@@ -1,0 +1,14 @@
+[package]
+name = "app"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+libloading = "0.8.5"
+base.path = "../base"
+macroquad = "0.4.13"
+notify = "7.0.0"
+tween = "2.0.3"
+derive_more = { version = "1.0.0", features = ["full"] }
+
+worker = {path = "../worker", optional = true}

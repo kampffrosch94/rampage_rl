@@ -1,0 +1,4 @@
+max_width = 95
+use_small_heuristics = "Max"
+indent_style = "Visual"
+# imports_granularity = "Module" # not stable yet
