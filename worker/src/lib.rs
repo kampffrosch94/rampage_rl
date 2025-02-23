@@ -1,9 +1,9 @@
 use std::{ffi::c_void, panic::AssertUnwindSafe};
 
 use base::{ContextTrait, PersistWrapper};
-use fleeting::FleetingState;
-use game::update_inner;
-use persistent::PersistentState;
+pub use fleeting::FleetingState;
+pub use game::update_inner;
+pub use persistent::PersistentState;
 mod fleeting;
 mod game;
 mod genarena;

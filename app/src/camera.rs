@@ -86,6 +86,7 @@ impl CameraWrapper {
         self.offset += self.screen_to_world(old) - self.screen_to_world(new);
     }
 
+    #[allow(unused)]
     pub fn move_camera(&mut self, (x, y): (f32, f32)) {
         self.offset.x += x;
         self.offset.y += y;

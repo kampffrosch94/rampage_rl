@@ -1,15 +1,16 @@
-use std::{
-    path::{Path, PathBuf},
-    sync::mpsc::Receiver,
-};
-
-use base::*;
-
+#[cfg(not(feature = "staticlink"))]
 use hotreload::WorkerReloader;
 use macroquad::prelude::*;
 mod camera;
 mod context;
+
+#[cfg(all(feature = "staticlink", feature = "hotreload"))]
+compile_error!("features hotreload and staticlink can't be enabled at the same time");
+
+#[cfg(not(feature = "staticlink"))]
 mod hotreload;
+#[cfg(feature = "staticlink")]
+mod static_worker;
 mod util;
 
 /// this makes it possible to unload shared libraries even if they use
@@ -18,13 +19,16 @@ mod util;
 ///
 /// see this post for details:
 /// https://fasterthanli.me/articles/so-you-want-to-live-reload-rust
+#[cfg(not(feature = "staticlink"))]
 #[no_mangle]
 pub unsafe extern "C" fn __cxa_thread_atexit_impl() {}
 
 #[macroquad::main("Roguelike Template")]
 async fn main() {
-    let path = "../target/debug/libworker.so";
-    let mut worker = WorkerReloader::new(path);
+    #[cfg(not(feature = "staticlink"))]
+    let mut worker = WorkerReloader::new("../target/debug/libworker.so");
+    #[cfg(feature = "staticlink")]
+    let mut worker = static_worker::StaticWorker::new();
 
     let mut last_mouse_pos = mouse_position();
     let ctx = &mut context::Context::new();

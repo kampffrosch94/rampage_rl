@@ -4,11 +4,18 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-libloading = "0.8.5"
+libloading = {version = "0.8.5", optional = true}
 base.path = "../base"
 macroquad = "0.4.13"
-notify = "7.0.0"
+notify = {version = "7.0.0", optional = true}
 tween = "2.0.3"
 derive_more = { version = "1.0.0", features = ["full"] }
 
+# optional
 worker = {path = "../worker", optional = true}
+
+
+[features]
+default = ["hotreload"]
+staticlink = ["dep:worker"]
+hotreload = ["dep:notify", "dep:libloading"]
