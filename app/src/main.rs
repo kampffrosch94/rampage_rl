@@ -32,13 +32,17 @@ async fn main() {
 
     let mut last_mouse_pos = mouse_position();
     let ctx = &mut context::Context::new();
+    #[cfg(not(feature = "staticlink"))]
+    let prefix = "..";
+    #[cfg(feature = "staticlink")]
+    let prefix = ".";
     ctx.textures
-       .load_texture("../assets/tilemap/tilemap_packed.png", "tiles", false)
+       .load_texture(format!("{prefix}/assets/tilemap/tilemap_packed.png"), "tiles", false)
        .await
        .unwrap();
 
     ctx.textures
-       .load_texture("../assets/ui/rectangle_flat.png", "ui_bg", false)
+       .load_texture(format!("{prefix}/assets/ui/rectangle_flat.png"), "ui_bg", false)
        .await
        .unwrap();
 
