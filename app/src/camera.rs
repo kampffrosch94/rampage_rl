@@ -33,13 +33,17 @@ impl CameraWrapper {
     }
 
     pub fn create_camera(scale: f32, offset: Vec2) -> Camera2D {
-        Camera2D { zoom: vec2(scale / screen_width(), scale / screen_height()),
-                   rotation: 0.,
-                   offset: vec2(0., 0.),
-                   target: vec2(screen_width() / scale + offset.x,
-                                screen_height() / scale + offset.y),
-                   render_target: None,
-                   viewport: None }
+        Camera2D {
+            zoom: vec2(scale / screen_width(), scale / screen_height()),
+            rotation: 0.,
+            offset: vec2(0., 0.),
+            target: vec2(
+                screen_width() / scale + offset.x,
+                screen_height() / scale + offset.y,
+            ),
+            render_target: None,
+            viewport: None,
+        }
     }
 
     pub fn set(&self) {
@@ -110,18 +114,9 @@ impl CameraWrapper {
 }
 
 // needed because orphan rules are annoying
-#[derive(Default,
-           Clone,
-           Copy,
-           Add,
-           Sub,
-           Mul,
-           Div,
-           From,
-           AddAssign,
-           SubAssign,
-           MulAssign,
-           DivAssign)]
+#[derive(
+    Default, Clone, Copy, Add, Sub, Mul, Div, From, AddAssign, SubAssign, MulAssign, DivAssign,
+)]
 pub struct Vec2f {
     pub x: f32,
     pub y: f32,

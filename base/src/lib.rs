@@ -117,7 +117,8 @@ pub struct Rect {
     pub h: f32,
 }
 
-#[derive(Debug, Clone, Copy)]
+/// rgba values from 0.0 to 1.0
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Color {
     pub r: f32,
     pub g: f32,

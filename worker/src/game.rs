@@ -1,6 +1,3 @@
-#![allow(unused)]
-use std::any::TypeId;
-
 use base::{Circle, Color, ContextTrait, Rect};
 use froql::query;
 use froql::world::World;
@@ -39,6 +36,7 @@ pub fn update_inner(
     for (circle,) in query!(world, Circle, !Inside(this, _)) {
         c.draw_circle(*circle, BLUE, 2);
     }
+
     c.draw_text("Hello", 40., 200., 200., 5);
 
     let mouse = c.mouse_world();

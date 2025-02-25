@@ -9,11 +9,12 @@ pub struct TextureStore {
 }
 
 impl TextureStore {
-    pub async fn load_texture(&mut self,
-                              path: impl AsRef<str>,
-                              name: impl Into<String>,
-                              antialias: bool)
-                              -> Result<(), macroquad::Error> {
+    pub async fn load_texture(
+        &mut self,
+        path: impl AsRef<str>,
+        name: impl Into<String>,
+        antialias: bool,
+    ) -> Result<(), macroquad::Error> {
         let texture = load_texture(path.as_ref()).await?;
         if !antialias {
             texture.set_filter(FilterMode::Nearest);

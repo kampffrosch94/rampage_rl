@@ -75,7 +75,7 @@ impl WorkerReloader {
         while let Ok(event) = self.receiver.try_recv() {
             if let Ok(e) = event {
                 if e.kind.is_create()
-                   && e.paths.iter().any(|p| p.file_name() == self.path.file_name())
+                    && e.paths.iter().any(|p| p.file_name() == self.path.file_name())
                 {
                     dbg!(&e);
                     modified = true;

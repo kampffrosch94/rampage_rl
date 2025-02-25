@@ -13,6 +13,7 @@ derive_more = { version = "1.0.0", features = ["full"] }
 
 # optional
 worker = {path = "../worker", optional = true}
+cosmic-text = { version = "0.12.1", default-features = false, features = ["swash", "no_std"] }
 
 
 [features]

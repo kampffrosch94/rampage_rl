@@ -39,11 +39,13 @@ impl ContextTrait for Context {
             .push(DrawCommand { z_level, command: Box::new(command) });
     }
 
-    fn draw_rect_lines(&mut self,
-                       rect: base::Rect,
-                       thickness: f32,
-                       c: base::Color,
-                       z_level: i32) {
+    fn draw_rect_lines(
+        &mut self,
+        rect: base::Rect,
+        thickness: f32,
+        c: base::Color,
+        z_level: i32,
+    ) {
         let color = macroquad::prelude::Color { r: c.r, g: c.g, b: c.b, a: c.a };
 
         let command = move || {
@@ -65,13 +67,14 @@ impl ContextTrait for Context {
             .push(DrawCommand { z_level, command: Box::new(command) });
     }
 
-    fn draw_text(&mut self,
-                 text: &str,
-                 size: f32,
-                 x: f32,
-                 y: f32,
-                 z_level: i32)
-                 -> base::Rect {
+    fn draw_text(
+        &mut self,
+        text: &str,
+        size: f32,
+        x: f32,
+        y: f32,
+        z_level: i32,
+    ) -> base::Rect {
         let font = Some(self.font.clone());
         let zooming = !self.camera.scale_tween.is_finished();
         let dimens = measure_text(text, Some(&self.font), size as u16, 1.);
@@ -79,18 +82,22 @@ impl ContextTrait for Context {
         let command = move || {
             // TODO this tanks performance during zoom (maybe disable it then/cache it?)
             let text_params = if zooming {
-                TextParams { font: font.as_ref(),
-                             font_size: size as u16,
-                             color: DARKGRAY,
-                             ..Default::default() }
+                TextParams {
+                    font: font.as_ref(),
+                    font_size: size as u16,
+                    color: DARKGRAY,
+                    ..Default::default()
+                }
             } else {
                 let (font_size, font_scale, font_aspect) = camera_font_scale(size);
-                TextParams { font: font.as_ref(),
-                             font_size,
-                             font_scale,
-                             font_scale_aspect: font_aspect,
-                             color: DARKGRAY,
-                             ..Default::default() }
+                TextParams {
+                    font: font.as_ref(),
+                    font_size,
+                    font_scale,
+                    font_scale_aspect: font_aspect,
+                    color: DARKGRAY,
+                    ..Default::default()
+                }
             };
             draw_text_ex(&text, x, y, text_params);
         };
@@ -117,12 +124,14 @@ impl ContextTrait for Context {
         }
     }
 
-    fn draw_texture_part(&mut self,
-                         name: &str,
-                         src: base::Rect,
-                         x: f32,
-                         y: f32,
-                         z_level: i32) {
+    fn draw_texture_part(
+        &mut self,
+        name: &str,
+        src: base::Rect,
+        x: f32,
+        y: f32,
+        z_level: i32,
+    ) {
         // load if not in texture store
         // then add to draw buffer
         if let Some(texture) = self.textures.get(name) {
@@ -140,11 +149,13 @@ impl ContextTrait for Context {
         }
     }
 
-    fn draw_texture_part_scaled(&mut self,
-                                name: &str,
-                                src: base::Rect,
-                                target: base::Rect,
-                                z_level: i32) {
+    fn draw_texture_part_scaled(
+        &mut self,
+        name: &str,
+        src: base::Rect,
+        target: base::Rect,
+        z_level: i32,
+    ) {
         // load if not in texture store
         // then add to draw buffer
         if let Some(texture) = self.textures.get(name) {
@@ -198,11 +209,13 @@ impl Context {
         let font =
             load_ttf_font_from_bytes(include_bytes!("../../assets/font/Kenney Future.ttf"))
                 .unwrap();
-        Self { draw_buffer: Default::default(),
-               camera: Default::default(),
-               textures: Default::default(),
-               loading: Default::default(),
-               font }
+        Self {
+            draw_buffer: Default::default(),
+            camera: Default::default(),
+            textures: Default::default(),
+            loading: Default::default(),
+            font,
+        }
     }
 
     /// executes deferred drawing, should be called once per frame
