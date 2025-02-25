@@ -3,6 +3,7 @@ pub mod circle;
 pub mod grids;
 pub mod ldtk;
 pub mod rect;
+pub mod text;
 
 pub trait ContextTrait {
     /// time since program start
