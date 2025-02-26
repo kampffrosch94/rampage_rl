@@ -4,7 +4,7 @@ use base::*;
 
 use macroquad::prelude::*;
 
-use crate::{camera::CameraWrapper, util::texture_store::TextureStore};
+use crate::{camera::CameraWrapper, text::Texter, util::texture_store::TextureStore};
 
 pub struct Context {
     draw_buffer: RefCell<Vec<DrawCommand>>,
@@ -12,6 +12,11 @@ pub struct Context {
     pub textures: TextureStore,
     pub loading: Vec<(String, String)>,
     pub font: Font,
+    pub inner: ContextInner,
+}
+
+pub struct ContextInner {
+    pub texter: Texter,
 }
 
 impl ContextTrait for Context {
@@ -31,7 +36,7 @@ impl ContextTrait for Context {
     fn draw_rect(&mut self, rect: base::Rect, c: base::Color, z_level: i32) {
         let color = macroquad::prelude::Color { r: c.r, g: c.g, b: c.b, a: c.a };
 
-        let command = move || {
+        let command = move |_: &mut ContextInner| {
             draw_rectangle(rect.x, rect.y, rect.w, rect.h, color);
         };
         self.draw_buffer
@@ -48,7 +53,7 @@ impl ContextTrait for Context {
     ) {
         let color = macroquad::prelude::Color { r: c.r, g: c.g, b: c.b, a: c.a };
 
-        let command = move || {
+        let command = move |_: &mut ContextInner| {
             draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, thickness, color);
         };
         self.draw_buffer
@@ -59,52 +64,12 @@ impl ContextTrait for Context {
     fn draw_circle(&mut self, circle: base::Circle, c: base::Color, z_level: i32) {
         let color = macroquad::prelude::Color { r: c.r, g: c.g, b: c.b, a: c.a };
 
-        let command = move || {
+        let command = move |_: &mut ContextInner| {
             draw_circle(circle.pos.x, circle.pos.y, circle.radius, color);
         };
         self.draw_buffer
             .borrow_mut()
             .push(DrawCommand { z_level, command: Box::new(command) });
-    }
-
-    fn draw_text(
-        &mut self,
-        text: &str,
-        size: f32,
-        x: f32,
-        y: f32,
-        z_level: i32,
-    ) -> base::Rect {
-        let font = Some(self.font.clone());
-        let zooming = !self.camera.scale_tween.is_finished();
-        let dimens = measure_text(text, Some(&self.font), size as u16, 1.);
-        let text = text.to_string();
-        let command = move || {
-            // TODO this tanks performance during zoom (maybe disable it then/cache it?)
-            let text_params = if zooming {
-                TextParams {
-                    font: font.as_ref(),
-                    font_size: size as u16,
-                    color: DARKGRAY,
-                    ..Default::default()
-                }
-            } else {
-                let (font_size, font_scale, font_aspect) = camera_font_scale(size);
-                TextParams {
-                    font: font.as_ref(),
-                    font_size,
-                    font_scale,
-                    font_scale_aspect: font_aspect,
-                    color: DARKGRAY,
-                    ..Default::default()
-                }
-            };
-            draw_text_ex(&text, x, y, text_params);
-        };
-        self.draw_buffer
-            .borrow_mut()
-            .push(DrawCommand { z_level, command: Box::new(command) });
-        return base::Rect { x, y: y - dimens.offset_y, w: dimens.width, h: dimens.height };
     }
 
     fn draw_texture(&mut self, name: &str, x: f32, y: f32, z_level: i32) {
@@ -113,14 +78,14 @@ impl ContextTrait for Context {
         if let Some(texture) = self.textures.get(name) {
             let source = None;
             let params = DrawTextureParams { source, ..Default::default() };
-            let command = move || {
+            let command = move |_: &mut ContextInner| {
                 draw_texture_ex(&texture, x, y, WHITE, params);
             };
             self.draw_buffer
                 .borrow_mut()
                 .push(DrawCommand { z_level, command: Box::new(command) });
         } else {
-            self.draw_text(&format!("ERROR('{name}')"), 20., x, y, 9999);
+            self.draw_rect(base::Rect::new(x, y, 300., 300.), base::Color::PINK, 9999);
         }
     }
 
@@ -138,14 +103,14 @@ impl ContextTrait for Context {
             let source =
                 Some(macroquad::math::Rect { x: src.x, y: src.y, w: src.w, h: src.h });
             let params = DrawTextureParams { source, ..Default::default() };
-            let command = move || {
+            let command = move |_: &mut ContextInner| {
                 draw_texture_ex(&texture, x, y, WHITE, params);
             };
             self.draw_buffer
                 .borrow_mut()
                 .push(DrawCommand { z_level, command: Box::new(command) });
         } else {
-            self.draw_text(&format!("ERROR('{name}')"), 20., x, y, 9999);
+            self.draw_rect(base::Rect::new(x, y, 300., 300.), base::Color::PINK, 9999);
         }
     }
 
@@ -163,14 +128,14 @@ impl ContextTrait for Context {
                 Some(macroquad::math::Rect { x: src.x, y: src.y, w: src.w, h: src.h });
             let dest_size = Some(vec2(target.w, target.h));
             let params = DrawTextureParams { source, dest_size, ..Default::default() };
-            let command = move || {
+            let command = move |_: &mut ContextInner| {
                 draw_texture_ex(&texture, target.x, target.y, WHITE, params);
             };
             self.draw_buffer
                 .borrow_mut()
                 .push(DrawCommand { z_level, command: Box::new(command) });
         } else {
-            self.draw_text(&format!("ERROR('{name}')"), 20., target.x, target.y, 9999);
+            self.draw_rect(target, base::Color::PINK, 9999);
         }
     }
 
@@ -202,6 +167,19 @@ impl ContextTrait for Context {
         let m = self.camera.mouse_world();
         FPos { x: m.x, y: m.y }
     }
+
+    fn set_text(&mut self, key: u64, w: f32, h: f32, text: &[(&str, TextProperty)]) {
+        self.inner.texter.set_text(key, w, h, text);
+    }
+
+    fn draw_text(&mut self, key: u64, x: f32, y: f32, z_level: i32) {
+        let command = move |inner: &mut ContextInner| {
+            inner.texter.draw_text(key, x, y);
+        };
+        self.draw_buffer
+            .borrow_mut()
+            .push(DrawCommand { z_level, command: Box::new(command) });
+    }
 }
 
 impl Context {
@@ -215,6 +193,7 @@ impl Context {
             textures: Default::default(),
             loading: Default::default(),
             font,
+            inner: ContextInner { texter: Texter::new() },
         }
     }
 
@@ -229,12 +208,12 @@ impl Context {
         let buffer = &mut self.draw_buffer.borrow_mut();
         buffer.sort_by_key(|it| it.z_level);
         for draw in buffer.drain(..) {
-            (draw.command)();
+            (draw.command)(&mut self.inner);
         }
     }
 }
 
 struct DrawCommand {
     z_level: i32,
-    command: Box<dyn FnOnce() -> ()>,
+    command: Box<dyn FnOnce(&mut ContextInner) -> ()>,
 }

@@ -9,6 +9,9 @@ watch:
 run:
     cargo run
 
+run-static:
+    cargo run -F staticlink --no-default-features
+
 web-build:
     cargo build --target wasm32-unknown-unknown --release -F staticlink --no-default-features
 

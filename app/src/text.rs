@@ -38,18 +38,24 @@ impl Texter {
         Texter { font_system, swash_cache, cache: HashMap::new() }
     }
 
-    pub fn set_text(&mut self, key: u64, w: f32, h: f32, text: &[(&str, TextProperty)]) {
+    pub fn set_text(
+        &mut self,
+        key: u64,
+        w: f32,
+        h: f32,
+        text: &[(&str, TextProperty)],
+    ) -> base::Rect {
         let to = self.cache.entry(key).or_insert_with(|| {
             let buffer = Buffer::new(&mut self.font_system, Metrics::new(33., 40.));
             TextObject::new(buffer)
         });
         // entry.0.set_metrics(&mut self font_system, metrics);
-        to.set_text(&mut self.font_system, w, h, text);
+        to.set_text(&mut self.font_system, w, h, text)
     }
 
-    pub fn draw_text(&mut self, key: u64, x: f32, y: f32) {
+    pub fn draw_text(&mut self, key: u64, x: f32, y: f32) -> base::Rect {
         let to = self.cache.get_mut(&key).unwrap();
-        to.draw(&mut self.font_system, &mut self.swash_cache, x, y);
+        to.draw(&mut self.font_system, &mut self.swash_cache, x, y)
     }
 }
 
@@ -78,20 +84,22 @@ pub struct TextObject {
     buffer: Buffer,
     texture: Option<Texture2D>,
     last_text: Vec<(String, TextProperty)>,
+    width: f32,
+    height: f32,
 }
 
 impl TextObject {
-    pub fn new(buffer: Buffer) -> Self {
-        Self { buffer, texture: None, last_text: Vec::new() }
+    fn new(buffer: Buffer) -> Self {
+        Self { buffer, texture: None, last_text: Vec::new(), width: 0., height: 0. }
     }
 
-    pub fn set_text(
+    fn set_text(
         &mut self,
         font_system: &mut FontSystem,
         w: f32,
         h: f32,
         text: &[(&str, TextProperty)],
-    ) {
+    ) -> base::Rect {
         if text.len() != self.last_text.len()
             || text
                 .iter()
@@ -107,16 +115,18 @@ impl TextObject {
                 Attrs::new(),
                 Shaping::Advanced,
             );
+            self.buffer.set_redraw(true);
         }
+        base::Rect { x: 0., y: 0., w: self.width, h: self.height }
     }
 
-    pub fn draw(
+    fn draw(
         &mut self,
         font_system: &mut FontSystem,
         swash_cache: &mut SwashCache,
         x: f32,
         y: f32,
-    ) {
+    ) -> base::Rect {
         // Create a default text color
         const DEFAULT_COLOR: cosmic_text::Color = cosmic_text::Color::rgb(0xFF, 0xFF, 0xFF);
 
@@ -163,9 +173,10 @@ impl TextObject {
                 }
             }
             self.texture = Some(Texture2D::from_image(&image));
-            println!("Redraw Text");
         }
 
         draw_texture(self.texture.as_ref().unwrap(), x, y, WHITE);
+
+        base::Rect { x, y, w: self.width, h: self.height }
     }
 }

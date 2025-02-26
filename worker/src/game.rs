@@ -1,4 +1,4 @@
-use base::{Circle, Color, ContextTrait, Rect};
+use base::{text::TextFamily, Circle, Color, ContextTrait, Rect, TextProperty};
 use froql::query;
 use froql::world::World;
 
@@ -37,7 +37,30 @@ pub fn update_inner(
         c.draw_circle(*circle, BLUE, 2);
     }
 
-    c.draw_text("Hello", 40., 200., 200., 5);
+    c.set_text(
+        2,
+        500.,
+        500.,
+        &[
+            (
+                "Placeholder of doom",
+                TextProperty::new()
+                    .family(TextFamily::BloodCyrillic)
+                    .metrics(66, 80)
+                    .color(Color::RED),
+            ),
+            ("\n \n", TextProperty::new().metrics(2, 20)),
+            (
+                r#"a) Run run run!
+b) Walk walk walk!"#,
+                TextProperty::new()
+                    .family(TextFamily::BloodCyrillic)
+                    .color(Color::PINK)
+                    .metrics(44, 60),
+            ),
+        ],
+    );
+    c.draw_text(2, 30., 30., 30);
 
     let mouse = c.mouse_world();
 

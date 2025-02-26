@@ -1,4 +1,6 @@
 use std::{ffi::c_void, ops::Sub};
+
+pub use text::TextProperty;
 pub mod circle;
 pub mod grids;
 pub mod ldtk;
@@ -21,8 +23,6 @@ pub trait ContextTrait {
 
     fn draw_circle(&mut self, circle: Circle, c: Color, z_level: i32);
 
-    fn draw_text(&mut self, text: &str, size: f32, x: f32, y: f32, z_level: i32) -> Rect;
-
     fn draw_texture(&mut self, name: &str, x: f32, y: f32, z_level: i32);
 
     fn draw_texture_part(&mut self, name: &str, src: Rect, x: f32, y: f32, z_level: i32);
@@ -38,6 +38,12 @@ pub trait ContextTrait {
     fn mouse_screen(&self) -> FPos;
 
     fn mouse_world(&self) -> FPos;
+
+    // TODO return actual size rect
+    fn set_text(&mut self, key: u64, w: f32, h: f32, text: &[(&str, TextProperty)]);
+
+    // TODO return rect
+    fn draw_text(&mut self, key: u64, x: f32, y: f32, z_level: i32);
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -134,6 +140,15 @@ pub struct Circle {
 }
 
 impl Color {
+    pub const YELLOW: Color = Color::rgb(1.0, 1.0, 0.0);
+    pub const BLUE: Color = Color::rgb(0.3, 0.3, 1.0);
+    pub const RED: Color = Color::rgb(1.0, 0.0, 0.0);
+    pub const VIOLET: Color = Color::rgb(0.5, 0.0, 0.5);
+    pub const GREEN: Color = Color::rgb(0.0, 1.0, 0.0);
+    pub const BLACK: Color = Color::rgb(0.0, 0.0, 0.0);
+    pub const WHITE: Color = Color::rgb(1.0, 1.0, 1.0);
+    pub const PINK: Color = Color::rgb(1.0, 0.75, 0.8);
+
     pub const fn rgb(r: f32, g: f32, b: f32) -> Self {
         Color { r, g, b, a: 1.0 }
     }
