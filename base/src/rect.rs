@@ -1,11 +1,20 @@
-use crate::{FPos, Rect};
+use crate::FPos;
+
+/// x and y are in the top left
+#[derive(Debug, Clone, Copy)]
+pub struct Rect {
+    pub x: f32,
+    pub y: f32,
+    pub w: f32,
+    pub h: f32,
+}
 
 impl Rect {
     pub fn new(x: f32, y: f32, w: f32, h: f32) -> Self {
         Rect { x, y, w, h }
     }
 
-    pub fn wh(w: f32, h: f32) -> Self {
+    pub fn new_wh(w: f32, h: f32) -> Self {
         Rect { x: 0.0, y: 0.0, w, h }
     }
 
@@ -93,5 +102,9 @@ impl Rect {
 
     pub fn center(&self) -> FPos {
         FPos { x: self.x + self.w / 2.0, y: self.y + self.h / 2.0 }
+    }
+
+    pub fn move_by(&self, x: f32, y: f32) -> Self {
+        Rect { x: self.x + x, y: self.y + y, w: self.w, h: self.h }
     }
 }

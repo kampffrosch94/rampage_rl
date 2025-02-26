@@ -6,6 +6,7 @@ pub mod grids;
 pub mod ldtk;
 pub mod rect;
 pub mod text;
+pub use rect::Rect;
 
 pub trait ContextTrait {
     /// time since program start
@@ -39,10 +40,8 @@ pub trait ContextTrait {
 
     fn mouse_world(&self) -> FPos;
 
-    // TODO return actual size rect
-    fn set_text(&mut self, key: u64, w: f32, h: f32, text: &[(&str, TextProperty)]);
+    fn set_text(&mut self, key: u64, w: f32, h: f32, text: &[(&str, TextProperty)]) -> Rect;
 
-    // TODO return rect
     fn draw_text(&mut self, key: u64, x: f32, y: f32, z_level: i32);
 }
 
@@ -113,15 +112,6 @@ impl PersistWrapper {
         let ptr = self.ptr as *mut T;
         unsafe { &mut *ptr }
     }
-}
-
-/// x and y are in the top left
-#[derive(Debug, Clone, Copy)]
-pub struct Rect {
-    pub x: f32,
-    pub y: f32,
-    pub w: f32,
-    pub h: f32,
 }
 
 /// rgba values from 0.0 to 1.0

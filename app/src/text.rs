@@ -116,7 +116,7 @@ impl TextObject {
             );
             self.buffer.set_redraw(true);
         }
-        base::Rect { x: 0., y: 0., w: self.width, h: self.height }
+        base::Rect::new_wh(self.width, self.height)
     }
 
     fn draw(

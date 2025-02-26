@@ -167,8 +167,14 @@ impl ContextTrait for Context {
         FPos { x: m.x, y: m.y }
     }
 
-    fn set_text(&mut self, key: u64, w: f32, h: f32, text: &[(&str, TextProperty)]) {
-        self.inner.texter.set_text(key, w, h, text);
+    fn set_text(
+        &mut self,
+        key: u64,
+        w: f32,
+        h: f32,
+        text: &[(&str, TextProperty)],
+    ) -> base::Rect {
+        self.inner.texter.set_text(key, w, h, text)
     }
 
     fn draw_text(&mut self, key: u64, x: f32, y: f32, z_level: i32) {
