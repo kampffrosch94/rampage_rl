@@ -1,12 +1,11 @@
 use cosmic_text::{
     fontdb::{self, Database},
-    rustybuzz::script::TELUGU,
     Attrs, Buffer, FontSystem, Metrics, Shaping, SwashCache,
 };
 
 use std::{collections::HashMap, sync::Arc};
 
-use base::text::{TextFamily, TextMetrics, TextProperty};
+use base::text::{TextFamily, TextProperty};
 use macroquad::prelude::draw_texture;
 use macroquad::prelude::Texture2D;
 use macroquad::prelude::WHITE;

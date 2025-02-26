@@ -11,7 +11,6 @@ pub struct Context {
     pub camera: CameraWrapper,
     pub textures: TextureStore,
     pub loading: Vec<(String, String)>,
-    pub font: Font,
     pub inner: ContextInner,
 }
 
@@ -184,15 +183,11 @@ impl ContextTrait for Context {
 
 impl Context {
     pub fn new() -> Self {
-        let font =
-            load_ttf_font_from_bytes(include_bytes!("../../assets/font/Kenney Future.ttf"))
-                .unwrap();
         Self {
             draw_buffer: Default::default(),
             camera: Default::default(),
             textures: Default::default(),
             loading: Default::default(),
-            font,
             inner: ContextInner { texter: Texter::new() },
         }
     }
