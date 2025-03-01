@@ -15,8 +15,12 @@ impl TextureStore {
         name: impl Into<String>,
         antialias: bool,
     ) -> Result<(), macroquad::Error> {
+        let name = name.into();
+        println!("Loaded {name}");
         let texture = load_texture(path.as_ref()).await?;
-        if !antialias {
+        if antialias {
+            texture.set_filter(FilterMode::Linear);
+        } else {
             texture.set_filter(FilterMode::Nearest);
         }
         self.textures.insert(name.into(), texture);

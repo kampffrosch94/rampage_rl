@@ -19,7 +19,7 @@ impl Default for CameraWrapper {
 
 impl CameraWrapper {
     pub fn new() -> Self {
-        let scale_exp = 2;
+        let scale_exp = 1; // 2 is actually zero zoom
         let base2: f32 = 2.;
         let scale = base2.powf(scale_exp as f32);
         let scale_tween = Tweener::linear(scale, scale, 0.);
@@ -33,6 +33,7 @@ impl CameraWrapper {
     }
 
     pub fn create_camera(scale: f32, offset: Vec2) -> Camera2D {
+        let scale = scale / screen_dpi_scale();
         Camera2D {
             zoom: vec2(scale / screen_width(), scale / screen_height()),
             rotation: 0.,

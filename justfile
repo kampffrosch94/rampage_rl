@@ -7,7 +7,7 @@ watch:
 
 [working-directory: 'app']
 run:
-    cargo run
+    RUST_BACKTRACE=1 cargo run
 
 run-static:
     cargo run -F staticlink --no-default-features

@@ -9,6 +9,7 @@ mod game;
 mod genarena;
 mod persistent;
 mod util;
+mod saveload;
 
 pub const GRIDSIZE: f32 = 16.;
 

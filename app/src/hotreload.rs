@@ -77,7 +77,7 @@ impl WorkerReloader {
                 if e.kind.is_create()
                     && e.paths.iter().any(|p| p.file_name() == self.path.file_name())
                 {
-                    dbg!(&e);
+                    // dbg!(&e);
                     modified = true;
                 }
             }

@@ -52,9 +52,9 @@ impl Texter {
         to.set_text(&mut self.font_system, w, h, text)
     }
 
-    pub fn draw_text(&mut self, key: u64, x: f32, y: f32) -> base::Rect {
-        let to = self.cache.get_mut(&key).unwrap();
-        to.draw(&mut self.font_system, &mut self.swash_cache, x, y)
+    pub fn draw_text(&mut self, key: u64, x: f32, y: f32) -> Option<base::Rect> {
+        let to = self.cache.get_mut(&key)?;
+        Some(to.draw(&mut self.font_system, &mut self.swash_cache, x, y))
     }
 }
 
@@ -115,6 +115,16 @@ impl TextObject {
                 Shaping::Advanced,
             );
             self.buffer.set_redraw(true);
+
+            let mut height = 0.;
+            let mut width = 0.0;
+
+            for run in self.buffer.layout_runs() {
+                width = run.line_w.max(width);
+                height += run.line_height;
+            }
+            self.height = height;
+            self.width = width;
         }
         base::Rect::new_wh(self.width, self.height)
     }

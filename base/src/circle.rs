@@ -1,4 +1,10 @@
-use crate::{Circle, FPos, Rect};
+use crate::{FPos, Rect};
+
+#[derive(Debug, Clone, Copy)]
+pub struct Circle {
+    pub pos: FPos,
+    pub radius: f32,
+}
 
 impl Circle {
     pub fn new(x: f32, y: f32, radius: f32) -> Self {

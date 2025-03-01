@@ -107,4 +107,8 @@ impl Rect {
     pub fn move_by(&self, x: f32, y: f32) -> Self {
         Rect { x: self.x + x, y: self.y + y, w: self.w, h: self.h }
     }
+
+    pub fn move_by_pos(&self, pos: FPos) -> Rect {
+        self.move_by(pos.x, pos.y)
+    }
 }

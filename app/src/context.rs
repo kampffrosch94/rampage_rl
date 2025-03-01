@@ -4,7 +4,10 @@ use base::*;
 
 use macroquad::prelude::*;
 
-use crate::{camera::CameraWrapper, text::Texter, util::texture_store::TextureStore};
+use crate::{
+    camera::CameraWrapper, draw::kf_draw_texture, text::Texter,
+    util::texture_store::TextureStore,
+};
 
 pub struct Context {
     draw_buffer: RefCell<Vec<DrawCommand>>,
@@ -78,7 +81,7 @@ impl ContextTrait for Context {
             let source = None;
             let params = DrawTextureParams { source, ..Default::default() };
             let command = move |_: &mut ContextInner| {
-                draw_texture_ex(&texture, x, y, WHITE, params);
+                kf_draw_texture(&texture, x, y, WHITE, params);
             };
             self.draw_buffer
                 .borrow_mut()
@@ -103,7 +106,7 @@ impl ContextTrait for Context {
                 Some(macroquad::math::Rect { x: src.x, y: src.y, w: src.w, h: src.h });
             let params = DrawTextureParams { source, ..Default::default() };
             let command = move |_: &mut ContextInner| {
-                draw_texture_ex(&texture, x, y, WHITE, params);
+                kf_draw_texture(&texture, x, y, WHITE, params);
             };
             self.draw_buffer
                 .borrow_mut()
@@ -128,7 +131,7 @@ impl ContextTrait for Context {
             let dest_size = Some(vec2(target.w, target.h));
             let params = DrawTextureParams { source, dest_size, ..Default::default() };
             let command = move |_: &mut ContextInner| {
-                draw_texture_ex(&texture, target.x, target.y, WHITE, params);
+                kf_draw_texture(&texture, target.x, target.y, WHITE, params);
             };
             self.draw_buffer
                 .borrow_mut()
@@ -179,7 +182,10 @@ impl ContextTrait for Context {
 
     fn draw_text(&mut self, key: u64, x: f32, y: f32, z_level: i32) {
         let command = move |inner: &mut ContextInner| {
-            inner.texter.draw_text(key, x, y);
+            if inner.texter.draw_text(key, x, y).is_none() {
+                let rect = macroquad::prelude::Rect::new(x, y, 300., 300.);
+                draw_rectangle(rect.x, rect.y, rect.w, rect.h, PINK);
+            }
         };
         self.draw_buffer
             .borrow_mut()

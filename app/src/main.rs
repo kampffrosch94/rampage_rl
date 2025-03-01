@@ -3,6 +3,7 @@ use hotreload::WorkerReloader;
 use macroquad::prelude::*;
 mod camera;
 mod context;
+mod draw;
 mod text;
 
 #[cfg(all(feature = "staticlink", feature = "hotreload"))]
@@ -24,12 +25,24 @@ mod util;
 #[no_mangle]
 pub unsafe extern "C" fn __cxa_thread_atexit_impl() {}
 
-#[macroquad::main("Roguelike Template")]
+fn window_conf() -> Conf {
+    Conf {
+        window_title: "Roguelike".to_owned(),
+        fullscreen: false,
+        high_dpi: false,
+        //sample_count: 1,
+        ..Default::default()
+    }
+}
+
+#[macroquad::main(window_conf)]
 async fn main() {
     #[cfg(not(feature = "staticlink"))]
     let mut worker = WorkerReloader::new("../target/debug/libworker.so");
     #[cfg(feature = "staticlink")]
     let mut worker = static_worker::StaticWorker::new();
+
+    set_default_filter_mode(FilterMode::Nearest);
 
     let mut last_mouse_pos = mouse_position();
     let ctx = &mut context::Context::new();
@@ -43,12 +56,17 @@ async fn main() {
         .unwrap();
 
     ctx.textures
-        .load_texture(format!("{prefix}/assets/ui/rectangle_flat.png"), "ui_bg", false)
+        .load_texture(format!("{prefix}/assets/ui/rectangle_flat.png"), "ui_bg", true)
+        .await
+        .unwrap();
+
+    ctx.textures
+        .load_texture(format!("{prefix}/assets/pixeltest.png"), "test", true)
         .await
         .unwrap();
 
     loop {
-        clear_background(BLACK);
+        clear_background(Color { r: 0., g: 0., b: 0., a: 0. });
 
         if is_mouse_button_down(MouseButton::Middle) {
             ctx.camera.mouse_delta(last_mouse_pos, mouse_position());
@@ -68,17 +86,25 @@ async fn main() {
             }
         }
 
+        // set_camera(&Camera2D::from_display_rect(Rect {
+        //     x: 0.,
+        //     y: screen_height(),
+        //     w: screen_width(),
+        //     h: -screen_height(),
+        // }));
         ctx.camera.process();
 
-        // let start = Instant::now();
         worker.update(ctx);
-        // let duration = start.elapsed();
-        // println!("Reload + Execution took: {:?}", duration)));
 
         ctx.process().await;
 
         let fps = get_fps();
-        let s = format!("FPS: {}", if fps > 55 && fps < 65 { 60 } else { fps });
+        let fps = if fps > 55 && fps < 65 { 60 } else { fps };
+        let dpi = screen_dpi_scale();
+
+        let w = screen_width();
+        let h = screen_height();
+        let s = format!("FPS: {fps} DPI: {dpi} Screen: {w} x {h}");
         draw_text(&s, 20.0, 20.0, 30.0, WHITE);
 
         next_frame().await

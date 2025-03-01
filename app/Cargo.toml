@@ -6,7 +6,7 @@ edition = "2021"
 [dependencies]
 libloading = {version = "0.8.5", optional = true}
 base.path = "../base"
-macroquad = "0.4.13"
+macroquad = { git = "https://github.com/not-fl3/macroquad", version = "0.4.13" }
 notify = {version = "7.0.0", optional = true}
 tween = "2.0.3"
 derive_more = { version = "1.0.0", features = ["full"] }

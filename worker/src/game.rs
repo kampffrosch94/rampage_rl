@@ -1,4 +1,4 @@
-use base::{text::TextFamily, Circle, Color, ContextTrait, Rect, TextProperty};
+use base::{text::TextFamily, Circle, Color, ContextTrait, FPos, Rect, TextProperty};
 use froql::query;
 use froql::world::World;
 
@@ -7,14 +7,10 @@ use crate::{
     persistent::{Inside, PersistentState},
 };
 
-const COLOR: Color = Color::rgb(0.0, 0.5, 0.5);
-const YELLOW: Color = Color::rgb(1.0, 1.0, 0.0);
-const BLUE: Color = Color::rgb(0.3, 0.3, 1.0);
-const RED: Color = Color::rgb(1.0, 0.0, 0.0);
-const VIOLET: Color = Color::rgb(0.5, 0.0, 0.5);
-const GREEN: Color = Color::rgb(0.0, 1.0, 0.0);
-const BLACK: Color = Color::rgb(0.0, 0.0, 0.0);
-const WHITE: Color = Color::rgb(1.0, 1.0, 1.0);
+#[repr(C)]
+enum Label {
+    ExampleText,
+}
 
 pub fn update_inner(
     c: &mut dyn ContextTrait,
@@ -24,21 +20,30 @@ pub fn update_inner(
     s.re_register();
     let world = &mut s.world;
 
+    c.draw_texture("ui_bg", 30., 350., 999);
+    c.draw_texture_part_scaled(
+        "test",
+        Rect::new(0., 0., 1., 4.),
+        Rect::new(00., 00., 10., 40.),
+        10000,
+    );
+    c.draw_texture("test", 20., 360., 9999);
+
     for (rect,) in query!(world, Rect) {
-        let color = Color::rgb(0.0, 0.5, 0.0);
-        c.draw_rect_lines(*rect, 2., color, 0);
+        // let color = Color::rgb(0.0, 0.5, 0.0);
+        // c.draw_rect_lines(*rect, 2., color, 0);
     }
 
     for (circle,) in query!(world, Circle, Inside(this, _)) {
-        c.draw_circle(*circle, YELLOW, 2);
+        // c.draw_circle(*circle, Color::YELLOW, 2);
     }
 
     for (circle,) in query!(world, Circle, !Inside(this, _)) {
-        c.draw_circle(*circle, BLUE, 2);
+        c.draw_circle(*circle, Color::BLUE, 2);
     }
 
-    c.set_text(
-        2,
+    let r = c.set_text(
+        Label::ExampleText as _,
         500.,
         500.,
         &[
@@ -60,16 +65,21 @@ b) Walk walk walk!"#,
             ),
         ],
     );
-    c.draw_text(2, 30., 30., 30);
+
+    let pos = FPos::new(30., 30.);
+    c.draw_text(Label::ExampleText as _, pos.x, pos.y, 30);
+
+    let color = Color::rgb(0.0, 0.6, 0.0);
+    c.draw_rect_lines(r.move_by_pos(pos).grow_all(20.), 40., color, -5);
 
     let mouse = c.mouse_world();
 
     for (e_circle, _) in query!(world, &this, Circle).filter(|(_, c)| c.contains(mouse)) {
         for (circle,) in query!(world, Circle, Inside(this, rect), !Inside(*e_circle, rect)) {
-            c.draw_circle(*circle, RED, 2);
+            c.draw_circle(*circle, Color::RED, 2);
         }
     }
 
     let circle = Circle { pos: mouse, radius: 6. };
-    c.draw_circle(circle, WHITE, 10);
+    c.draw_circle(circle, Color::WHITE, 10);
 }
