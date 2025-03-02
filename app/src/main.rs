@@ -51,12 +51,7 @@ async fn main() {
     #[cfg(feature = "staticlink")]
     let prefix = ".";
     ctx.textures
-        .load_texture(format!("{prefix}/assets/tilemap/tilemap_packed.png"), "tiles", false)
-        .await
-        .unwrap();
-
-    ctx.textures
-        .load_texture(format!("{prefix}/assets/ui/rectangle_flat.png"), "ui_bg", true)
+        .load_texture(format!("{prefix}/assets/32rogues/tiles.png"), "tiles", false)
         .await
         .unwrap();
 
