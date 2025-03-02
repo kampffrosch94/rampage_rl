@@ -1,4 +1,5 @@
-use base::{text::TextFamily, Color, ContextTrait, FPos, TextProperty};
+use base::{text::TextFamily, Color, ContextTrait, TextProperty};
+use creature::CreatureSprite;
 use tile_map::TileMap;
 mod creature;
 mod tile_map;
@@ -19,12 +20,13 @@ pub fn update_inner(
     _f: &mut FleetingState,
 ) {
     s.re_register();
-    let world = &mut s.world;
+    let _world = &mut s.world;
 
     c.draw_texture("tiles", -200., -950., 5);
     c.draw_texture("rogues", -600., -950., 5);
+    c.draw_texture("test", -20., 0., 8);
 
-    let r = c.set_text(
+    c.set_text(
         Label::ExampleText as _,
         500.,
         500.,
@@ -47,10 +49,11 @@ b) Walk walk walk!"#,
             ),
         ],
     );
-    let pos = FPos::new(400., -530.);
-    c.draw_text(Label::ExampleText as _, pos.x, pos.y, 30);
+    c.draw_text(Label::ExampleText as _, 400., -530., 30);
 
     let mut tm = TileMap::new(12, 12);
     tm.enwall();
     tm.draw(c, 0., 0.);
+
+    CreatureSprite::Dwarf.draw(c, 64. * 4., 64. * 2.);
 }

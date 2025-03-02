@@ -71,6 +71,11 @@ impl CameraWrapper {
             self.scale = new_scale;
         }
 
+        if self.scale_tween.is_finished() && self.offset_tween.is_finished() {
+            self.offset.x = self.offset.x.round();
+            self.offset.y = self.offset.y.round();
+        }
+
         self.camera = Self::create_camera(self.scale, self.offset.into());
         self.set();
         //cw_debug!("Camera scale: {} offset: {:?}", self.scale, self.offset);
@@ -93,8 +98,8 @@ impl CameraWrapper {
 
     #[allow(unused)]
     pub fn move_camera(&mut self, (x, y): (f32, f32)) {
-        self.offset.x += x;
-        self.offset.y += y;
+        self.offset.x = x;
+        self.offset.y = y;
     }
 
     pub fn screen_to_world(&self, pos: impl Into<Vec2>) -> Vec2f {
