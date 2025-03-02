@@ -61,7 +61,7 @@ async fn main() {
         .unwrap();
 
     loop {
-        clear_background(Color { r: 0., g: 0., b: 0., a: 0. });
+        clear_background(BLACK);
 
         if is_mouse_button_down(MouseButton::Middle) {
             ctx.camera.mouse_delta(last_mouse_pos, mouse_position());

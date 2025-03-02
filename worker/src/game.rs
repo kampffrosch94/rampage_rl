@@ -1,7 +1,7 @@
-#![allow(unused)]
-use base::{text::TextFamily, Circle, Color, ContextTrait, FPos, Rect, TextProperty};
-use froql::query;
-use froql::world::World;
+use base::{text::TextFamily, Color, ContextTrait, FPos, Rect, TextProperty};
+use tiles::DrawTile;
+mod tile_map;
+mod tiles;
 
 use crate::{fleeting::FleetingState, persistent::PersistentState};
 
@@ -10,6 +10,8 @@ enum Label {
     ExampleText,
 }
 
+pub const Z_TILES: i32 = 0;
+
 pub fn update_inner(
     c: &mut dyn ContextTrait,
     s: &mut PersistentState,
@@ -17,6 +19,8 @@ pub fn update_inner(
 ) {
     s.re_register();
     let world = &mut s.world;
+
+    c.draw_texture("tiles", -200., -950., 5);
 
     let r = c.set_text(
         Label::ExampleText as _,
@@ -41,6 +45,14 @@ b) Walk walk walk!"#,
             ),
         ],
     );
+
+    for x in (0..10).map(|it| it as f32 * 64.) {
+        let tile = DrawTile::SkullWallTop;
+        tile.draw(c, x, 500.);
+
+        let tile = DrawTile::SkullWallBot;
+        tile.draw(c, x, 564.);
+    }
 
     let pos = FPos::new(30., 30.);
     c.draw_text(Label::ExampleText as _, pos.x, pos.y, 30);

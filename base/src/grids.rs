@@ -54,6 +54,13 @@ impl<T: Clone> Grid<T> {
         &self[(x, y)]
     }
 
+    pub fn get_opt(&self, pos: Pos) -> Option<&T> {
+        if pos.x < 0 || pos.x >= self.width || pos.y < 0 || pos.y >= self.height {
+            return None;
+        }
+        self.data.get((pos.x + pos.y * self.width) as usize)
+    }
+
     pub fn get_mut(&mut self, x: i32, y: i32) -> &mut T {
         &mut self[(x, y)]
     }

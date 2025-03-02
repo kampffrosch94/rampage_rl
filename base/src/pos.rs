@@ -30,6 +30,12 @@ impl Pos {
     }
 }
 
+impl From<(i32, i32)> for Pos {
+    fn from(value: (i32, i32)) -> Self {
+        Self { x: value.0, y: value.1 }
+    }
+}
+
 impl Sub<Pos> for Pos {
     type Output = IVec;
 
@@ -65,5 +71,11 @@ impl Sub for FPos {
 impl FVec {
     pub fn length(&self) -> f32 {
         (self.x.powi(2) + self.y.powi(2)).sqrt()
+    }
+}
+
+impl From<(f32, f32)> for FPos {
+    fn from(value: (f32, f32)) -> Self {
+        Self { x: value.0, y: value.1 }
     }
 }
