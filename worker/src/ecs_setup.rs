@@ -1,11 +1,10 @@
 #![allow(unused_variables)]
 #![allow(unused_mut)]
 #![allow(unused)]
-use std::collections::HashMap;
-use froql::world::World;
 use base::Circle;
 use base::Rect;
-use crate::persistent::Inside;
+use froql::world::World;
+use std::collections::HashMap;
 
 use nanoserde::{DeJson, SerJson};
 
@@ -146,7 +145,4 @@ macro_rules! ecs_types {
     }
 }
 
-ecs_types!(
-    Components(Circle, Rect),
-    Relations(Inside)
-);
+ecs_types!(Components(Circle, Rect), Relations());

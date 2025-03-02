@@ -17,4 +17,4 @@ web-build:
 
 web-deploy:
     @just web-build
-    @just -f ~/data/Programming/static/roguelike_template_test/justfile deploy
+    @just -f ~/data/Programming/static/7drl_2025_web_publish/justfile deploy
