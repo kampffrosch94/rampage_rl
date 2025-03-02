@@ -1,9 +1,7 @@
 use base::{Circle, Rect};
 use froql::{query, world::World};
 
-
-
-
+use crate::ecs_setup::{re_register_components, register_components};
 
 /// not dropped across reloads
 pub struct PersistentState {
@@ -16,9 +14,7 @@ impl PersistentState {
     pub fn new() -> Self {
         let mut rand = SimpleRand::new(12345);
         let mut world = World::new();
-        world.register_component::<Circle>();
-        world.register_component::<Rect>();
-        world.register_relation::<Inside>();
+        register_components(&mut world);
 
         let screen_w = 2300 / 2;
         let screen_h = 1240;
@@ -54,11 +50,7 @@ impl PersistentState {
     }
 
     pub fn re_register(&mut self) {
-        unsafe {
-            self.world.re_register_component::<Circle>();
-            self.world.re_register_component::<Rect>();
-            self.world.re_register_relation::<Inside>();
-        }
+        re_register_components(&mut self.world);
     }
 }
 

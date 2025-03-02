@@ -30,12 +30,12 @@ pub fn update_inner(
     c.draw_texture("test", 20., 360., 9999);
 
     for (rect,) in query!(world, Rect) {
-        // let color = Color::rgb(0.0, 0.5, 0.0);
-        // c.draw_rect_lines(*rect, 2., color, 0);
+        let color = Color::rgb(0.0, 0.5, 0.0);
+        c.draw_rect_lines(*rect, 2., color, 2);
     }
 
     for (circle,) in query!(world, Circle, Inside(this, _)) {
-        // c.draw_circle(*circle, Color::YELLOW, 2);
+        c.draw_circle(*circle, Color::YELLOW, -0);
     }
 
     for (circle,) in query!(world, Circle, !Inside(this, _)) {

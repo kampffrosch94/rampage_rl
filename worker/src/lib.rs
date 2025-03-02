@@ -4,12 +4,12 @@ use base::{ContextTrait, PersistWrapper};
 pub use fleeting::FleetingState;
 pub use game::update_inner;
 pub use persistent::PersistentState;
+mod ecs_setup;
 mod fleeting;
 mod game;
 mod genarena;
 mod persistent;
 mod util;
-mod saveload;
 
 pub const GRIDSIZE: f32 = 16.;
 
