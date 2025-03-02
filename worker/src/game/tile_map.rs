@@ -1,6 +1,6 @@
 use base::{grids::Grid, ContextTrait, Pos};
 
-use super::tiles::{self, DrawTile, Environment, LogicTile, TILE_DIM, TILE_SCALE};
+use super::tiles::{Environment, LogicTile, TILE_DIM, TILE_SCALE};
 use crate::game::tiles::generate_draw_tile;
 
 pub struct TileMap {
@@ -40,9 +40,7 @@ impl TileMap {
         }
     }
 
-
     pub fn is_blocked(&self, pos: Pos) -> bool {
-        self.tiles.get_opt(pos).map(|tile| *tile == LogicTile::Wall)
-            .unwrap_or(false)
+        self.tiles.get_opt(pos).map(|tile| *tile == LogicTile::Wall).unwrap_or(false)
     }
 }

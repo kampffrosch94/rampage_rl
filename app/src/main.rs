@@ -56,6 +56,11 @@ async fn main() {
         .unwrap();
 
     ctx.textures
+        .load_texture(format!("{prefix}/assets/32rogues/rogues.png"), "rogues", false)
+        .await
+        .unwrap();
+
+    ctx.textures
         .load_texture(format!("{prefix}/assets/pixeltest.png"), "test", false)
         .await
         .unwrap();

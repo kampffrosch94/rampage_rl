@@ -1,6 +1,6 @@
-use base::{text::TextFamily, Color, ContextTrait, FPos, Rect, TextProperty};
+use base::{text::TextFamily, Color, ContextTrait, FPos, TextProperty};
 use tile_map::TileMap;
-use tiles::DrawTile;
+mod creature;
 mod tile_map;
 mod tiles;
 
@@ -22,6 +22,7 @@ pub fn update_inner(
     let world = &mut s.world;
 
     c.draw_texture("tiles", -200., -950., 5);
+    c.draw_texture("rogues", -600., -950., 5);
 
     let r = c.set_text(
         Label::ExampleText as _,
