@@ -3,7 +3,7 @@ use base::{ContextTrait, Rect};
 use nanoserde::{DeJson, SerJson};
 
 pub const TILE_DIM: f32 = 32.;
-const TILE_SCALE: f32 = 2.0;
+pub const TILE_SCALE: f32 = 2.0;
 
 /// A graphical tile from the tileset.png asset in 32rogues
 #[derive(Debug, Clone, Copy, SerJson, DeJson)]
@@ -29,7 +29,7 @@ impl DrawTile {
     }
 }
 
-#[derive(Debug, Clone, Copy, SerJson, DeJson)]
+#[derive(Debug, Clone, Copy, SerJson, DeJson, PartialEq)]
 pub enum LogicTile {
     Wall,
     Floor,

@@ -1,4 +1,5 @@
 use base::{text::TextFamily, Color, ContextTrait, FPos, Rect, TextProperty};
+use tile_map::TileMap;
 use tiles::DrawTile;
 mod tile_map;
 mod tiles;
@@ -45,15 +46,10 @@ b) Walk walk walk!"#,
             ),
         ],
     );
-
-    for x in (0..10).map(|it| it as f32 * 64.) {
-        let tile = DrawTile::SkullWallTop;
-        tile.draw(c, x, 500.);
-
-        let tile = DrawTile::SkullWallBot;
-        tile.draw(c, x, 564.);
-    }
-
-    let pos = FPos::new(30., 30.);
+    let pos = FPos::new(400., -530.);
     c.draw_text(Label::ExampleText as _, pos.x, pos.y, 30);
+
+    let mut tm = TileMap::new(12, 12);
+    tm.enwall();
+    tm.draw(c, 0., 0.);
 }
