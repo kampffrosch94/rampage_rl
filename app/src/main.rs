@@ -1,9 +1,11 @@
+use fps_counter::FPSCounter;
 #[cfg(not(feature = "staticlink"))]
 use hotreload::WorkerReloader;
 use macroquad::prelude::*;
 mod camera;
 mod context;
 mod draw;
+mod fps_counter;
 mod text;
 
 #[cfg(all(feature = "staticlink", feature = "hotreload"))]
@@ -65,6 +67,8 @@ async fn main() {
         .await
         .unwrap();
 
+    let mut fps_counter = FPSCounter::new();
+
     loop {
         clear_background(BLACK);
 
@@ -98,8 +102,8 @@ async fn main() {
 
         ctx.process().await;
 
-        let fps = get_fps();
-        let fps = if fps > 55 && fps < 65 { 60 } else { fps };
+        fps_counter.update();
+        let fps = fps_counter.get_fps();
         let dpi = screen_dpi_scale();
 
         let w = screen_width();

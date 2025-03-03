@@ -117,7 +117,7 @@ pub fn create_world() -> World {
     let _player = world
         .create_mut()
         .add(Player {})
-        .add(DrawPos(FPos::new(0., 50.)))
+        .add(DrawPos(FPos::new(0., 0.)))
         .add(Actor { pos: Pos::new(3, 3), sprite: CreatureSprite::Dwarf });
 
     world
