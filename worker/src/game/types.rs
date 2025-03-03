@@ -17,6 +17,7 @@ use crate::ecs_setup::{
 };
 
 use super::creature::CreatureSprite;
+use super::tile_map::TileMap;
 
 /// Marker for player character
 #[derive(Debug, DeJson, SerJson)]
@@ -32,6 +33,14 @@ pub struct Actor {
 pub struct DrawPos(pub FPos);
 
 ecs_types!(
-    Components(Circle, Rect, Pos[persist], Player[persist], Actor[persist], DrawPos[persist]),
+    Components(
+        Circle,
+        Rect,
+        Pos[persist],
+        Player[persist],
+        Actor[persist],
+        DrawPos[persist],
+        TileMap[persist]
+    ),
     Relations()
 );

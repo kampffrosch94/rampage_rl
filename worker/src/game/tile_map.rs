@@ -1,8 +1,10 @@
 use base::{grids::Grid, ContextTrait, Pos};
+use nanoserde::{DeJson, SerJson};
 
 use super::tiles::{Environment, LogicTile, TILE_DIM, TILE_SCALE};
 use crate::game::tiles::generate_draw_tile;
 
+#[derive(Debug, DeJson, SerJson)]
 pub struct TileMap {
     tiles: Grid<LogicTile>,
 }

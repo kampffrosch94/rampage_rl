@@ -65,9 +65,6 @@ b) Walk walk walk!"#,
     );
     c.draw_text(Label::ExampleText as _, 400., -530., 30);
 
-    let mut tm = TileMap::new(12, 12);
-    tm.enwall();
-    tm.draw(c, 0., 0.);
 
     pc_inputs(c, world, f);
     update_systems(c, world, f);
@@ -88,7 +85,7 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState)
     for (mut player,) in query!(world, _ Player, mut Actor) {
         for (input, dir) in MOVEMENTS {
             if c.is_pressed(input) {
-                player.pos += dir;
+                let new_pos = player.pos + dir;
             }
         }
     }
@@ -108,6 +105,8 @@ pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
         let (x, y) = draw_pos.0.into();
         actor.sprite.draw(c, x, y);
     }
+
+    // let tm = world.singleton().get::<TileMap>();
 }
 
 pub fn create_world() -> World {
@@ -120,5 +119,12 @@ pub fn create_world() -> World {
         .add(DrawPos(FPos::new(0., 0.)))
         .add(Actor { pos: Pos::new(3, 3), sprite: CreatureSprite::Dwarf });
 
+
+    let mut tm = TileMap::new(12, 12);
+    tm.enwall();
+    // tm.draw(c, 0., 0.);
+    world.singleton().add(tm);
+
+    world.process();
     world
 }

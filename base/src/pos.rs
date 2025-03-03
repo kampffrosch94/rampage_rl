@@ -1,4 +1,4 @@
-use std::ops::{AddAssign, Mul, Sub};
+use std::ops::{Add, AddAssign, Mul, Sub};
 
 use nanoserde::{DeJson, SerJson};
 
@@ -50,6 +50,14 @@ impl AddAssign<(i32, i32)> for Pos {
     fn add_assign(&mut self, rhs: (i32, i32)) {
         self.x += rhs.0;
         self.y += rhs.1;
+    }
+}
+
+impl Add<(i32, i32)> for Pos {
+    type Output = Pos;
+
+    fn add(self, rhs: (i32, i32)) -> Self::Output {
+        Pos { x: self.x + rhs.0, y: self.y + rhs.1 }
     }
 }
 

@@ -24,6 +24,7 @@ impl PersistentState {
         std::mem::forget(new_world);
     }
 
+    // TODO make noop when not hotreloading
     pub fn re_register(&mut self) {
         re_register_components(&mut self.world);
     }

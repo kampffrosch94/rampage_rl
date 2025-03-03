@@ -2,9 +2,11 @@
 #![allow(dead_code)]
 use std::ops::{Add, Index, IndexMut, Mul};
 
+use nanoserde::{DeJson, SerJson};
+
 use crate::Pos;
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, DeJson, SerJson)]
 pub struct Grid<T> {
     pub data: Vec<T>,
     pub width: i32,
