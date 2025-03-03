@@ -12,7 +12,7 @@ mod util;
 
 pub const GRIDSIZE: f32 = 16.;
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn permanent_state() -> PersistWrapper {
     let state = PersistentState::new();
     let size = size_of_val(&state);
@@ -22,7 +22,7 @@ pub extern "C" fn permanent_state() -> PersistWrapper {
     PersistWrapper { ptr, size, align }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn fleeting_state_create() -> PersistWrapper {
     let state = FleetingState::new();
     let size = size_of_val(&state);
@@ -32,7 +32,7 @@ pub extern "C" fn fleeting_state_create() -> PersistWrapper {
     PersistWrapper { ptr, size, align }
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub extern "C" fn fleeting_state_dispose(pers: &mut PersistWrapper, fleet: PersistWrapper) {
     let ptr = fleet.ptr as *mut FleetingState;
     // put state into a box which gets dropped at the end of this method
@@ -40,7 +40,7 @@ pub extern "C" fn fleeting_state_dispose(pers: &mut PersistWrapper, fleet: Persi
     boxed.co.run_blocking(pers.ref_mut());
 }
 
-#[no_mangle]
+#[unsafe(no_mangle)]
 #[allow(improper_ctypes_definitions)]
 pub extern "C" fn update(
     c: &mut dyn ContextTrait,

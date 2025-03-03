@@ -1,4 +1,4 @@
-use base::{grids::Grid, ContextTrait, Pos};
+use base::{ContextTrait, Pos, grids::Grid};
 use nanoserde::{DeJson, SerJson};
 
 use super::tiles::{Environment, LogicTile, TILE_DIM, TILE_SCALE};

@@ -24,7 +24,7 @@ mod util;
 /// see this post for details:
 /// https://fasterthanli.me/articles/so-you-want-to-live-reload-rust
 #[cfg(not(feature = "staticlink"))]
-#[no_mangle]
+#[unsafe(no_mangle)]
 pub unsafe extern "C" fn __cxa_thread_atexit_impl() {}
 
 fn window_conf() -> Conf {

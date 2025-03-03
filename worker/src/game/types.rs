@@ -8,8 +8,8 @@ use nanoserde::{DeJson, SerJson};
 use crate::ecs_setup::SerializedState;
 use froql::entity_store::EntityId;
 use froql::query_helper::trivial_query_one_component;
-use std::any::type_name;
 use std::any::TypeId;
+use std::any::type_name;
 use std::cell::RefCell;
 
 use crate::ecs_setup::{

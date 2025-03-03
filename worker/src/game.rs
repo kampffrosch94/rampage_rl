@@ -1,4 +1,4 @@
-use base::{text::TextFamily, Color, ContextTrait, FPos, Input, Pos, TextProperty};
+use base::{Color, ContextTrait, FPos, Input, Pos, TextProperty, text::TextFamily};
 use creature::CreatureSprite;
 use froql::{query, world::World};
 use tile_map::TileMap;
@@ -65,7 +65,6 @@ b) Walk walk walk!"#,
     );
     c.draw_text(Label::ExampleText as _, 400., -530., 30);
 
-
     pc_inputs(c, world, f);
     update_systems(c, world, f);
     draw_systems(c, world);
@@ -83,9 +82,13 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState)
         (Input::MoveSW, (-1, 1)),
     ];
     for (mut player,) in query!(world, _ Player, mut Actor) {
+        let tm = world.singleton().get::<TileMap>();
         for (input, dir) in MOVEMENTS {
             if c.is_pressed(input) {
                 let new_pos = player.pos + dir;
+                if !tm.is_blocked(new_pos) {
+                    player.pos = new_pos;
+                }
             }
         }
     }
@@ -106,7 +109,8 @@ pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
         actor.sprite.draw(c, x, y);
     }
 
-    // let tm = world.singleton().get::<TileMap>();
+    let tm = world.singleton().get::<TileMap>();
+    tm.draw(c, 0., 0.);
 }
 
 pub fn create_world() -> World {
@@ -118,7 +122,6 @@ pub fn create_world() -> World {
         .add(Player {})
         .add(DrawPos(FPos::new(0., 0.)))
         .add(Actor { pos: Pos::new(3, 3), sprite: CreatureSprite::Dwarf });
-
 
     let mut tm = TileMap::new(12, 12);
     tm.enwall();
