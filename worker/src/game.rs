@@ -1,11 +1,13 @@
 use base::{Color, ContextTrait, FPos, Input, Pos, TextProperty, text::TextFamily};
+use cosync::CosyncInput;
 use creature::CreatureSprite;
-use froql::{query, world::World};
+use froql::{entity_store::Entity, query, world::World};
 use tile_map::TileMap;
 mod creature;
 mod tile_map;
 mod tiles;
 pub mod types;
+use tiles::pos_to_drawpos;
 use types::*;
 
 use crate::{fleeting::FleetingState, persistent::PersistentState};
@@ -36,6 +38,15 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     }
 
     let world = &mut s.world;
+
+    if !world.singleton().has::<DeltaTime>() {
+        world.singleton().add(DeltaTime(c.delta()));
+        world.process();
+    } else {
+        world.singleton().get_mut::<DeltaTime>().0 = c.delta();
+    }
+
+    f.co.run_until_stall(world);
 
     c.draw_texture("tiles", -200., -950., 5);
     c.draw_texture("rogues", -600., -950., 5);
@@ -71,6 +82,9 @@ b) Walk walk walk!"#,
 }
 
 fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
+    if !f.co.is_empty() {
+        return;
+    }
     const MOVEMENTS: [(Input, (i32, i32)); 8] = [
         (Input::MoveW, (-1, 0)),
         (Input::MoveE, (1, 0)),
@@ -81,12 +95,13 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState)
         (Input::MoveSE, (1, 1)),
         (Input::MoveSW, (-1, 1)),
     ];
-    for (mut player,) in query!(world, _ Player, mut Actor) {
+    for (e, mut player) in query!(world, &this, _ Player, mut Actor) {
         let tm = world.singleton().get::<TileMap>();
         for (input, dir) in MOVEMENTS {
             if c.is_pressed(input) {
                 let new_pos = player.pos + dir;
                 if !tm.is_blocked(new_pos) {
+                    spawn_move_animation(f, e.id, player.pos, new_pos);
                     player.pos = new_pos;
                 }
             }
@@ -94,10 +109,34 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState)
     }
 }
 
+fn spawn_move_animation(f: &mut FleetingState, e: Entity, start: Pos, end: Pos) {
+    let start = pos_to_drawpos(start);
+    let end = pos_to_drawpos(end);
+    let animation_time = 0.08;
+    let mut elapsed = 0.0;
+    f.co.queue(move |mut input: CosyncInput<World>| async move {
+        loop {
+            {
+                let world = input.get();
+                let dt = world.singleton().get::<DeltaTime>().0;
+                elapsed += dt;
+                let mut draw_pos = world.get_component_mut::<DrawPos>(e);
+                draw_pos.0 = start.lerp(end, elapsed / animation_time);
+                if elapsed >= animation_time {
+                    break;
+                }
+            }
+            cosync::sleep_ticks(1).await;
+        }
+        let world = input.get();
+        world.get_component_mut::<DrawPos>(e).0 = end;
+    });
+}
+
 fn update_systems(_c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
     if f.co.is_empty() {
         for (actor, mut draw_pos) in query!(world, Actor, mut DrawPos) {
-            draw_pos.0 = actor.pos * 64.0;
+            draw_pos.0 = pos_to_drawpos(actor.pos);
         }
     }
 }

@@ -1,3 +1,4 @@
+#![allow(unused)]
 use base::Circle;
 use base::FPos;
 use base::Pos;
@@ -32,10 +33,15 @@ pub struct Actor {
 #[derive(Debug, DeJson, SerJson)]
 pub struct DrawPos(pub FPos);
 
+/// How much time passed since the last frame in seconds
+/// Set early in the game loop.
+pub struct DeltaTime(pub f32);
+
 ecs_types!(
     Components(
         Circle,
         Rect,
+        DeltaTime,
         Pos[persist],
         Player[persist],
         Actor[persist],

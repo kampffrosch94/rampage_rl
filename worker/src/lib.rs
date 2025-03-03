@@ -37,7 +37,7 @@ pub extern "C" fn fleeting_state_dispose(pers: &mut PersistWrapper, fleet: Persi
     let ptr = fleet.ptr as *mut FleetingState;
     // put state into a box which gets dropped at the end of this method
     let mut boxed: Box<FleetingState> = unsafe { Box::from_raw(ptr) };
-    boxed.co.run_blocking(pers.ref_mut());
+    boxed.co.run_blocking(&mut pers.ref_mut::<PersistentState>().world);
 }
 
 #[unsafe(no_mangle)]

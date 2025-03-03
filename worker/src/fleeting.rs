@@ -1,11 +1,9 @@
-use cosync::CosyncInput;
-
-use crate::persistent::PersistentState;
+use froql::world::World;
 
 /// dropped and recreated on reload
 /// you can change this definition without breaking hotreloading
 pub struct FleetingState {
-    pub co: cosync::Cosync<PersistentState>,
+    pub co: cosync::Cosync<World>,
 }
 
 impl FleetingState {

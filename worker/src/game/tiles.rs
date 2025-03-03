@@ -1,5 +1,5 @@
 use crate::game::Z_TILES;
-use base::{ContextTrait, Rect};
+use base::{ContextTrait, FPos, Pos, Rect};
 use nanoserde::{DeJson, SerJson};
 
 pub const TILE_DIM: f32 = 32.;
@@ -52,4 +52,8 @@ pub fn generate_draw_tile(lt: LogicTile, env: Environment, below: LogicTile) -> 
             LogicTile::Empty => DrawTile::Empty,
         },
     }
+}
+
+pub fn pos_to_drawpos(pos: Pos) -> FPos {
+    pos * (TILE_DIM * TILE_SCALE)
 }
