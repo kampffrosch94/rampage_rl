@@ -69,8 +69,29 @@ b) Walk walk walk!"#,
     tm.enwall();
     tm.draw(c, 0., 0.);
 
+    pc_inputs(c, world, f);
     update_systems(c, world, f);
     draw_systems(c, world);
+}
+
+fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
+    const MOVEMENTS: [(Input, (i32, i32)); 8] = [
+        (Input::MoveW, (-1, 0)),
+        (Input::MoveE, (1, 0)),
+        (Input::MoveN, (0, -1)),
+        (Input::MoveNE, (1, -1)),
+        (Input::MoveNW, (-1, -1)),
+        (Input::MoveS, (0, 1)),
+        (Input::MoveSE, (1, 1)),
+        (Input::MoveSW, (-1, 1)),
+    ];
+    for (mut player,) in query!(world, _ Player, mut Actor) {
+        for (input, dir) in MOVEMENTS {
+            if c.is_pressed(input) {
+                player.pos += dir;
+            }
+        }
+    }
 }
 
 fn update_systems(_c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {

@@ -17,6 +17,7 @@ impl PersistentState {
     }
 
     pub fn restart(&mut self) {
+        // self.world = create_world();
         let mut new_world = create_world();
         std::mem::swap(&mut new_world, &mut self.world);
         std::mem::forget(new_world);
@@ -32,7 +33,10 @@ impl PersistentState {
 
     pub fn load(&mut self) {
         if let Some(save) = &self.save {
-            self.world = load_world(save);
+            // self.world = load_world(save);
+            let mut new_world = create_world();
+            std::mem::swap(&mut new_world, &mut self.world);
+            std::mem::forget(new_world);
         }
     }
 }

@@ -1,4 +1,4 @@
-use std::ops::{Mul, Sub};
+use std::ops::{AddAssign, Mul, Sub};
 
 use nanoserde::{DeJson, SerJson};
 
@@ -43,6 +43,13 @@ impl Sub<Pos> for Pos {
 
     fn sub(self, rhs: Pos) -> Self::Output {
         IVec { x: self.x - rhs.x, y: self.y - rhs.y }
+    }
+}
+
+impl AddAssign<(i32, i32)> for Pos {
+    fn add_assign(&mut self, rhs: (i32, i32)) {
+        self.x += rhs.0;
+        self.y += rhs.1;
     }
 }
 
