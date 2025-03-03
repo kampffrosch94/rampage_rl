@@ -7,7 +7,6 @@ pub use persistent::PersistentState;
 mod ecs_setup;
 mod fleeting;
 mod game;
-mod genarena;
 mod persistent;
 mod util;
 
