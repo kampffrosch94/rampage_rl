@@ -152,11 +152,23 @@ impl ContextTrait for Context {
             .unwrap_or(base::Rect { x: 0., y: 0., w: 0., h: 0. })
     }
 
-    fn is_pressed(&self, button: Button) -> bool {
-        match button {
-            Button::MouseLeft => is_mouse_button_pressed(MouseButton::Left),
-            Button::MouseMiddle => is_mouse_button_pressed(MouseButton::Middle),
-            Button::MouseRight => is_mouse_button_pressed(MouseButton::Right),
+    fn is_pressed(&self, input: Input) -> bool {
+        match input {
+            Input::MouseLeft => is_mouse_button_pressed(MouseButton::Left),
+            Input::MouseMiddle => is_mouse_button_pressed(MouseButton::Middle),
+            Input::MouseRight => is_mouse_button_pressed(MouseButton::Right),
+            Input::RestartGame => is_key_pressed(KeyCode::F1),
+            Input::Save => is_key_pressed(KeyCode::F5),
+            Input::Load => is_key_pressed(KeyCode::F9),
+            Input::MoveSW => is_key_pressed(KeyCode::Kp1),
+            Input::MoveS => is_key_pressed(KeyCode::Kp2),
+            Input::MoveSE => is_key_pressed(KeyCode::Kp3),
+            Input::MoveW => is_key_pressed(KeyCode::Kp4),
+            Input::MoveSkip => is_key_pressed(KeyCode::Kp5),
+            Input::MoveE => is_key_pressed(KeyCode::Kp6),
+            Input::MoveNW => is_key_pressed(KeyCode::Kp7),
+            Input::MoveN => is_key_pressed(KeyCode::Kp8),
+            Input::MoveNE => is_key_pressed(KeyCode::Kp9),
         }
     }
 

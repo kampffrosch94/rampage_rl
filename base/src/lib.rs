@@ -8,7 +8,7 @@ pub mod rect;
 pub mod text;
 
 pub use circle::Circle;
-pub use input::Button;
+pub use input::Input;
 pub use pos::{FPos, FVec, Pos};
 pub use rect::Rect;
 pub use text::TextProperty;
@@ -39,7 +39,7 @@ pub trait ContextTrait {
 
     fn texture_dimensions(&mut self, name: &str) -> Rect;
 
-    fn is_pressed(&self, button: Button) -> bool;
+    fn is_pressed(&self, input: Input) -> bool;
 
     fn mouse_screen(&self) -> FPos;
 

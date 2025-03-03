@@ -1,6 +1,8 @@
-use std::ops::Sub;
+use std::ops::{Mul, Sub};
 
-#[derive(Debug, Clone, Copy, PartialEq, Hash, Eq)]
+use nanoserde::{DeJson, SerJson};
+
+#[derive(Debug, Clone, Copy, PartialEq, Hash, Eq, SerJson, DeJson)]
 pub struct Pos {
     pub x: i32,
     pub y: i32,
@@ -12,7 +14,7 @@ pub struct IVec {
     pub y: i32,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, SerJson, DeJson)]
 pub struct FPos {
     pub x: f32,
     pub y: f32,
@@ -41,6 +43,14 @@ impl Sub<Pos> for Pos {
 
     fn sub(self, rhs: Pos) -> Self::Output {
         IVec { x: self.x - rhs.x, y: self.y - rhs.y }
+    }
+}
+
+impl Mul<f32> for Pos {
+    type Output = FPos;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        FPos { x: self.x as f32 * rhs, y: self.y as f32 * rhs }
     }
 }
 

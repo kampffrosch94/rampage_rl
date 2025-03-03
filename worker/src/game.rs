@@ -1,9 +1,12 @@
-use base::{text::TextFamily, Color, ContextTrait, TextProperty};
+use base::{text::TextFamily, Color, ContextTrait, Input, Pos, TextProperty};
 use creature::CreatureSprite;
+use froql::{query, world::World};
 use tile_map::TileMap;
 mod creature;
 mod tile_map;
 mod tiles;
+pub mod types;
+use types::*;
 
 use crate::{fleeting::FleetingState, persistent::PersistentState};
 
@@ -14,17 +17,27 @@ enum Label {
 
 pub const Z_TILES: i32 = 0;
 
-pub fn update_inner(
-    c: &mut dyn ContextTrait,
-    s: &mut PersistentState,
-    _f: &mut FleetingState,
-) {
+pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, _f: &mut FleetingState) {
+    if c.is_pressed(Input::RestartGame) {
+        println!("Restarting game.");
+        s.world = create_world();
+    }
+
     s.re_register();
-    let _world = &mut s.world;
+
+    if c.is_pressed(Input::Save) {
+        println!("Saving game.");
+        s.save();
+    }
+    if c.is_pressed(Input::Load) {
+        println!("Loading game.");
+        s.load();
+    }
+
+    let world = &mut s.world;
 
     c.draw_texture("tiles", -200., -950., 5);
     c.draw_texture("rogues", -600., -950., 5);
-    c.draw_texture("test", -20., 0., 8);
 
     c.set_text(
         Label::ExampleText as _,
@@ -55,5 +68,26 @@ b) Walk walk walk!"#,
     tm.enwall();
     tm.draw(c, 0., 0.);
 
-    CreatureSprite::Dwarf.draw(c, 64. * 4., 64. * 2.);
+    draw_systems(c, world);
+}
+
+pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
+    // draw actors
+    // TODO use draw pos as component
+    for (actor,) in query!(world, Actor) {
+        let draw_pos = actor.pos * 64.0;
+        actor.sprite.draw(c, draw_pos.x, draw_pos.y);
+    }
+}
+
+pub fn create_world() -> World {
+    let mut world = World::new();
+    register_components(&mut world);
+
+    let _player = world
+        .create_mut()
+        .add(Player {})
+        .add(Actor { pos: Pos::new(3, 3), sprite: CreatureSprite::Dwarf });
+
+    world
 }

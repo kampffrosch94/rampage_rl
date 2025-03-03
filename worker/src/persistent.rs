@@ -1,25 +1,33 @@
 use froql::world::World;
 
-use crate::ecs_setup::{re_register_components, register_components};
+use crate::{
+    game::create_world,
+    game::types::{load_world, re_register_components, save_world},
+};
 
 /// not dropped across reloads
 pub struct PersistentState {
     pub world: World,
+    save: Option<String>,
 }
 
 impl PersistentState {
     pub fn new() -> Self {
-        let mut world = World::new();
-        register_components(&mut world);
-
-        // executes deferred operations
-        world.process();
-
-        Self { world }
+        Self { world: create_world(), save: None }
     }
 
     pub fn re_register(&mut self) {
         re_register_components(&mut self.world);
+    }
+
+    pub fn save(&mut self) {
+        self.save = Some(save_world(&self.world));
+    }
+
+    pub fn load(&mut self) {
+        if let Some(save) = &self.save {
+            self.world = load_world(save);
+        }
     }
 }
 

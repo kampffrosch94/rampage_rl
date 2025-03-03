@@ -1,6 +1,18 @@
 #[derive(Debug, Clone, Copy)]
-pub enum Button {
+pub enum Input {
     MouseLeft,
     MouseMiddle,
     MouseRight,
+    RestartGame,
+    Save,
+    Load,
+    MoveN,
+    MoveNW,
+    MoveNE,
+    MoveE,
+    MoveW,
+    MoveS,
+    MoveSW,
+    MoveSE,
+    MoveSkip,
 }

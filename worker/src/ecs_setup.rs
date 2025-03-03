@@ -1,19 +1,12 @@
-#![allow(unused_variables)]
-#![allow(unused_mut)]
-#![allow(unused)]
-use base::Circle;
-use base::Rect;
-use froql::world::World;
+use nanoserde::{DeJson, SerJson};
 use std::collections::HashMap;
 
-use nanoserde::{DeJson, SerJson};
-
 #[derive(Default, Debug, DeJson, SerJson)]
-struct SerializedState {
+pub struct SerializedState {
     // TypeName, Vec<(EntityId, ComponentPayload)>
-    components: HashMap<String, Vec<(u32, String)>>,
+    pub components: HashMap<String, Vec<(u32, String)>>,
     // TypeName, Vec<(Origin, Target)>
-    relations: HashMap<String, Vec<(u32, u32)>>,
+    pub relations: HashMap<String, Vec<(u32, u32)>>,
 }
 
 macro_rules! generate_register {
@@ -111,6 +104,7 @@ macro_rules! generate_load {
     (@comp ($world:expr) $var:ident $payloads:ident $ty:tt) => {};
     (Components($($components:tt $([$persist_comp:tt])?),*),
      Relations($($relations:tt $(($flags:expr))? $([$persist_rel:tt])?),*)) => {
+        #[allow(unused)]
         pub fn load_world(s: &str) -> World {
             let mut world = World::new();
             register_components(&mut world);
@@ -145,4 +139,8 @@ macro_rules! ecs_types {
     }
 }
 
-ecs_types!(Components(Circle, Rect), Relations());
+pub(crate) use ecs_types;
+pub(crate) use generate_load;
+pub(crate) use generate_re_register;
+pub(crate) use generate_register;
+pub(crate) use generate_save;
