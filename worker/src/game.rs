@@ -1,4 +1,4 @@
-use base::{text::TextFamily, Color, ContextTrait, Input, Pos, TextProperty};
+use base::{text::TextFamily, Color, ContextTrait, FPos, Input, Pos, TextProperty};
 use creature::CreatureSprite;
 use froql::{query, world::World};
 use tile_map::TileMap;
@@ -17,10 +17,11 @@ enum Label {
 
 pub const Z_TILES: i32 = 0;
 
-pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, _f: &mut FleetingState) {
+pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut FleetingState) {
     if c.is_pressed(Input::RestartGame) {
         println!("Restarting game.");
-        s.world = create_world();
+        s.restart();
+        println!("Game restarted.");
     }
 
     s.re_register();
@@ -68,15 +69,23 @@ b) Walk walk walk!"#,
     tm.enwall();
     tm.draw(c, 0., 0.);
 
+    update_systems(c, world, f);
     draw_systems(c, world);
+}
+
+fn update_systems(_c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
+    if f.co.is_empty() {
+        for (actor, mut draw_pos) in query!(world, Actor, mut DrawPos) {
+            draw_pos.0 = actor.pos * 64.0;
+        }
+    }
 }
 
 pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
     // draw actors
-    // TODO use draw pos as component
-    for (actor,) in query!(world, Actor) {
-        let draw_pos = actor.pos * 64.0;
-        actor.sprite.draw(c, draw_pos.x, draw_pos.y);
+    for (actor, draw_pos) in query!(world, Actor, DrawPos) {
+        let (x, y) = draw_pos.0.into();
+        actor.sprite.draw(c, x, y);
     }
 }
 
@@ -87,6 +96,7 @@ pub fn create_world() -> World {
     let _player = world
         .create_mut()
         .add(Player {})
+        .add(DrawPos(FPos::new(0., 50.)))
         .add(Actor { pos: Pos::new(3, 3), sprite: CreatureSprite::Dwarf });
 
     world

@@ -1,4 +1,5 @@
 use base::Circle;
+use base::FPos;
 use base::Pos;
 use base::Rect;
 use froql::world::World;
@@ -27,7 +28,10 @@ pub struct Actor {
     pub sprite: CreatureSprite,
 }
 
+#[derive(Debug, DeJson, SerJson)]
+pub struct DrawPos(pub FPos);
+
 ecs_types!(
-    Components(Circle, Rect, Pos[persist], Player[persist], Actor[persist]),
+    Components(Circle, Rect, Pos[persist], Player[persist], Actor[persist], DrawPos[persist]),
     Relations()
 );

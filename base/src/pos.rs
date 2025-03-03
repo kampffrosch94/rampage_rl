@@ -78,6 +78,12 @@ impl Sub for FPos {
     }
 }
 
+impl Into<(f32, f32)> for FPos {
+    fn into(self) -> (f32, f32) {
+        (self.x, self.y)
+    }
+}
+
 impl FVec {
     pub fn length(&self) -> f32 {
         (self.x.powi(2) + self.y.powi(2)).sqrt()

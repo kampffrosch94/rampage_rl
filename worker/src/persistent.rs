@@ -16,6 +16,12 @@ impl PersistentState {
         Self { world: create_world(), save: None }
     }
 
+    pub fn restart(&mut self) {
+        let mut new_world = create_world();
+        std::mem::swap(&mut new_world, &mut self.world);
+        std::mem::forget(new_world);
+    }
+
     pub fn re_register(&mut self) {
         re_register_components(&mut self.world);
     }
