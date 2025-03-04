@@ -4,7 +4,7 @@ use base::{ContextTrait, Pos, grids::Grid};
 use froql::{entity_store::Entity, query, world::World};
 use nanoserde::{DeJson, SerJson};
 
-use super::tiles::{Environment, LogicTile, TILE_DIM, TILE_SCALE};
+use super::tiles::{Decor, Environment, LogicTile, TILE_DIM, TILE_SCALE};
 use crate::game::Actor;
 use crate::game::tiles::generate_draw_tile;
 
@@ -13,11 +13,16 @@ pub struct TileMap {
     tiles: Grid<LogicTile>,
     #[nserde(skip)]
     actors: HashMap<Pos, Entity>,
+    decor: Vec<(Pos, Decor)>,
 }
 
 impl TileMap {
     pub fn new(w: i32, h: i32) -> Self {
-        Self { tiles: Grid::new(w, h, LogicTile::Floor), actors: HashMap::new() }
+        Self {
+            tiles: Grid::new(w, h, LogicTile::Floor),
+            actors: HashMap::new(),
+            decor: Vec::new(),
+        }
     }
 
     /// put a wall on the outside
@@ -46,6 +51,15 @@ impl TileMap {
             let y = y_base + pos.y as f32 * TILE_DIM * TILE_SCALE;
             draw_tile.draw(c, x, y);
         }
+        for (pos, decor) in &self.decor {
+            let x = x_base + pos.x as f32 * TILE_DIM * TILE_SCALE;
+            let y = y_base + pos.y as f32 * TILE_DIM * TILE_SCALE;
+            decor.draw(c, x, y);
+        }
+    }
+
+    pub fn add_decor(&mut self, pos: Pos, decor: Decor) {
+        self.decor.push((pos, decor));
     }
 
     pub fn is_blocked(&self, pos: Pos) -> bool {
@@ -59,5 +73,9 @@ impl TileMap {
         for (e, actor) in query!(world, &this, Actor) {
             tm.actors.insert(actor.pos, e.id);
         }
+    }
+
+    pub fn get_actor(&self, pos: Pos) -> Option<Entity> {
+        self.actors.get(&pos).copied()
     }
 }

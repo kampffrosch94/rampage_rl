@@ -7,6 +7,7 @@ use froql::world::World;
 use nanoserde::{DeJson, SerJson};
 
 use crate::ecs_setup::SerializedState;
+use crate::rand::RandomGenerator;
 use froql::entity_store::EntityId;
 use froql::query_helper::trivial_query_one_component;
 use std::any::TypeId;
@@ -46,7 +47,8 @@ ecs_types!(
         Player[persist],
         Actor[persist],
         DrawPos[persist],
-        TileMap[persist]
+        TileMap[persist],
+        RandomGenerator[persist]
     ),
     Relations()
 );

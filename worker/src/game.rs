@@ -7,10 +7,10 @@ mod creature;
 mod tile_map;
 mod tiles;
 pub mod types;
-use tiles::pos_to_drawpos;
+use tiles::{Decor, pos_to_drawpos};
 use types::*;
 
-use crate::{fleeting::FleetingState, persistent::PersistentState};
+use crate::{fleeting::FleetingState, persistent::PersistentState, rand::RandomGenerator};
 
 #[repr(C)]
 enum Label {
@@ -99,10 +99,54 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState)
                 if !tm.is_blocked(new_pos) {
                     spawn_move_animation(f, e.id, player.pos, new_pos);
                     player.pos = new_pos;
+                } else {
+                    if let Some(other) = tm.get_actor(new_pos) {
+                        spawn_bump_attack_animation(f, e.id, player.pos, new_pos);
+                    }
                 }
             }
         }
     }
+}
+
+fn spawn_bump_attack_animation(f: &mut FleetingState, e: Entity, p_start: Pos, p_end: Pos) {
+    let start = pos_to_drawpos(p_start);
+    let end = pos_to_drawpos(p_end);
+    let animation_time = 0.15;
+    let mut elapsed = 0.0;
+    const PART_FORWARD: f32 = 0.5;
+    f.co.queue(move |mut input: CosyncInput<World>| async move {
+        loop {
+            {
+                let world = input.get();
+                let dt = world.singleton().get::<DeltaTime>().0;
+                elapsed += dt;
+                let mut draw_pos = world.get_component_mut::<DrawPos>(e);
+                if elapsed < animation_time * PART_FORWARD {
+                    let lerpiness = (elapsed / animation_time) * 1.5;
+                    draw_pos.0 = start.lerp(end, lerpiness);
+                } else {
+                    // let lerpiness = (elapsed / animation_time) * 1.5;
+                    let lerpiness = elapsed / animation_time;
+                    draw_pos.0 = end.lerp(start, lerpiness);
+                    // TODO calculate and apply damage
+                    // TODO healthbar
+                    // TODO death
+                }
+                if elapsed >= animation_time * PART_FORWARD {
+                    break;
+                }
+            }
+            cosync::sleep_ticks(1).await;
+        }
+        let world = input.get();
+        world.get_component_mut::<DrawPos>(e).0 = start;
+        let mut tm = world.singleton().get_mut::<TileMap>();
+        let mut rand = world.singleton().get_mut::<RandomGenerator>();
+        let decor_pos = p_end + rand.random_direction();
+        let decor = rand.pick_random(&[Decor::BloodRed1, Decor::BloodRed2]);
+        tm.add_decor(decor_pos, decor);
+    });
 }
 
 fn spawn_move_animation(f: &mut FleetingState, e: Entity, start: Pos, end: Pos) {
@@ -167,11 +211,12 @@ pub fn create_world() -> World {
     let _goblin = world
         .create_mut()
         .add(DrawPos(FPos::new(0., 0.)))
-        .add(Actor { pos: Pos::new(2, 1), sprite: CreatureSprite::Goblin });
+        .add(Actor { pos: Pos::new(4, 4), sprite: CreatureSprite::Goblin });
 
     let mut tm = TileMap::new(12, 12);
     tm.enwall();
-    world.singleton().add(tm);
+    // TODO get properly random seed
+    world.singleton().add(tm).add(RandomGenerator::new(12345));
 
     world.process();
     world

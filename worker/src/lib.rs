@@ -8,6 +8,7 @@ mod ecs_setup;
 mod fleeting;
 mod game;
 mod persistent;
+mod rand;
 mod util;
 
 pub const GRIDSIZE: f32 = 16.;
