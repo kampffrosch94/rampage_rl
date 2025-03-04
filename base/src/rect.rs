@@ -64,6 +64,15 @@ impl Rect {
         Rect { x: self.x, y: self.y, w: self.w, h: self.h - amount }
     }
 
+    pub fn skip_all(&self, amount: f32) -> Self {
+        Rect {
+            x: self.x + amount,
+            y: self.y + amount,
+            w: self.w - 2. * amount,
+            h: self.h - 2. * amount,
+        }
+    }
+
     pub fn grow_all(&self, amount: f32) -> Self {
         Rect {
             x: self.x - amount,

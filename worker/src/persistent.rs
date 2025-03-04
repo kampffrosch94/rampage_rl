@@ -18,10 +18,7 @@ impl PersistentState {
 
     // TODO don't leak when not hotreloading
     pub fn restart(&mut self) {
-        // self.world = create_world();
-        let mut new_world = create_world();
-        std::mem::swap(&mut new_world, &mut self.world);
-        std::mem::forget(new_world);
+        self.world = create_world();
     }
 
     // TODO make noop when not hotreloading
@@ -36,10 +33,7 @@ impl PersistentState {
     // TODO don't leak when not hotreloading
     pub fn load(&mut self) {
         if let Some(save) = &self.save {
-            // self.world = load_world(save);
-            let mut new_world = load_world(save);
-            std::mem::swap(&mut new_world, &mut self.world);
-            std::mem::forget(new_world);
+            self.world = load_world(save);
         }
     }
 }

@@ -26,9 +26,16 @@ use super::tile_map::TileMap;
 pub struct Player {}
 
 #[derive(Debug, DeJson, SerJson)]
+pub struct HP {
+    pub max: i32,
+    pub current: i32,
+}
+
+#[derive(Debug, DeJson, SerJson)]
 pub struct Actor {
     pub pos: Pos,
     pub sprite: CreatureSprite,
+    pub hp: HP,
 }
 
 #[derive(Debug, DeJson, SerJson)]

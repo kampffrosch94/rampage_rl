@@ -5,7 +5,9 @@ use base::*;
 use macroquad::prelude::*;
 
 use crate::{
-    camera::CameraWrapper, draw::kf_draw_texture, text::Texter,
+    camera::{CameraWrapper, screen_camera},
+    draw::kf_draw_texture,
+    text::Texter,
     util::texture_store::TextureStore,
 };
 
@@ -203,6 +205,10 @@ impl ContextTrait for Context {
             .borrow_mut()
             .push(DrawCommand { z_level, command: Box::new(command) });
     }
+
+    fn screen_rect(&self) -> base::Rect {
+        base::Rect::new(0., 0., screen_width(), screen_height())
+    }
 }
 
 impl Context {
@@ -226,7 +232,13 @@ impl Context {
 
         let buffer = &mut self.draw_buffer.borrow_mut();
         buffer.sort_by_key(|it| it.z_level);
+        let mut camera_switched = false;
+        self.camera.set();
         for draw in buffer.drain(..) {
+            if !camera_switched && draw.z_level >= 1000 {
+                camera_switched = true;
+                set_camera(&screen_camera());
+            }
             (draw.command)(&mut self.inner);
         }
     }

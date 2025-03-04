@@ -1,4 +1,4 @@
-use base::{Color, ContextTrait, FPos, Input, Pos, TextProperty, text::TextFamily};
+use base::{Color, ContextTrait, FPos, Input, Pos, Rect, TextProperty, text::TextFamily};
 use cosync::CosyncInput;
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
@@ -7,7 +7,7 @@ mod creature;
 mod tile_map;
 mod tiles;
 pub mod types;
-use tiles::{Decor, pos_to_drawpos};
+use tiles::{Decor, TILE_SIZE, pos_to_drawpos};
 use types::*;
 
 use crate::{fleeting::FleetingState, persistent::PersistentState, rand::RandomGenerator};
@@ -15,9 +15,14 @@ use crate::{fleeting::FleetingState, persistent::PersistentState, rand::RandomGe
 #[repr(C)]
 enum Label {
     ExampleText,
+    UITest,
 }
 
 pub const Z_TILES: i32 = 0;
+pub const Z_HP_BAR: i32 = 9;
+pub const Z_SPRITE: i32 = 10;
+pub const Z_UI_BG: i32 = 1000;
+pub const Z_UI_TEXT: i32 = 1100;
 
 pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut FleetingState) {
     if c.is_pressed(Input::RestartGame) {
@@ -76,6 +81,13 @@ b) Walk walk walk!"#,
     );
     c.draw_text(Label::ExampleText as _, 400., -530., 30);
 
+    let ui_rect = c.screen_rect().take_right(300.);
+    let text_rect = ui_rect.skip_all(10.);
+    c.set_text(Label::UITest as _, text_rect.w, text_rect.h, &[("Test", TextProperty::new())]);
+    c.draw_text(Label::UITest as _, text_rect.x, text_rect.y, Z_UI_TEXT);
+    c.draw_rect(ui_rect, Color::BLACK, Z_UI_BG);
+    c.draw_rect_lines(ui_rect,  5.0, Color::GRAY,Z_UI_BG);
+
     update_systems(c, world, f);
     draw_systems(c, world);
 }
@@ -101,7 +113,7 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState)
                     player.pos = new_pos;
                 } else {
                     if let Some(other) = tm.get_actor(new_pos) {
-                        spawn_bump_attack_animation(f, e.id, player.pos, new_pos);
+                        spawn_bump_attack_animation(f, e.id, player.pos, new_pos, other, 1);
                     }
                 }
             }
@@ -109,7 +121,14 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState)
     }
 }
 
-fn spawn_bump_attack_animation(f: &mut FleetingState, e: Entity, p_start: Pos, p_end: Pos) {
+fn spawn_bump_attack_animation(
+    f: &mut FleetingState,
+    e: Entity,
+    p_start: Pos,
+    p_end: Pos,
+    target: Entity,
+    damage: i32,
+) {
     let start = pos_to_drawpos(p_start);
     let end = pos_to_drawpos(p_end);
     let animation_time = 0.15;
@@ -146,6 +165,7 @@ fn spawn_bump_attack_animation(f: &mut FleetingState, e: Entity, p_start: Pos, p
         let decor_pos = p_end + rand.random_direction();
         let decor = rand.pick_random(&[Decor::BloodRed1, Decor::BloodRed2]);
         tm.add_decor(decor_pos, decor);
+        world.get_component_mut::<Actor>(target).hp.current -= damage;
     });
 }
 
@@ -181,9 +201,14 @@ fn update_systems(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingS
     if f.co.is_empty() {
         TileMap::update_actors(world);
 
-        for (actor, mut draw_pos) in query!(world, Actor, mut DrawPos) {
+        for (e, actor, mut draw_pos) in query!(world, &this, Actor, mut DrawPos) {
             draw_pos.0 = pos_to_drawpos(actor.pos);
+            if actor.hp.current <= 0 {
+                e.destroy();
+            }
         }
+
+        world.process();
     }
 }
 
@@ -192,6 +217,19 @@ pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
     for (actor, draw_pos) in query!(world, Actor, DrawPos) {
         let (x, y) = draw_pos.0.into();
         actor.sprite.draw(c, x, y);
+
+        if actor.hp.current < actor.hp.max {
+            let hp_percent = actor.hp.current as f32 / actor.hp.max as f32;
+            let rect = Rect::new(x + TILE_SIZE * 0.1, y + TILE_SIZE, TILE_SIZE * 0.8, 5.);
+            c.draw_rect(rect, Color::RED, Z_HP_BAR);
+            let rect = Rect::new(
+                x + TILE_SIZE * 0.1,
+                y + TILE_SIZE,
+                TILE_SIZE * 0.8 * hp_percent,
+                5.,
+            );
+            c.draw_rect(rect, Color::GREEN, Z_HP_BAR);
+        }
     }
 
     let tm = world.singleton().get::<TileMap>();
@@ -202,16 +240,18 @@ pub fn create_world() -> World {
     let mut world = World::new();
     register_components(&mut world);
 
-    let _player = world
-        .create_mut()
-        .add(Player {})
-        .add(DrawPos(FPos::new(0., 0.)))
-        .add(Actor { pos: Pos::new(1, 1), sprite: CreatureSprite::Dwarf });
+    let _player =
+        world.create_mut().add(Player {}).add(DrawPos(FPos::new(0., 0.))).add(Actor {
+            pos: Pos::new(1, 1),
+            sprite: CreatureSprite::Dwarf,
+            hp: HP { max: 10, current: 10 },
+        });
 
-    let _goblin = world
-        .create_mut()
-        .add(DrawPos(FPos::new(0., 0.)))
-        .add(Actor { pos: Pos::new(4, 4), sprite: CreatureSprite::Goblin });
+    let _goblin = world.create_mut().add(DrawPos(FPos::new(0., 0.))).add(Actor {
+        pos: Pos::new(4, 4),
+        sprite: CreatureSprite::Goblin,
+        hp: HP { max: 5, current: 5 },
+    });
 
     let mut tm = TileMap::new(12, 12);
     tm.enwall();

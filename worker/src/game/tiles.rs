@@ -4,6 +4,7 @@ use nanoserde::{DeJson, SerJson};
 
 pub const TILE_DIM: f32 = 32.;
 pub const TILE_SCALE: f32 = 2.0;
+pub const TILE_SIZE: f32 = TILE_DIM * TILE_SCALE;
 
 /// A graphical tile from the tileset.png asset in 32rogues
 #[derive(Debug, Clone, Copy, SerJson, DeJson)]

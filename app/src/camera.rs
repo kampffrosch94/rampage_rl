@@ -119,6 +119,10 @@ impl CameraWrapper {
     }
 }
 
+pub fn screen_camera() -> Camera2D {
+    CameraWrapper::create_camera(2.0, vec2(0., 0.))
+}
+
 // needed because orphan rules are annoying
 #[derive(
     Default, Clone, Copy, Add, Sub, Mul, Div, From, AddAssign, SubAssign, MulAssign, DivAssign,

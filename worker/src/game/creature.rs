@@ -1,9 +1,10 @@
 use base::{ContextTrait, Rect};
 use nanoserde::{DeJson, SerJson};
 
-use super::tiles::{TILE_DIM, TILE_SCALE};
-
-pub const Z_SPRITE: i32 = 5;
+use super::{
+    Z_SPRITE,
+    tiles::{TILE_DIM, TILE_SCALE},
+};
 
 #[derive(Debug, Clone, Copy, SerJson, DeJson)]
 pub enum CreatureSprite {
