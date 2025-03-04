@@ -25,6 +25,7 @@ use super::tile_map::TileMap;
 #[derive(Debug, DeJson, SerJson)]
 pub struct Player {
     pub pulse: f32,
+    pub last_action: i32,
 }
 
 #[derive(Debug, DeJson, SerJson)]

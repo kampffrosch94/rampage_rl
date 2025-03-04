@@ -26,10 +26,12 @@ impl PersistentState {
         if re_register_components(&mut self.world).is_err() {
             println!("Error when re_registering. Restarting instead.");
 
-            // gotta leak the old world because calling the old destructor on hotreload is likely to crash
+            // gotta leak the old world because calling the old destructor on hotreload is
+            // likely to crash
             let mut new_world = create_world();
             std::mem::swap(&mut new_world, &mut self.world);
             std::mem::forget(new_world);
+            self.save = None;
         }
     }
 

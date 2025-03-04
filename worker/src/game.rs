@@ -241,14 +241,15 @@ pub fn create_world() -> World {
     let mut world = World::new();
     register_components(&mut world);
 
-    let _player =
-        world.create_mut().add(Player { pulse: 60. }).add(DrawPos(FPos::new(0., 0.))).add(
-            Actor {
-                pos: Pos::new(1, 1),
-                sprite: CreatureSprite::Dwarf,
-                hp: HP { max: 10, current: 10 },
-            },
-        );
+    let _player = world
+        .create_mut()
+        .add(Player { pulse: 60., last_action: 0 })
+        .add(DrawPos(FPos::new(0., 0.)))
+        .add(Actor {
+            pos: Pos::new(1, 1),
+            sprite: CreatureSprite::Dwarf,
+            hp: HP { max: 10, current: 10 },
+        });
 
     let _goblin = world.create_mut().add(DrawPos(FPos::new(0., 0.))).add(Actor {
         pos: Pos::new(4, 4),
