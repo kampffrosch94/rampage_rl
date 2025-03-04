@@ -55,6 +55,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
 
     c.draw_texture("tiles", -200., -950., 5);
     c.draw_texture("rogues", -600., -950., 5);
+    c.draw_texture("monsters", -1100., -950., 5);
 
     c.set_text(
         Label::ExampleText as _,
@@ -86,7 +87,7 @@ b) Walk walk walk!"#,
     c.set_text(Label::UITest as _, text_rect.w, text_rect.h, &[("Test", TextProperty::new())]);
     c.draw_text(Label::UITest as _, text_rect.x, text_rect.y, Z_UI_TEXT);
     c.draw_rect(ui_rect, Color::BLACK, Z_UI_BG);
-    c.draw_rect_lines(ui_rect,  5.0, Color::GRAY,Z_UI_BG);
+    c.draw_rect_lines(ui_rect, 5.0, Color::GRAY, Z_UI_BG);
 
     update_systems(c, world, f);
     draw_systems(c, world);
@@ -241,11 +242,13 @@ pub fn create_world() -> World {
     register_components(&mut world);
 
     let _player =
-        world.create_mut().add(Player {}).add(DrawPos(FPos::new(0., 0.))).add(Actor {
-            pos: Pos::new(1, 1),
-            sprite: CreatureSprite::Dwarf,
-            hp: HP { max: 10, current: 10 },
-        });
+        world.create_mut().add(Player { pulse: 60. }).add(DrawPos(FPos::new(0., 0.))).add(
+            Actor {
+                pos: Pos::new(1, 1),
+                sprite: CreatureSprite::Dwarf,
+                hp: HP { max: 10, current: 10 },
+            },
+        );
 
     let _goblin = world.create_mut().add(DrawPos(FPos::new(0., 0.))).add(Actor {
         pos: Pos::new(4, 4),

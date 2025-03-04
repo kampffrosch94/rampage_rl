@@ -27,18 +27,19 @@ macro_rules! generate_register {
 
 macro_rules! generate_re_register {
     (@rel $world:ident $ty:tt $flags:tt) => {
-        $world.re_register_relation::<$ty>();
+        $world.re_register_relation::<$ty>()?;
     };
     (@rel $world:ident $ty:tt) => {
-        $world.re_register_relation::<$ty>();
+        $world.re_register_relation::<$ty>()?;
     };
     (Components($($components:tt $([persist])?),*),
      Relations($($relations:tt $(($flags:expr))? $([persist])? ),*)) => {
-        pub fn re_register_components(world: &mut World) {
+        pub fn re_register_components(world: &mut World) -> Result<(), ()> {
             unsafe {
-                $(world.re_register_component::<$components>();)*
+                $(world.re_register_component::<$components>()?;)*
                 $(generate_register!(@rel world $relations $($flags)?);)*
             }
+            Ok(())
         }
     };
 }

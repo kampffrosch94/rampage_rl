@@ -140,9 +140,6 @@ async fn main() {
         // }));
         ctx.camera.process();
 
-        worker.update(ctx);
-
-        ctx.process().await;
 
         fps_counter.update();
         let fps = fps_counter.get_fps();
@@ -150,8 +147,14 @@ async fn main() {
 
         let w = screen_width();
         let h = screen_height();
+        ctx.camera.set();
         let s = format!("FPS: {fps} DPI: {dpi} Screen: {w} x {h}");
         draw_text(&s, 20.0, -20.0, 30.0, WHITE);
+
+        worker.update(ctx);
+
+        ctx.process().await;
+
 
         next_frame().await
     }

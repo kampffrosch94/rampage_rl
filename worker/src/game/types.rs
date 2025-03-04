@@ -23,7 +23,9 @@ use super::tile_map::TileMap;
 
 /// Marker for player character
 #[derive(Debug, DeJson, SerJson)]
-pub struct Player {}
+pub struct Player {
+    pub pulse: f32,
+}
 
 #[derive(Debug, DeJson, SerJson)]
 pub struct HP {
