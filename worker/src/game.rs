@@ -76,15 +76,11 @@ b) Walk walk walk!"#,
     );
     c.draw_text(Label::ExampleText as _, 400., -530., 30);
 
-    pc_inputs(c, world, f);
     update_systems(c, world, f);
     draw_systems(c, world);
 }
 
 fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
-    if !f.co.is_empty() {
-        return;
-    }
     const MOVEMENTS: [(Input, (i32, i32)); 8] = [
         (Input::MoveW, (-1, 0)),
         (Input::MoveE, (1, 0)),
@@ -133,8 +129,14 @@ fn spawn_move_animation(f: &mut FleetingState, e: Entity, start: Pos, end: Pos) 
     });
 }
 
-fn update_systems(_c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
+fn update_systems(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
     if f.co.is_empty() {
+        pc_inputs(c, world, f);
+    }
+    // pc input may queue animation
+    if f.co.is_empty() {
+        TileMap::update_actors(world);
+
         for (actor, mut draw_pos) in query!(world, Actor, mut DrawPos) {
             draw_pos.0 = pos_to_drawpos(actor.pos);
         }
@@ -160,11 +162,15 @@ pub fn create_world() -> World {
         .create_mut()
         .add(Player {})
         .add(DrawPos(FPos::new(0., 0.)))
-        .add(Actor { pos: Pos::new(3, 3), sprite: CreatureSprite::Dwarf });
+        .add(Actor { pos: Pos::new(1, 1), sprite: CreatureSprite::Dwarf });
+
+    let _goblin = world
+        .create_mut()
+        .add(DrawPos(FPos::new(0., 0.)))
+        .add(Actor { pos: Pos::new(2, 1), sprite: CreatureSprite::Goblin });
 
     let mut tm = TileMap::new(12, 12);
     tm.enwall();
-    // tm.draw(c, 0., 0.);
     world.singleton().add(tm);
 
     world.process();

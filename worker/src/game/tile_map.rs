@@ -1,17 +1,23 @@
+use std::collections::HashMap;
+
 use base::{ContextTrait, Pos, grids::Grid};
+use froql::{entity_store::Entity, query, world::World};
 use nanoserde::{DeJson, SerJson};
 
 use super::tiles::{Environment, LogicTile, TILE_DIM, TILE_SCALE};
+use crate::game::Actor;
 use crate::game::tiles::generate_draw_tile;
 
 #[derive(Debug, DeJson, SerJson)]
 pub struct TileMap {
     tiles: Grid<LogicTile>,
+    #[nserde(skip)]
+    actors: HashMap<Pos, Entity>,
 }
 
 impl TileMap {
     pub fn new(w: i32, h: i32) -> Self {
-        Self { tiles: Grid::new(w, h, LogicTile::Floor) }
+        Self { tiles: Grid::new(w, h, LogicTile::Floor), actors: HashMap::new() }
     }
 
     /// put a wall on the outside
@@ -43,6 +49,15 @@ impl TileMap {
     }
 
     pub fn is_blocked(&self, pos: Pos) -> bool {
-        self.tiles.get_opt(pos).map(|tile| *tile == LogicTile::Wall).unwrap_or(false)
+        self.actors.contains_key(&pos)
+            || self.tiles.get_opt(pos).map(|tile| *tile == LogicTile::Wall).unwrap_or(false)
+    }
+
+    pub fn update_actors(world: &mut World) {
+        let mut tm = world.singleton().get_mut::<TileMap>();
+        tm.actors.clear();
+        for (e, actor) in query!(world, &this, Actor) {
+            tm.actors.insert(actor.pos, e.id);
+        }
     }
 }

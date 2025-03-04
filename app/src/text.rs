@@ -1,14 +1,14 @@
 use cosmic_text::{
-    fontdb::{self, Database},
     Attrs, Buffer, FontSystem, Metrics, Shaping, SwashCache,
+    fontdb::{self, Database},
 };
 
 use std::{collections::HashMap, sync::Arc};
 
 use base::text::{TextFamily, TextProperty};
-use macroquad::prelude::draw_texture;
 use macroquad::prelude::Texture2D;
 use macroquad::prelude::WHITE;
+use macroquad::prelude::draw_texture;
 
 pub struct Texter {
     font_system: FontSystem,

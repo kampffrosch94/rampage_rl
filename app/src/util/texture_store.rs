@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use macroquad::texture::{load_texture, FilterMode, Texture2D};
+use macroquad::texture::{FilterMode, Texture2D, load_texture};
 use std::result::Result;
 
 #[derive(Default)]

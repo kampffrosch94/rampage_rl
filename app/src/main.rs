@@ -67,6 +67,48 @@ async fn main() {
         .await
         .unwrap();
 
+    ctx.textures
+        .load_texture(format!("{prefix}/assets/32rogues/monsters.png"), "monsters", false)
+        .await
+        .unwrap();
+
+    ctx.textures
+        .load_texture(format!("{prefix}/assets/32rogues/items.png"), "items", false)
+        .await
+        .unwrap();
+    ctx.textures
+        .load_texture(format!("{prefix}/assets/32rogues/animals.png"), "animals", false)
+        .await
+        .unwrap();
+    ctx.textures
+        .load_texture(format!("{prefix}/assets/32rogues/autotiles.png"), "autotiles", false)
+        .await
+        .unwrap();
+    ctx.textures
+        .load_texture(
+            format!("{prefix}/assets/32rogues/animated-tiles.png"),
+            "animated-tiles",
+            false,
+        )
+        .await
+        .unwrap();
+    ctx.textures
+        .load_texture(
+            format!("{prefix}/assets/32rogues/32rogues-palette.png"),
+            "palette",
+            false,
+        )
+        .await
+        .unwrap();
+    ctx.textures
+        .load_texture(
+            format!("{prefix}/assets/32rogues/items-palette-swaps.png"),
+            "items-swaps",
+            false,
+        )
+        .await
+        .unwrap();
+
     let mut fps_counter = FPSCounter::new();
 
     loop {
