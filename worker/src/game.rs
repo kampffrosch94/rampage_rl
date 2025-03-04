@@ -1,4 +1,4 @@
-use base::{Color, ContextTrait, FPos, Input, Pos, Rect, TextProperty, text::TextFamily};
+use base::{Color, ContextTrait, FPos, Input, Pos, Rect};
 use cosync::CosyncInput;
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
@@ -9,14 +9,10 @@ mod tiles;
 pub mod types;
 use tiles::{Decor, TILE_SIZE, pos_to_drawpos};
 use types::*;
+use ui::handle_ui;
+mod ui;
 
 use crate::{fleeting::FleetingState, persistent::PersistentState, rand::RandomGenerator};
-
-#[repr(C)]
-enum Label {
-    ExampleText,
-    UITest,
-}
 
 pub const Z_TILES: i32 = 0;
 pub const Z_HP_BAR: i32 = 9;
@@ -57,38 +53,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     c.draw_texture("rogues", -600., -950., 5);
     c.draw_texture("monsters", -1100., -950., 5);
 
-    c.set_text(
-        Label::ExampleText as _,
-        500.,
-        500.,
-        &[
-            (
-                "Placeholder of doom",
-                TextProperty::new()
-                    .family(TextFamily::BloodCyrillic)
-                    .metrics(66, 80)
-                    .color(Color::RED),
-            ),
-            ("\n \n", TextProperty::new().metrics(2, 20)),
-            (
-                r#"a) Run run run!
-b) Walk walk walk!"#,
-                TextProperty::new()
-                    .family(TextFamily::BloodCyrillic)
-                    .color(Color::PINK)
-                    .metrics(44, 60),
-            ),
-        ],
-    );
-    c.draw_text(Label::ExampleText as _, 400., -530., 30);
-
-    let ui_rect = c.screen_rect().take_right(300.);
-    let text_rect = ui_rect.skip_all(10.);
-    c.set_text(Label::UITest as _, text_rect.w, text_rect.h, &[("Test", TextProperty::new())]);
-    c.draw_text(Label::UITest as _, text_rect.x, text_rect.y, Z_UI_TEXT);
-    c.draw_rect(ui_rect, Color::BLACK, Z_UI_BG);
-    c.draw_rect_lines(ui_rect, 5.0, Color::GRAY, Z_UI_BG);
-
+    handle_ui(c, world, f);
     update_systems(c, world, f);
     draw_systems(c, world);
 }
