@@ -160,13 +160,12 @@ fn spawn_move_animation(f: &mut FleetingState, e: Entity, start: Pos, end: Pos) 
 }
 
 fn update_systems(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
+    TileMap::update_actors(world);
     if f.co.is_empty() {
         pc_inputs(c, world, f);
     }
     // pc input may queue animation
     if f.co.is_empty() {
-        TileMap::update_actors(world);
-
         for (e, actor, mut draw_pos) in query!(world, &this, Actor, mut DrawPos) {
             draw_pos.0 = pos_to_drawpos(actor.pos);
             if actor.hp.current <= 0 {

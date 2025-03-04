@@ -31,10 +31,8 @@ impl RandomGenerator {
         DIRECTIONS[index as usize]
     }
 
-    pub fn pick_random<T: Copy + Debug>(&mut self, options: &[T]) -> T {
-        let index = self.next() % 2;
-        dbg!(&options);
-        dbg!(&index);
+    pub fn pick_random<T: Copy>(&mut self, options: &[T]) -> T {
+        let index = self.next() % options.len() as u64;
         options[index as usize]
     }
 }

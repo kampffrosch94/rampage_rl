@@ -44,6 +44,20 @@ impl Rect {
         }
     }
 
+    pub fn cut_top(&mut self, amount: f32) -> Self {
+        let r = self.take_top(amount);
+        self.y += r.h;
+        self.h -= r.h;
+        r
+    }
+
+    pub fn cut_left(&mut self, amount: f32) -> Self {
+        let r = self.take_left(amount);
+        self.x += r.w;
+        self.w -= r.w;
+        r
+    }
+
     /// the rect without specified amount of space on the left side
     pub fn skip_left(&self, amount: f32) -> Self {
         Rect { x: self.x + amount, y: self.y, w: self.w - amount, h: self.h }
