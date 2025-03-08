@@ -91,11 +91,19 @@ impl<T: Clone> Grid<T> {
         self.get_mut(x, y)
     }
 
-    pub fn iter_rect(&self, min: Pos, max: Pos) -> impl Iterator<Item = (i32, i32, &T)> {
+    pub fn fill_rect(&mut self, from: Pos, to: Pos, val: T) {
+        for x in from.x..to.x {
+            for y in from.y..to.y {
+                self[(x, y)] = val.clone();
+            }
+        }
+    }
+
+    pub fn iter_rect(&self, from: Pos, to: Pos) -> impl Iterator<Item = (i32, i32, &T)> {
         let mut coords = vec![];
 
-        for x in min.x..max.x {
-            for y in min.y..max.y {
+        for x in from.x..to.x {
+            for y in from.y..to.y {
                 coords.push((x, y));
             }
         }

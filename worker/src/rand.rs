@@ -1,3 +1,4 @@
+use base::Color;
 use nanoserde::{DeJson, SerJson};
 use std::fmt::Debug;
 
@@ -23,6 +24,9 @@ impl RandomGenerator {
     }
 
     pub fn next_in_range(&mut self, from: u64, to: u64) -> u64 {
+        if from >= to {
+            return from;
+        }
         from + (self.next() % (to - from))
     }
 
@@ -34,6 +38,15 @@ impl RandomGenerator {
     pub fn pick_random<T: Copy>(&mut self, options: &[T]) -> T {
         let index = self.next() % options.len() as u64;
         options[index as usize]
+    }
+
+    pub fn random_color(&mut self) -> Color {
+        let colors = 16;
+        Color::rgb(
+            self.next_in_range(0, colors) as f32 / colors as f32,
+            self.next_in_range(0, colors) as f32 / colors as f32,
+            self.next_in_range(0, colors) as f32 / colors as f32,
+        )
     }
 }
 

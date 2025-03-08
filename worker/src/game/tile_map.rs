@@ -4,25 +4,21 @@ use base::{ContextTrait, Pos, grids::Grid};
 use froql::{entity_store::Entity, query, world::World};
 use nanoserde::{DeJson, SerJson};
 
-use super::tiles::{Decor, Environment, LogicTile, TILE_DIM, TILE_SCALE};
+use super::tiles::{Decor, Environment, LogicTile, TILE_DIM, TILE_SCALE, TILE_SIZE};
 use crate::game::Actor;
 use crate::game::tiles::generate_draw_tile;
 
 #[derive(Debug, DeJson, SerJson)]
 pub struct TileMap {
-    tiles: Grid<LogicTile>,
+    pub tiles: Grid<LogicTile>,
     #[nserde(skip)]
     actors: HashMap<Pos, Entity>,
     decor: Vec<(Pos, Decor)>,
 }
 
 impl TileMap {
-    pub fn new(w: i32, h: i32) -> Self {
-        Self {
-            tiles: Grid::new(w, h, LogicTile::Floor),
-            actors: HashMap::new(),
-            decor: Vec::new(),
-        }
+    pub fn new(w: i32, h: i32, start_tile: LogicTile) -> Self {
+        Self { tiles: Grid::new(w, h, start_tile), actors: HashMap::new(), decor: Vec::new() }
     }
 
     /// put a wall on the outside
@@ -47,13 +43,13 @@ impl TileMap {
             pos_below.y += 1;
             let below = self.tiles.get_opt(pos_below).unwrap_or(&LogicTile::Empty);
             let draw_tile = generate_draw_tile(*lt, env, *below);
-            let x = x_base + pos.x as f32 * TILE_DIM * TILE_SCALE;
-            let y = y_base + pos.y as f32 * TILE_DIM * TILE_SCALE;
+            let x = x_base + pos.x as f32 * TILE_SIZE;
+            let y = y_base + pos.y as f32 * TILE_SIZE;
             draw_tile.draw(c, x, y);
         }
         for (pos, decor) in &self.decor {
-            let x = x_base + pos.x as f32 * TILE_DIM * TILE_SCALE;
-            let y = y_base + pos.y as f32 * TILE_DIM * TILE_SCALE;
+            let x = x_base + pos.x as f32 * TILE_SIZE;
+            let y = y_base + pos.y as f32 * TILE_SIZE;
             decor.draw(c, x, y);
         }
     }

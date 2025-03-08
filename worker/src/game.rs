@@ -2,14 +2,16 @@ use base::{Color, ContextTrait, FPos, Input, Pos, Rect};
 use cosync::CosyncInput;
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
+use mapgen::draw_wip;
 use tile_map::TileMap;
 mod creature;
 mod tile_map;
 mod tiles;
 pub mod types;
-use tiles::{Decor, TILE_SIZE, pos_to_drawpos};
+use tiles::{Decor, LogicTile, TILE_SIZE, pos_to_drawpos};
 use types::*;
 use ui::handle_ui;
+mod mapgen;
 mod ui;
 
 use crate::{fleeting::FleetingState, persistent::PersistentState, rand::RandomGenerator};
@@ -56,6 +58,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     handle_ui(c, world, f);
     update_systems(c, world, f);
     draw_systems(c, world);
+    draw_wip(c);
 }
 
 fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
@@ -221,7 +224,7 @@ pub fn create_world() -> World {
         hp: HP { max: 5, current: 5 },
     });
 
-    let mut tm = TileMap::new(12, 12);
+    let mut tm = TileMap::new(12, 12, LogicTile::Floor);
     tm.enwall();
     // TODO get properly random seed
     world.singleton().add(tm).add(RandomGenerator::new(12345));

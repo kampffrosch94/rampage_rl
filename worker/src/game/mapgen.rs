@@ -1,0 +1,137 @@
+use crate::rand::RandomGenerator;
+use base::Color;
+use base::ContextTrait;
+use base::Pos;
+use base::Rect;
+use base::grids::Grid;
+use froql::query;
+use froql::world::World;
+
+use super::tile_map::TileMap;
+use super::tiles::LogicTile;
+use super::tiles::TILE_SIZE;
+
+pub fn draw_wip(c: &mut dyn ContextTrait) {
+    let rand = &mut RandomGenerator::new(1234);
+
+    let mut world = World::new();
+    world.register_relation::<Inside>();
+
+    let width = rand.next_in_range(25, 35) as i32;
+    let height = rand.next_in_range(25, 35) as i32;
+    world
+        .create_mut()
+        .add(Area { x: 0, y: 0, w: width, h: height })
+        .add(Color::WHITE)
+        .add(ZLevel(0));
+
+    let mut go_on = true;
+    while go_on {
+        go_on = false;
+        for (container, area, z_level) in query!(world, &this, Area, ZLevel, !Inside(_, this))
+        {
+            if area.splitable() {
+                go_on = true;
+                let (a, b) = area.split(rand.next_in_range(4, 6) as i32);
+                let ca = rand.random_color().alpha(0.2);
+                let cb = rand.random_color().alpha(0.2);
+                world
+                    .create_deferred()
+                    .add(a)
+                    .add(ZLevel(z_level.0 + 1))
+                    .add(ca)
+                    .relate_to::<Inside>(container.id);
+                world
+                    .create_deferred()
+                    .add(b)
+                    .add(ZLevel(z_level.0 + 1))
+                    .add(cb)
+                    .relate_to::<Inside>(container.id);
+            }
+        }
+        world.process();
+    }
+
+    for (area, color, z_level) in query!(world, Area, Color, ZLevel) {
+        c.draw_rect(area.as_rect().move_by(0., 1000.), *color, z_level.0);
+    }
+
+    let mut tm = TileMap::new(width, height, LogicTile::Wall);
+
+    for (area,) in query!(world, Area, !Inside(_, this)) {
+        area.carve(&mut tm.tiles, rand);
+    }
+
+    tm.draw(c, 0., 1000.);
+}
+
+enum Inside {}
+
+struct ZLevel(i32);
+
+#[derive(Debug)]
+struct Area {
+    x: i32,
+    y: i32,
+    w: i32,
+    h: i32,
+}
+
+impl Area {
+    fn as_rect(&self) -> Rect {
+        Rect {
+            x: self.x as f32 * TILE_SIZE,
+            y: self.y as f32 * TILE_SIZE,
+            w: self.w as f32 * TILE_SIZE,
+            h: self.h as f32 * TILE_SIZE,
+        }
+    }
+
+    #[allow(unused)]
+    fn area(&self) -> i32 {
+        self.w * self.h
+    }
+
+    fn splitable(&self) -> bool {
+        self.w >= 14 || self.h >= 14
+    }
+
+    fn split(&self, ratio: i32) -> (Area, Area) {
+        if self.w > self.h {
+            let w_a = (self.w * ratio) / 10;
+            let w_b = self.w - w_a;
+            let a = Area { x: self.x, y: self.y, w: w_a, h: self.h };
+            // TODO check if off by one
+            let b = Area { x: self.x + w_a, y: self.y, w: w_b, h: self.h };
+            (a, b)
+        } else {
+            let h_a = (self.h * ratio) / 10;
+            let h_b = self.h - h_a;
+            let a = Area { x: self.x, y: self.y, w: self.w, h: h_a };
+            let b = Area { x: self.x, y: self.y + h_a, w: self.w, h: h_b };
+            (a, b)
+        }
+    }
+
+    #[allow(unused)]
+    fn shrink(&self) -> Area {
+        Area { x: self.x + 1, y: self.y + 1, w: self.w - 2, h: self.h - 2 }
+    }
+
+    fn carve(&self, grid: &mut Grid<LogicTile>, rand: &mut RandomGenerator) {
+        let min_w = 3.max(self.w - 5);
+        let min_h = 3.max(self.h - 5);
+        let w = rand.next_in_range(min_w as u64, (self.w - 2) as _) as i32;
+        let h = rand.next_in_range(min_h as u64, (self.h - 2) as _) as i32;
+        if min_h > self.h {
+            dbg!(self);
+        }
+        let max_x = self.x + self.w - w;
+        let max_y = self.y + self.h - h;
+        let x = rand.next_in_range(self.x as u64 + 1, max_x as _) as i32;
+        let y = rand.next_in_range(self.y as u64 + 1, max_y as _) as i32;
+        let from = Pos::new(x, y);
+        let to = Pos::new(x + w, y + h);
+        grid.fill_rect(from, to, LogicTile::Floor);
+    }
+}

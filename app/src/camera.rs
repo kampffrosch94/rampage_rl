@@ -85,7 +85,7 @@ impl CameraWrapper {
     pub fn zoom(&mut self, delta: i32) {
         self.scale_exp += delta;
         let base2: f32 = 2.;
-        self.scale_exp = self.scale_exp.clamp(1, 5);
+        self.scale_exp = self.scale_exp.clamp(0, 5); // TODO set min to 1 before release?
         let target = base2.powf(self.scale_exp as f32);
         self.scale_tween = Tweener::linear(self.scale, target, 0.25);
     }

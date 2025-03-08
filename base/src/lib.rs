@@ -95,4 +95,8 @@ impl Color {
     pub const fn rgba(r: f32, g: f32, b: f32, a: f32) -> Self {
         Color { r, g, b, a }
     }
+
+    pub const fn alpha(self, a: f32) -> Self {
+        Color { r: self.r, g: self.g, b: self.b, a }
+    }
 }
