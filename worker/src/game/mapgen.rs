@@ -24,7 +24,7 @@ pub fn draw_wip(c: &mut dyn ContextTrait) {
     world.register_relation::<Inside>();
     world.register_relation_flags::<Connected>(SYMMETRIC | TRANSITIVE);
 
-    let width = rand.next_in_range(25, 35) as i32;
+    let width = rand.next_in_range(35, 45) as i32;
     let height = rand.next_in_range(25, 35) as i32;
     world
         .create_mut()
