@@ -4,18 +4,25 @@ use base::ContextTrait;
 use base::Pos;
 use base::Rect;
 use base::grids::Grid;
+use froql::component::SYMMETRIC;
+use froql::component::TRANSITIVE;
 use froql::query;
 use froql::world::World;
+
+mod astar_dig;
 
 use super::tile_map::TileMap;
 use super::tiles::LogicTile;
 use super::tiles::TILE_SIZE;
+enum Connected {}
 
 pub fn draw_wip(c: &mut dyn ContextTrait) {
     let rand = &mut RandomGenerator::new(1234);
 
     let mut world = World::new();
+    world.register_component::<Room>();
     world.register_relation::<Inside>();
+    world.register_relation_flags::<Connected>(SYMMETRIC | TRANSITIVE);
 
     let width = rand.next_in_range(25, 35) as i32;
     let height = rand.next_in_range(25, 35) as i32;
@@ -25,6 +32,7 @@ pub fn draw_wip(c: &mut dyn ContextTrait) {
         .add(Color::WHITE)
         .add(ZLevel(0));
 
+    // BSP
     let mut go_on = true;
     while go_on {
         go_on = false;
@@ -58,8 +66,33 @@ pub fn draw_wip(c: &mut dyn ContextTrait) {
 
     let mut tm = TileMap::new(width, height, LogicTile::Wall);
 
-    for (area,) in query!(world, Area, !Inside(_, this)) {
-        area.carve(&mut tm.tiles, rand);
+    for (e, area) in query!(world, &this, Area, !Inside(_, this)) {
+        let room = area.carve(&mut tm.tiles, rand);
+        e.add(room);
+    }
+    world.process();
+
+    let mut go_on = true;
+    while go_on {
+        go_on = false;
+        for (a, room_a) in query!(world, &a, Room(a)) {
+            if let Some((b, room_b)) =
+                query!(world, &b, Room(b), !Connected(b, *a), *a != b).next()
+            {
+                a.relate_to::<Connected>(*b);
+                if let Some(path) = astar_dig::astar_orth_dig(&tm, room_a.pos(), room_b.pos())
+                {
+                    dbg!(&room_b);
+                    dbg!(room_b.pos());
+                    for pos in path {
+                        tm.tiles[pos] = LogicTile::Floor;
+                    }
+                }
+                go_on = true;
+                break;
+            }
+        }
+        world.process();
     }
 
     tm.draw(c, 0., 1000.);
@@ -85,6 +118,10 @@ impl Area {
             w: self.w as f32 * TILE_SIZE,
             h: self.h as f32 * TILE_SIZE,
         }
+    }
+
+    fn pos(&self) -> Pos {
+        Pos { x: self.x, y: self.y }
     }
 
     #[allow(unused)]
@@ -118,7 +155,7 @@ impl Area {
         Area { x: self.x + 1, y: self.y + 1, w: self.w - 2, h: self.h - 2 }
     }
 
-    fn carve(&self, grid: &mut Grid<LogicTile>, rand: &mut RandomGenerator) {
+    fn carve(&self, grid: &mut Grid<LogicTile>, rand: &mut RandomGenerator) -> Room {
         let min_w = 3.max(self.w - 5);
         let min_h = 3.max(self.h - 5);
         let w = rand.next_in_range(min_w as u64, (self.w - 2) as _) as i32;
@@ -133,5 +170,22 @@ impl Area {
         let from = Pos::new(x, y);
         let to = Pos::new(x + w, y + h);
         grid.fill_rect(from, to, LogicTile::Floor);
+        Room { x, y, w, h }
+    }
+}
+
+#[derive(Debug)]
+struct Room {
+    x: i32,
+    y: i32,
+    w: i32,
+    h: i32,
+}
+
+impl Room {
+    fn pos(&self) -> Pos {
+        let x = self.x + self.w / 2;
+        let y = self.y + self.h / 2;
+        Pos { x, y }
     }
 }

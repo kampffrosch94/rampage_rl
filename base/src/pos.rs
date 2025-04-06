@@ -2,7 +2,9 @@ use std::ops::{Add, AddAssign, Mul, Sub};
 
 use nanoserde::{DeJson, SerJson};
 
-#[derive(Debug, Clone, Copy, PartialEq, Hash, Eq, SerJson, DeJson)]
+use crate::grids::Grid;
+
+#[derive(Debug, Clone, Copy, PartialEq, Hash, Eq, SerJson, DeJson, PartialOrd, Ord)]
 pub struct Pos {
     pub x: i32,
     pub y: i32,
@@ -29,6 +31,36 @@ pub struct FVec {
 impl Pos {
     pub fn new(x: i32, y: i32) -> Self {
         Self { x, y }
+    }
+
+    /// Neighbors in 8 directions
+    pub fn neighbors<T>(&self, grid: Grid<T>) -> impl Iterator<Item = Pos> {
+        const DIRECTIONS: [(i32, i32); 8] =
+            [(-1, 0), (1, 0), (0, -1), (1, -1), (-1, -1), (0, 1), (1, 1), (-1, 1)];
+
+        let h = grid.height;
+        let w = grid.width;
+        DIRECTIONS
+            .iter()
+            .copied()
+            .map(move |dir| *self + dir)
+            .filter(move |pos| 0 <= pos.x && pos.x < w && 0 <= pos.y && pos.y < h)
+    }
+
+    /// Neighbors in 4 directions
+    pub fn neighbors_orth<T>(&self, grid: &Grid<T>) -> impl Iterator<Item = Pos> {
+        const DIRECTIONS: [(i32, i32); 4] = [(-1, 0), (1, 0), (0, -1), (0, 1)];
+
+        let h = grid.height;
+        let w = grid.width;
+        DIRECTIONS
+            .iter()
+            .map(move |dir| *self + *dir)
+            .filter(move |pos| 0 <= pos.x && pos.x < w && 0 <= pos.y && pos.y < h)
+    }
+
+    pub fn manhattan_distance(&self, other: Pos) -> i32 {
+        (self.x - other.x).abs() + (self.y - other.y).abs()
     }
 }
 
