@@ -4,7 +4,7 @@ use base::{ContextTrait, Pos, grids::Grid};
 use froql::{entity_store::Entity, query, world::World};
 use nanoserde::{DeJson, SerJson};
 
-use super::tiles::{Decor, Environment, LogicTile, TILE_DIM, TILE_SCALE, TILE_SIZE};
+use super::tiles::{Decor, Environment, LogicTile, TILE_SIZE};
 use crate::game::Actor;
 use crate::game::tiles::generate_draw_tile;
 

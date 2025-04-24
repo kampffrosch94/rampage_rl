@@ -17,9 +17,9 @@ use super::tiles::TILE_SIZE;
 enum Connected {}
 
 pub fn draw_wip(c: &mut dyn ContextTrait) {
-    let rand = &mut RandomGenerator::new(1234);
+    let rand = &mut RandomGenerator::new(12345);
 
-    let mut world = World::new();
+    let world = &mut World::new();
     world.register_component::<Room>();
     world.register_relation::<Inside>();
     world.register_relation_flags::<Connected>(SYMMETRIC | TRANSITIVE);
@@ -82,8 +82,6 @@ pub fn draw_wip(c: &mut dyn ContextTrait) {
                 a.relate_to::<Connected>(*b);
                 if let Some(path) = astar_dig::astar_orth_dig(&tm, room_a.pos(), room_b.pos())
                 {
-                    dbg!(&room_b);
-                    dbg!(room_b.pos());
                     for pos in path {
                         tm.tiles[pos] = LogicTile::Floor;
                     }
@@ -120,6 +118,7 @@ impl Area {
         }
     }
 
+    #[allow(unused)]
     fn pos(&self) -> Pos {
         Pos { x: self.x, y: self.y }
     }

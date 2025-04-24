@@ -1,26 +1,17 @@
 use base::{Pos, grids::Grid};
 
-fn get_neighbors<T>(pos: Pos, grid: &Grid<T>) -> impl Iterator<Item = Pos> {
-    const DIRECTIONS: [(i32, i32); 8] =
-        [(-1, 0), (1, 0), (0, -1), (1, -1), (-1, -1), (0, 1), (1, 1), (-1, 1)];
-
-    DIRECTIONS
-        .iter()
-        .copied()
-        .map(move |dir| pos + dir)
-        .filter(|pos| 0 <= pos.x && pos.x < grid.width && 0 <= pos.y && pos.y < grid.height)
-}
-
 /// spreads out values, starting from the seeds
 /// the seed positions are supposed to be set to a > 0 value before using this function
+#[allow(unused)]
 pub fn dijkstra<F: Fn(Pos) -> i32>(grid: &mut Grid<i32>, seed: &[Pos], cost: F) {
-    let mut next: Vec<Pos> = seed.iter().flat_map(|pos| get_neighbors(*pos, grid)).collect();
+    let mut next: Vec<Pos> = seed.iter().flat_map(|pos| pos.neighbors(grid)).collect();
     next.extend(seed.iter()); // sometimes its necessary to recompute seeds too
 
     while !next.is_empty() {
         let buffer: Vec<_> = next.drain(..).collect();
         for pos in buffer.into_iter() {
-            let neighbor_max = get_neighbors(pos, grid)
+            let neighbor_max = pos
+                .neighbors(grid)
                 .into_iter()
                 .map(|pos| grid.get_clamped(pos.x, pos.y))
                 .max();
@@ -31,7 +22,7 @@ pub fn dijkstra<F: Fn(Pos) -> i32>(grid: &mut Grid<i32>, seed: &[Pos], cost: F) 
                     let new_val = neighbor_max - c;
                     *grid.get_mut(pos.x, pos.y) = new_val;
                     next.extend(
-                        get_neighbors(pos, grid)
+                        pos.neighbors(grid)
                             .into_iter()
                             .filter(|pos| *grid.get(pos.x, pos.y) < new_val - cost(*pos)),
                     );
@@ -42,6 +33,7 @@ pub fn dijkstra<F: Fn(Pos) -> i32>(grid: &mut Grid<i32>, seed: &[Pos], cost: F) 
 }
 
 /// returns path that follows increasing values until it reaches a local maximium
+#[allow(unused)]
 pub fn dijkstra_path(grid: &Grid<i32>, start: Pos) -> Vec<Pos> {
     let mut path = Vec::new();
     if start.x < 0 || start.y <= 0 || start.x >= grid.width || start.y >= grid.height {
@@ -56,7 +48,8 @@ pub fn dijkstra_path(grid: &Grid<i32>, start: Pos) -> Vec<Pos> {
     // do while at home
     while {
         // neighbor with maximum value
-        let (npos, nv) = get_neighbors(pos, grid)
+        let (npos, nv) = pos
+            .neighbors(grid)
             .into_iter()
             .map(|npos| (npos, grid[npos]))
             .max_by_key(|(_, v)| *v)
@@ -80,14 +73,14 @@ mod tests {
     #[test]
     fn get_neighbors_test() {
         let grid = Grid::new(10, 10, 0);
-        let neighbors = get_neighbors(Pos::new(1, 1), &grid).collect::<Vec<_>>();
+        let neighbors = Pos::new(1, 1).neighbors(&grid).collect::<Vec<_>>();
         assert_eq!(8, neighbors.len());
         assert!(neighbors.contains(&Pos::new(0, 1)));
         assert!(neighbors.contains(&Pos::new(2, 1)));
         assert!(neighbors.contains(&Pos::new(1, 0)));
         assert!(neighbors.contains(&Pos::new(1, 2)));
 
-        let neighbors = get_neighbors(Pos::new(0, 0), &grid).collect::<Vec<_>>();
+        let neighbors = Pos::new(0, 0).neighbors(&grid).collect::<Vec<_>>();
         assert_eq!(3, neighbors.len());
         assert!(neighbors.contains(&Pos::new(0, 1)));
         assert!(neighbors.contains(&Pos::new(1, 0)));

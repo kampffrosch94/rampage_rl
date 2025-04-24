@@ -34,7 +34,7 @@ impl Pos {
     }
 
     /// Neighbors in 8 directions
-    pub fn neighbors<T>(&self, grid: Grid<T>) -> impl Iterator<Item = Pos> {
+    pub fn neighbors<T>(&self, grid: &Grid<T>) -> impl Iterator<Item = Pos> {
         const DIRECTIONS: [(i32, i32); 8] =
             [(-1, 0), (1, 0), (0, -1), (1, -1), (-1, -1), (0, 1), (1, 1), (-1, 1)];
 
