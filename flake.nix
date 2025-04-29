@@ -66,6 +66,7 @@
             cargo-watch
             cargo-llvm-lines
             cargo-machete
+            cargo-nextest
           ];
           # stuff we need to run
           LD_LIBRARY_PATH =
