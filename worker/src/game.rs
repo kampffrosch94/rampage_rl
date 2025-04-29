@@ -78,11 +78,11 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState)
             if c.is_pressed(input) {
                 let new_pos = player.pos + dir;
                 if !tm.is_blocked(new_pos) {
-                    spawn_move_animation(f, e.id, player.pos, new_pos);
+                    spawn_move_animation(f, *e, player.pos, new_pos);
                     player.pos = new_pos;
                 } else {
                     if let Some(other) = tm.get_actor(new_pos) {
-                        spawn_bump_attack_animation(f, e.id, player.pos, new_pos, other, 1);
+                        spawn_bump_attack_animation(f, *e, player.pos, new_pos, other, 1);
                     }
                 }
             }
@@ -209,7 +209,7 @@ pub fn create_world() -> World {
     register_components(&mut world);
 
     let _player = world
-        .create_mut()
+        .create()
         .add(Player { pulse: 60., last_action: 0 })
         .add(DrawPos(FPos::new(0., 0.)))
         .add(Actor {
@@ -218,7 +218,7 @@ pub fn create_world() -> World {
             hp: HP { max: 10, current: 10 },
         });
 
-    let _goblin = world.create_mut().add(DrawPos(FPos::new(0., 0.))).add(Actor {
+    let _goblin = world.create().add(DrawPos(FPos::new(0., 0.))).add(Actor {
         pos: Pos::new(4, 4),
         sprite: CreatureSprite::Goblin,
         hp: HP { max: 5, current: 5 },

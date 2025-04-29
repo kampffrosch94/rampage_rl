@@ -27,7 +27,7 @@ pub fn draw_wip(c: &mut dyn ContextTrait) {
     let width = rand.next_in_range(35, 45) as i32;
     let height = rand.next_in_range(25, 35) as i32;
     world
-        .create_mut()
+        .create()
         .add(Area { x: 0, y: 0, w: width, h: height })
         .add(Color::WHITE)
         .add(ZLevel(0));
@@ -48,13 +48,13 @@ pub fn draw_wip(c: &mut dyn ContextTrait) {
                     .add(a)
                     .add(ZLevel(z_level.0 + 1))
                     .add(ca)
-                    .relate_to::<Inside>(container.id);
+                    .relate_to::<Inside>(*container);
                 world
                     .create_deferred()
                     .add(b)
                     .add(ZLevel(z_level.0 + 1))
                     .add(cb)
-                    .relate_to::<Inside>(container.id);
+                    .relate_to::<Inside>(*container);
             }
         }
         world.process();
