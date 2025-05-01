@@ -42,11 +42,11 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
 
     let world = &mut s.world;
 
-    if !world.singleton().has::<DeltaTime>() {
-        world.singleton().add(DeltaTime(c.delta()));
+    if !world.singleton_has::<DeltaTime>() {
+        world.singleton_add(DeltaTime(c.delta()));
         world.process();
     } else {
-        world.singleton().get_mut::<DeltaTime>().0 = c.delta();
+        world.singleton_mut::<DeltaTime>().0 = c.delta();
     }
 
     f.co.run_until_stall(world);
@@ -73,7 +73,7 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState)
         (Input::MoveSW, (-1, 1)),
     ];
     for (e, mut player) in query!(world, &this, _ Player, mut Actor) {
-        let tm = world.singleton().get::<TileMap>();
+        let tm = world.singleton::<TileMap>();
         for (input, dir) in MOVEMENTS {
             if c.is_pressed(input) {
                 let new_pos = player.pos + dir;
@@ -107,7 +107,7 @@ fn spawn_bump_attack_animation(
         loop {
             {
                 let world = input.get();
-                let dt = world.singleton().get::<DeltaTime>().0;
+                let dt = world.singleton::<DeltaTime>().0;
                 elapsed += dt;
                 let mut draw_pos = world.get_component_mut::<DrawPos>(e);
                 if elapsed < animation_time * PART_FORWARD {
@@ -129,8 +129,8 @@ fn spawn_bump_attack_animation(
         }
         let world = input.get();
         world.get_component_mut::<DrawPos>(e).0 = start;
-        let mut tm = world.singleton().get_mut::<TileMap>();
-        let mut rand = world.singleton().get_mut::<RandomGenerator>();
+        let mut tm = world.singleton_mut::<TileMap>();
+        let mut rand = world.singleton_mut::<RandomGenerator>();
         let decor_pos = p_end + rand.random_direction();
         let decor = rand.pick_random(&[Decor::BloodRed1, Decor::BloodRed2]);
         tm.add_decor(decor_pos, decor);
@@ -147,7 +147,7 @@ fn spawn_move_animation(f: &mut FleetingState, e: Entity, start: Pos, end: Pos) 
         loop {
             {
                 let world = input.get();
-                let dt = world.singleton().get::<DeltaTime>().0;
+                let dt = world.singleton::<DeltaTime>().0;
                 elapsed += dt;
                 let mut draw_pos = world.get_component_mut::<DrawPos>(e);
                 draw_pos.0 = start.lerp(end, elapsed / animation_time);
@@ -200,7 +200,7 @@ pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
         }
     }
 
-    let tm = world.singleton().get::<TileMap>();
+    let tm = world.singleton::<TileMap>();
     tm.draw(c, 0., 0.);
 }
 
@@ -226,8 +226,9 @@ pub fn create_world() -> World {
 
     let mut tm = TileMap::new(12, 12, LogicTile::Floor);
     tm.enwall();
+    world.singleton_add(tm);
     // TODO get properly random seed
-    world.singleton().add(tm).add(RandomGenerator::new(12345));
+    world.singleton_add(RandomGenerator::new(12345));
 
     world.process();
     world

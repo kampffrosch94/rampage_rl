@@ -34,7 +34,8 @@ macro_rules! generate_re_register {
     };
     (Components($($components:tt $([persist])?),*),
      Relations($($relations:tt $(($flags:expr))? $([persist])? ),*)) => {
-        pub fn re_register_components(world: &mut World) -> Result<(), ()> {
+        pub fn re_register_components(world: &mut World) ->
+            Result<(), ::froql::world::ReregisterError> {
             unsafe {
                 $(world.re_register_component::<$components>()?;)*
                 $(generate_register!(@rel world $relations $($flags)?);)*

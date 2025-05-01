@@ -64,7 +64,7 @@ impl TileMap {
     }
 
     pub fn update_actors(world: &mut World) {
-        let mut tm = world.singleton().get_mut::<TileMap>();
+        let mut tm = world.singleton_mut::<TileMap>();
         tm.actors.clear();
         for (e, actor) in query!(world, &this, Actor) {
             tm.actors.insert(actor.pos, *e);
