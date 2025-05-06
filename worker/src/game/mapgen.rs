@@ -21,6 +21,9 @@ pub fn draw_wip(c: &mut dyn ContextTrait) {
 
     let world = &mut World::new();
     world.register_component::<Room>();
+    world.register_component::<Area>();
+    world.register_component::<base::Color>();
+    world.register_component::<ZLevel>();
     world.register_relation::<Inside>();
     world.register_relation_flags::<Connected>(SYMMETRIC | TRANSITIVE);
 
