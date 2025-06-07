@@ -4,12 +4,12 @@ use base::FPos;
 use base::Pos;
 use base::Rect;
 use froql::world::World;
-use nanoserde::{DeJson, SerJson};
 
 use crate::ecs_setup::SerializedState;
 use crate::rand::RandomGenerator;
 use froql::entity_store::EntityId;
 use froql::query_helper::trivial_query_one_component;
+use quicksilver::Quicksilver;
 use std::any::TypeId;
 use std::any::type_name;
 use std::cell::RefCell;
@@ -22,26 +22,26 @@ use super::creature::CreatureSprite;
 use super::tile_map::TileMap;
 
 /// Marker for player character
-#[derive(Debug, DeJson, SerJson)]
+#[derive(Debug, Quicksilver)]
 pub struct Player {
     pub pulse: f32,
     pub last_action: i32,
 }
 
-#[derive(Debug, DeJson, SerJson)]
+#[derive(Debug, Quicksilver)]
 pub struct HP {
     pub max: i32,
     pub current: i32,
 }
 
-#[derive(Debug, DeJson, SerJson)]
+#[derive(Debug, Quicksilver)]
 pub struct Actor {
     pub pos: Pos,
     pub sprite: CreatureSprite,
     pub hp: HP,
 }
 
-#[derive(Debug, DeJson, SerJson)]
+#[derive(Debug, Quicksilver)]
 pub struct DrawPos(pub FPos);
 
 /// How much time passed since the last frame in seconds

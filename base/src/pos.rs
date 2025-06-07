@@ -1,28 +1,30 @@
 use std::ops::{Add, AddAssign, Mul, Sub};
 
-use nanoserde::{DeJson, SerJson};
+use quicksilver::Quicksilver;
 
 use crate::grids::Grid;
 
-#[derive(Debug, Clone, Copy, PartialEq, Hash, Eq, SerJson, DeJson, PartialOrd, Ord)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Hash, Eq, PartialOrd, Ord, Quicksilver,
+)]
 pub struct Pos {
     pub x: i32,
     pub y: i32,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Hash, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Hash, Eq, Quicksilver)]
 pub struct IVec {
     pub x: i32,
     pub y: i32,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, SerJson, DeJson)]
+#[derive(Debug, Clone, Copy, PartialEq, Quicksilver)]
 pub struct FPos {
     pub x: f32,
     pub y: f32,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Quicksilver)]
 pub struct FVec {
     pub x: f32,
     pub y: f32,

@@ -1,8 +1,8 @@
 use base::Color;
-use nanoserde::{DeJson, SerJson};
+use quicksilver::Quicksilver;
 use std::fmt::Debug;
 
-#[derive(Debug, DeJson, SerJson)]
+#[derive(Debug, Quicksilver)]
 pub struct RandomGenerator {
     seed: u64,
 }

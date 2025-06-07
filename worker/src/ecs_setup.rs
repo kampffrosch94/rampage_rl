@@ -62,7 +62,7 @@ macro_rules! generate_save {
         let mut buffer = Vec::new();
         for id in trivial_query_one_component($world, TypeId::of::<RefCell<$ty>>()) {
             let r = $world.get_component_by_entityid::<$ty>(id);
-            let s = r.serialize_json();
+            let s = ::quicksilver::reflections_ref::reflect_ref(&*r).struct_to_json();
             buffer.push((id.0, s));
         }
         $state
@@ -76,6 +76,7 @@ macro_rules! generate_save {
             let mut state = SerializedState::default();
             $(generate_save!(@comp world state $components $($persist_comp)?);)*
             $(generate_save!(@rel world state $relations $($persist_rel)?);)*
+            use nanoserde::SerJson;
             state.serialize_json()
         }
     };
@@ -96,7 +97,7 @@ macro_rules! generate_load {
     (@comp ($world:expr) $var:ident $payloads:ident $ty:tt persist) => {
         if $var == type_name::<$ty>() {
             for (entity_id, payload) in $payloads {
-                let val = $ty::deserialize_json(payload).unwrap();
+                let val = ::quicksilver::json::from_json::<$ty>(payload);
                 let e = $world.ensure_alive(EntityId(*entity_id));
                 $world.add_component(e, val);
             }
@@ -110,6 +111,7 @@ macro_rules! generate_load {
         pub fn load_world(s: &str) -> World {
             let mut world = World::new();
             register_components(&mut world);
+            use nanoserde::DeJson;
             let state: SerializedState = SerializedState::deserialize_json(s).unwrap();
 
             //$(generate_load!(@comp world state $components $($persist_comp)?);)*

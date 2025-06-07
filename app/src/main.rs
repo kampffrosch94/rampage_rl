@@ -140,7 +140,6 @@ async fn main() {
         // }));
         ctx.camera.process();
 
-
         fps_counter.update();
         let fps = fps_counter.get_fps();
         let dpi = screen_dpi_scale();
@@ -154,7 +153,6 @@ async fn main() {
         worker.update(ctx);
 
         ctx.process().await;
-
 
         next_frame().await
     }

@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 nanoserde.workspace = true
+quicksilver.workspace = true

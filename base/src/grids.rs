@@ -1,12 +1,15 @@
 // vendored
 #![allow(dead_code)]
-use std::ops::{Add, Index, IndexMut, Mul};
+use std::{
+    mem::offset_of,
+    ops::{Add, Index, IndexMut, Mul},
+};
 
-use nanoserde::{DeJson, SerJson};
+use quicksilver::{Field, Quicksilver, Struct, Type};
 
 use crate::Pos;
 
-#[derive(Clone, Debug, DeJson, SerJson)]
+#[derive(Clone, Debug)]
 pub struct Grid<T> {
     pub data: Vec<T>,
     pub width: i32,
@@ -340,6 +343,19 @@ impl<T: Clone> IndexMut<Pos> for Grid<T> {
     fn index_mut(&mut self, pos: Pos) -> &mut Self::Output {
         &mut self.data[(pos.x + pos.y * self.width) as usize]
     }
+}
+
+impl<T: Quicksilver> Quicksilver for Grid<T> {
+    const MIRROR: Type = Type::Struct(&Struct {
+        name: "Grid",
+        size: size_of::<Self>(),
+        align: align_of::<Self>(),
+        fields: &[
+            Field { name: "data", ty: Vec::<T>::MIRROR, offset: offset_of!(Self, data) },
+            Field { name: "width", ty: i32::MIRROR, offset: offset_of!(Self, width) },
+            Field { name: "height", ty: i32::MIRROR, offset: offset_of!(Self, height) },
+        ],
+    });
 }
 
 // impl<T: Clone> Index<(u32, u32)> for Grid<T> {

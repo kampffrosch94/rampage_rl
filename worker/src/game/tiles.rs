@@ -1,13 +1,14 @@
 use crate::game::Z_TILES;
 use base::{ContextTrait, FPos, Pos, Rect};
-use nanoserde::{DeJson, SerJson};
+use quicksilver::Quicksilver;
 
 pub const TILE_DIM: f32 = 32.;
 pub const TILE_SCALE: f32 = 2.0;
 pub const TILE_SIZE: f32 = TILE_DIM * TILE_SCALE;
 
 /// A graphical tile from the tileset.png asset in 32rogues
-#[derive(Debug, Clone, Copy, SerJson, DeJson)]
+#[derive(Debug, Clone, Copy, Quicksilver)]
+#[repr(C)]
 pub enum DrawTile {
     Empty,
     SkullWallTop,
@@ -30,14 +31,16 @@ impl DrawTile {
     }
 }
 
-#[derive(Debug, Clone, Copy, SerJson, DeJson, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Quicksilver)]
+#[repr(C)]
 pub enum LogicTile {
     Wall,
     Floor,
     Empty,
 }
 
-#[derive(Debug, Clone, Copy, SerJson, DeJson)]
+#[derive(Debug, Clone, Copy, Quicksilver)]
+#[repr(C)]
 pub enum Environment {
     Catacomb,
 }
@@ -62,7 +65,8 @@ pub fn pos_to_drawpos(pos: Pos) -> FPos {
 /// Anything that can lie on top of a tile.
 /// Below items
 /// Below actors
-#[derive(Debug, Clone, Copy, SerJson, DeJson)]
+#[derive(Debug, Clone, Copy, Quicksilver)]
+#[repr(C)]
 pub enum Decor {
     BloodRed1,
     BloodRed2,

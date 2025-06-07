@@ -10,6 +10,7 @@ pub mod text;
 pub use circle::Circle;
 pub use input::Input;
 pub use pos::{FPos, FVec, Pos};
+pub use quicksilver;
 pub use rect::Rect;
 pub use text::TextProperty;
 

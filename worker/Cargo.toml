@@ -11,3 +11,4 @@ base.path = "../base"
 cosync = "0.2.1"
 froql = { version = "0.1.0", path = "../../fast_queries/froql" }
 nanoserde.workspace = true
+quicksilver.workspace = true
