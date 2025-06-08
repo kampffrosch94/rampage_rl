@@ -18,3 +18,6 @@ web-build:
 web-deploy:
     @just web-build
     @just -f ~/data/Programming/static/7drl_2025_web_publish/justfile deploy
+
+profile:
+    cargo flamegraph --no-default-features -f staticlink

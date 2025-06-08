@@ -61,8 +61,8 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     draw_systems(c, world);
     draw_wip(c);
 
-    for (mut player,) in query!(world, _ Player, mut Actor) {
-        c.inspect(&mut reflect(&mut *player));
+    for (mut actor,) in query!(world, mut Actor) {
+        c.inspect(&mut reflect(&mut *actor));
     }
 }
 

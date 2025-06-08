@@ -20,7 +20,9 @@ pub struct Context {
     pub loading: Vec<(String, String)>,
     pub inner: ContextInner,
     #[cfg(feature = "hotreload")]
-    pub egui_ctx: Option<egui::Context>,
+    pub egui_ctx: Option<&'static mut egui::Ui>,
+    #[cfg(feature = "hotreload")]
+    pub egui_drawn: bool,
 }
 
 pub struct ContextInner {
@@ -216,12 +218,12 @@ impl ContextTrait for Context {
 
     #[cfg(feature = "hotreload")]
     fn inspect(&mut self, val: &mut ValueReflection) {
-        use crate::egui_inspector::next_id;
-
-        egui::Window::new("Adhoc").show(self.egui_ctx.as_ref().unwrap(), |ui| {
-            use crate::egui_inspector::draw_value;
+        self.egui_drawn = true;
+        use crate::egui_inspector::draw_value;
+        if let Some(ref mut ui) = self.egui_ctx {
             draw_value(ui, val);
-        });
+            ui.separator();
+        }
     }
 }
 
@@ -235,6 +237,8 @@ impl Context {
             inner: ContextInner { texter: Texter::new() },
             #[cfg(feature = "hotreload")]
             egui_ctx: None,
+            #[cfg(feature = "hotreload")]
+            egui_drawn: false,
         }
     }
 

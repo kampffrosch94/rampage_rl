@@ -118,6 +118,8 @@ async fn main() {
     #[cfg(feature = "hotreload")]
     let mut egui = egui_macroquad::Egui::new();
 
+    let mut egui_drawn_before = false;
+
     loop {
         #[cfg(feature = "hotreload")]
         egui_inspector::reset_id();
@@ -160,19 +162,31 @@ async fn main() {
         let s = format!("FPS: {fps} DPI: {dpi} Screen: {w} x {h}");
         draw_text(&s, 20.0, -20.0, 30.0, WHITE);
 
-        #[cfg(feature = "hotreload")]
-        egui.ui(|_, egui_ctx| {
-            egui_ctx.set_pixels_per_point(1.5);
-            ctx.egui_ctx = Some(egui_ctx.clone());
+        if egui_drawn_before {
+            #[cfg(feature = "hotreload")]
+            egui.ui(|_, egui_ctx| {
+                egui_ctx.set_pixels_per_point(1.5);
+
+                egui::SidePanel::left("my_left_panel").show(egui_ctx, |ui| {
+                    ctx.egui_ctx = Some(unsafe { std::mem::transmute(ui) });
+                    worker.update(ctx);
+                    ctx.egui_ctx = None;
+                });
+            });
+        } else {
             worker.update(ctx);
-        });
-        #[cfg(feature = "staticlink")]
-        worker.update(ctx);
+        }
 
         ctx.process().await;
 
         #[cfg(feature = "hotreload")]
-        egui.draw();
+        {
+            if egui_drawn_before {
+                egui.draw();
+            }
+            egui_drawn_before = ctx.egui_drawn;
+            ctx.egui_drawn = false;
+        }
 
         /*
         egui_macroquad::ui(|egui_ctx| {

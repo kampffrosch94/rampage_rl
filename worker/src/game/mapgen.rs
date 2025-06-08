@@ -75,9 +75,8 @@ pub fn draw_wip(c: &mut dyn ContextTrait) {
     }
     world.process();
 
-    let mut go_on = true;
-    while go_on {
-        go_on = false;
+    'outer: loop {
+        world.process();
         for (a, room_a) in query!(world, &a, Room(a)) {
             if let Some((b, room_b)) =
                 query!(world, &b, Room(b), !Connected(b, *a), *a != b).next()
@@ -89,11 +88,11 @@ pub fn draw_wip(c: &mut dyn ContextTrait) {
                         tm.tiles[pos] = LogicTile::Floor;
                     }
                 }
-                go_on = true;
-                break;
+                continue 'outer;
             }
         }
         world.process();
+        break;
     }
 
     tm.draw(c, 0., 1000.);
