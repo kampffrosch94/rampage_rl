@@ -54,7 +54,7 @@ pub trait ContextTrait {
     fn screen_rect(&self) -> Rect;
 
     //fn inspect(&mut self, _val: ValueReflection) {}
-    fn inspect(&mut self, _val: &str) {}
+    fn inspect(&mut self, _val: &mut ValueReflection) {}
 }
 
 /// Wrapper for state that is persisted between reloads

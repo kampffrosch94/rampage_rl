@@ -11,6 +11,7 @@ notify = {version = "7.0.0", optional = true}
 tween = "2.0.3"
 derive_more = { version = "1.0.0", features = ["full"] }
 cosmic-text = { version = "0.12.1", default-features = false, features = ["swash", "no_std"] }
+quicksilver.workspace = true
 
 # optional
 worker = {path = "../worker", optional = true}

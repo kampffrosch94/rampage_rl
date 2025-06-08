@@ -3,6 +3,8 @@ use std::cell::RefCell;
 use base::*;
 
 use macroquad::prelude::*;
+#[cfg(feature = "hotreload")]
+use quicksilver::reflections::ValueReflection;
 
 use crate::{
     camera::{CameraWrapper, screen_camera},
@@ -213,9 +215,12 @@ impl ContextTrait for Context {
     }
 
     #[cfg(feature = "hotreload")]
-    fn inspect(&mut self, val: &str) {
+    fn inspect(&mut self, val: &mut ValueReflection) {
+        use crate::egui_inspector::next_id;
+
         egui::Window::new("Adhoc").show(self.egui_ctx.as_ref().unwrap(), |ui| {
-            ui.label(val);
+            use crate::egui_inspector::draw_value;
+            draw_value(ui, val);
         });
     }
 }

@@ -69,7 +69,7 @@ macro_rules! generate_save {
         let mut buffer = Vec::new();
         for id in trivial_query_one_component($world, TypeId::of::<RefCell<$ty>>()) {
             let r = $world.get_component_by_entityid::<$ty>(id);
-            let s = ::quicksilver::reflections_ref::reflect_ref(&*r).struct_to_json();
+            let s = ::quicksilver::reflections_ref::reflect_ref(&*r).to_json();
             buffer.push(EntityComponent(id.0, s));
         }
         $state
@@ -83,7 +83,7 @@ macro_rules! generate_save {
             let mut state = SerializedState::default();
             $(generate_save!(@comp world state $components $($persist_comp)?);)*
             $(generate_save!(@rel world state $relations $($persist_rel)?);)*
-            ::quicksilver::reflections_ref::reflect_ref(&state).struct_to_json()
+            ::quicksilver::reflections_ref::reflect_ref(&state).to_json()
         }
     };
 }

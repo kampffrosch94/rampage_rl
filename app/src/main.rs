@@ -6,6 +6,8 @@ mod camera;
 mod context;
 mod draw;
 #[cfg(feature = "hotreload")]
+mod egui_inspector;
+#[cfg(feature = "hotreload")]
 mod egui_macroquad;
 mod fps_counter;
 mod text;
@@ -117,6 +119,9 @@ async fn main() {
     let mut egui = egui_macroquad::Egui::new();
 
     loop {
+        #[cfg(feature = "hotreload")]
+        egui_inspector::reset_id();
+
         clear_background(BLACK);
 
         if is_mouse_button_down(MouseButton::Middle) {
@@ -157,6 +162,7 @@ async fn main() {
 
         #[cfg(feature = "hotreload")]
         egui.ui(|_, egui_ctx| {
+            egui_ctx.set_pixels_per_point(1.5);
             ctx.egui_ctx = Some(egui_ctx.clone());
             worker.update(ctx);
         });
@@ -181,6 +187,6 @@ async fn main() {
         egui_macroquad::draw();
         */
 
-        next_frame().await
+        next_frame().await;
     }
 }

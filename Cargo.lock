@@ -54,6 +54,7 @@ dependencies = [
  "libloading",
  "macroquad",
  "notify",
+ "quicksilver",
  "tween",
  "worker",
 ]
