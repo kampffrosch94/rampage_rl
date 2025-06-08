@@ -5,6 +5,8 @@ use macroquad::prelude::*;
 mod camera;
 mod context;
 mod draw;
+#[cfg(feature = "hotreload")]
+mod egui_macroquad;
 mod fps_counter;
 mod text;
 
@@ -111,6 +113,9 @@ async fn main() {
 
     let mut fps_counter = FPSCounter::new();
 
+    #[cfg(feature = "hotreload")]
+    let mut egui = egui_macroquad::Egui::new();
+
     loop {
         clear_background(BLACK);
 
@@ -150,9 +155,31 @@ async fn main() {
         let s = format!("FPS: {fps} DPI: {dpi} Screen: {w} x {h}");
         draw_text(&s, 20.0, -20.0, 30.0, WHITE);
 
+        #[cfg(feature = "hotreload")]
+        egui.ui(|_, egui_ctx| {
+            ctx.egui_ctx = Some(egui_ctx.clone());
+            worker.update(ctx);
+        });
+        #[cfg(feature = "staticlink")]
         worker.update(ctx);
 
         ctx.process().await;
+
+        #[cfg(feature = "hotreload")]
+        egui.draw();
+
+        /*
+        egui_macroquad::ui(|egui_ctx| {
+            egui_macroquad::egui::Window::new("egui ❤ macroquad")
+                .show(egui_ctx, |ui| {
+                    ui.label("Test");
+                });
+        });
+
+        // Draw things before egui
+
+        egui_macroquad::draw();
+        */
 
         next_frame().await
     }

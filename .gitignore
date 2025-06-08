@@ -2,3 +2,4 @@
 /.envrc
 /target/
 /.idea/
+/app/.dir-locals.el

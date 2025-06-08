@@ -23,6 +23,9 @@ pub const Z_UI_BG: i32 = 1000;
 pub const Z_UI_TEXT: i32 = 1100;
 
 pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut FleetingState) {
+
+    c.inspect("Test Jippie fasdjsfdl");
+
     if c.is_pressed(Input::RestartGame) {
         println!("Restarting game.");
         s.restart();

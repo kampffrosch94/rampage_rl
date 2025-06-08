@@ -11,6 +11,7 @@ pub use circle::Circle;
 pub use input::Input;
 pub use pos::{FPos, FVec, Pos};
 pub use quicksilver;
+use quicksilver::reflections::ValueReflection;
 pub use rect::Rect;
 pub use text::TextProperty;
 
@@ -51,6 +52,9 @@ pub trait ContextTrait {
     fn draw_text(&mut self, key: u64, x: f32, y: f32, z_level: i32);
 
     fn screen_rect(&self) -> Rect;
+
+    //fn inspect(&mut self, _val: ValueReflection) {}
+    fn inspect(&mut self, _val: &str) {}
 }
 
 /// Wrapper for state that is persisted between reloads

@@ -4,9 +4,7 @@ use quicksilver::Quicksilver;
 
 use crate::grids::Grid;
 
-#[derive(
-    Debug, Clone, Copy, PartialEq, Hash, Eq, PartialOrd, Ord, Quicksilver,
-)]
+#[derive(Debug, Clone, Copy, PartialEq, Hash, Eq, PartialOrd, Ord, Quicksilver)]
 pub struct Pos {
     pub x: i32,
     pub y: i32,

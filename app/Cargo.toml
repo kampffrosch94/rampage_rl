@@ -6,17 +6,18 @@ edition = "2024"
 [dependencies]
 libloading = {version = "0.8.5", optional = true}
 base.path = "../base"
-macroquad = { git = "https://github.com/not-fl3/macroquad", version = "0.4.13" }
+macroquad = { version = "0.4" }
 notify = {version = "7.0.0", optional = true}
 tween = "2.0.3"
 derive_more = { version = "1.0.0", features = ["full"] }
+cosmic-text = { version = "0.12.1", default-features = false, features = ["swash", "no_std"] }
 
 # optional
 worker = {path = "../worker", optional = true}
-cosmic-text = { version = "0.12.1", default-features = false, features = ["swash", "no_std"] }
-
+egui = {version = "0.31", optional = true}
+egui-miniquad = {version = "0.16", optional = true}
 
 [features]
 default = ["hotreload"]
 staticlink = ["dep:worker"]
-hotreload = ["dep:notify", "dep:libloading"]
+hotreload = ["dep:notify", "dep:libloading", "dep:egui-miniquad", "dep:egui"]

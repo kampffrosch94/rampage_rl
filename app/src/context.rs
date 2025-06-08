@@ -17,6 +17,8 @@ pub struct Context {
     pub textures: TextureStore,
     pub loading: Vec<(String, String)>,
     pub inner: ContextInner,
+    #[cfg(feature = "hotreload")]
+    pub egui_ctx: Option<egui::Context>,
 }
 
 pub struct ContextInner {
@@ -209,6 +211,13 @@ impl ContextTrait for Context {
     fn screen_rect(&self) -> base::Rect {
         base::Rect::new(0., 0., screen_width(), screen_height())
     }
+
+    #[cfg(feature = "hotreload")]
+    fn inspect(&mut self, val: &str) {
+        egui::Window::new("Adhoc").show(self.egui_ctx.as_ref().unwrap(), |ui| {
+            ui.label(val);
+        });
+    }
 }
 
 impl Context {
@@ -219,6 +228,8 @@ impl Context {
             textures: Default::default(),
             loading: Default::default(),
             inner: ContextInner { texter: Texter::new() },
+            #[cfg(feature = "hotreload")]
+            egui_ctx: None,
         }
     }
 
