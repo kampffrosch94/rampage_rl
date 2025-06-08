@@ -1,12 +1,19 @@
-use nanoserde::{DeJson, SerJson};
+use quicksilver::Quicksilver;
 use std::collections::HashMap;
 
-#[derive(Default, Debug, DeJson, SerJson)]
+type TypeName = String;
+
+#[derive(Default, Debug, Quicksilver)]
+pub struct OriginTarget(pub u32, pub u32);
+#[derive(Default, Debug, Quicksilver)]
+pub struct EntityComponent(pub u32, pub String);
+
+#[derive(Default, Debug, Quicksilver)]
 pub struct SerializedState {
     // TypeName, Vec<(EntityId, ComponentPayload)>
-    pub components: HashMap<String, Vec<(u32, String)>>,
+    pub components: HashMap<TypeName, Vec<EntityComponent>>,
     // TypeName, Vec<(Origin, Target)>
-    pub relations: HashMap<String, Vec<(u32, u32)>>,
+    pub relations: HashMap<TypeName, Vec<OriginTarget>>,
 }
 
 macro_rules! generate_register {
@@ -53,7 +60,7 @@ macro_rules! generate_save {
                 .bookkeeping
                 .relation_pairs(TypeId::of::<Relation<$ty>>())
                 .into_iter()
-                .map(|(o, t)| (o.id.0, t.id.0))
+                .map(|(o, t)| OriginTarget(o.id.0, t.id.0))
                 .collect(),
         );
     };
@@ -63,7 +70,7 @@ macro_rules! generate_save {
         for id in trivial_query_one_component($world, TypeId::of::<RefCell<$ty>>()) {
             let r = $world.get_component_by_entityid::<$ty>(id);
             let s = ::quicksilver::reflections_ref::reflect_ref(&*r).struct_to_json();
-            buffer.push((id.0, s));
+            buffer.push(EntityComponent(id.0, s));
         }
         $state
             .components
@@ -76,8 +83,7 @@ macro_rules! generate_save {
             let mut state = SerializedState::default();
             $(generate_save!(@comp world state $components $($persist_comp)?);)*
             $(generate_save!(@rel world state $relations $($persist_rel)?);)*
-            use nanoserde::SerJson;
-            state.serialize_json()
+            ::quicksilver::reflections_ref::reflect_ref(&state).struct_to_json()
         }
     };
 }
@@ -85,7 +91,7 @@ macro_rules! generate_save {
 macro_rules! generate_load {
     (@rel ($world:expr) $var:ident $pairs:ident $ty:tt persist) => {
         if $var == type_name::<$ty>() {
-            for (origin, target) in $pairs {
+            for OriginTarget(origin, target) in $pairs {
                 let a = $world.ensure_alive(EntityId(*origin));
                 let b = $world.ensure_alive(EntityId(*target));
                 $world.add_relation::<$ty>(a, b);
@@ -96,7 +102,7 @@ macro_rules! generate_load {
     (@rel ($world:expr) $var:ident $payloads:ident $ty:tt) => {};
     (@comp ($world:expr) $var:ident $payloads:ident $ty:tt persist) => {
         if $var == type_name::<$ty>() {
-            for (entity_id, payload) in $payloads {
+            for EntityComponent(entity_id, payload) in $payloads {
                 let val = ::quicksilver::json::from_json::<$ty>(payload);
                 let e = $world.ensure_alive(EntityId(*entity_id));
                 $world.add_component(e, val);
@@ -111,11 +117,7 @@ macro_rules! generate_load {
         pub fn load_world(s: &str) -> World {
             let mut world = World::new();
             register_components(&mut world);
-            use nanoserde::DeJson;
-            let state: SerializedState = SerializedState::deserialize_json(s).unwrap();
-
-            //$(generate_load!(@comp world state $components $($persist_comp)?);)*
-            //$(generate_load!(@rel world state $relations $($persist_rel)?);)*
+            let state: SerializedState = ::quicksilver::json::from_json(s);
 
             for (ty, payloads) in &state.components {
                 let var = ty.as_str();

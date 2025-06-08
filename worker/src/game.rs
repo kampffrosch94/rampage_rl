@@ -51,7 +51,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
 
     f.co.run_until_stall(world);
 
-    c.draw_texture("tiles", -225., -950., 5);
+    c.draw_texture("tiles", -228., -950., 5);
     c.draw_texture("rogues", -600., -950., 5);
     c.draw_texture("monsters", -1100., -950., 5);
 

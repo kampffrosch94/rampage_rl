@@ -3,8 +3,11 @@ use base::Circle;
 use base::FPos;
 use base::Pos;
 use base::Rect;
+use froql::relation::Relation;
 use froql::world::World;
 
+use crate::ecs_setup::EntityComponent;
+use crate::ecs_setup::OriginTarget;
 use crate::ecs_setup::SerializedState;
 use crate::rand::RandomGenerator;
 use froql::entity_store::EntityId;
@@ -48,6 +51,9 @@ pub struct DrawPos(pub FPos);
 /// Set early in the game loop.
 pub struct DeltaTime(pub f32);
 
+/// just here to check that the macro below works
+pub enum ExampleRel {}
+
 ecs_types!(
     Components(
         Circle,
@@ -60,5 +66,5 @@ ecs_types!(
         TileMap[persist],
         RandomGenerator[persist]
     ),
-    Relations()
+    Relations(ExampleRel[persist])
 );

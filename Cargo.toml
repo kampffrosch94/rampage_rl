@@ -3,9 +3,6 @@ resolver = "2"
 
 members = [ "app" , "base", "worker"]
 
-[patch.crates-io]
-miniquad = { git = "https://github.com/not-fl3/miniquad.git"}
-
 [profile.release]
 opt-level = 3
 #lto = true
@@ -13,5 +10,5 @@ opt-level = 3
 #debug=true #careful with code size
 
 [workspace.dependencies]
-nanoserde = { git = "https://github.com/not-fl3/nanoserde.git", branch= "master" }
+#nanoserde = { git = "https://github.com/not-fl3/nanoserde.git", branch= "master" }
 quicksilver = { path = "../quicksilver/quicksilver", version = "0.1.0"}

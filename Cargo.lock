@@ -38,7 +38,6 @@ checksum = "ace50bade8e6234aa140d9a2f552bbee1db4d353f69b8217bc503490fc1a9f26"
 name = "base"
 version = "0.1.0"
 dependencies = [
- "nanoserde",
  "quicksilver",
 ]
 
@@ -419,11 +418,12 @@ dependencies = [
 [[package]]
 name = "miniquad"
 version = "0.4.7"
-source = "git+https://github.com/not-fl3/miniquad.git#efa0e4fd3a5e5b216749013733baa9b78f026015"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "df742c016aff7c852d639e93a87846c098ca4c7d95b9da11e61b58423cd363d0"
 dependencies = [
  "libc",
  "ndk-sys",
- "objc-rs",
+ "objc",
  "winapi",
 ]
 
@@ -448,19 +448,6 @@ dependencies = [
  "wasi",
  "windows-sys 0.52.0",
 ]
-
-[[package]]
-name = "nanoserde"
-version = "0.2.0"
-source = "git+https://github.com/not-fl3/nanoserde.git?branch=master#308f32661b1045b38304b0bbe2487a5cfd7e9917"
-dependencies = [
- "nanoserde-derive",
-]
-
-[[package]]
-name = "nanoserde-derive"
-version = "0.2.0"
-source = "git+https://github.com/not-fl3/nanoserde.git?branch=master#308f32661b1045b38304b0bbe2487a5cfd7e9917"
 
 [[package]]
 name = "ndk-sys"
@@ -506,10 +493,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "objc-rs"
-version = "0.2.8"
+name = "objc"
+version = "0.2.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "64a1e7069a2525126bf12a9f1f7916835fafade384fb27cabf698e745e2a1eb8"
+checksum = "915b1b472bc21c53464d6c8461c9d3af805ba1ef837e1cac254428f4a77177b1"
 dependencies = [
  "malloc_buf",
 ]
@@ -926,7 +913,6 @@ dependencies = [
  "base",
  "cosync",
  "froql",
- "nanoserde",
  "quicksilver",
 ]
 
