@@ -130,6 +130,17 @@ pub fn draw_value(ui: &mut egui::Ui, value: &mut ValueReflection) {
                 },
             );
         }
+        ValueReflection::Option(o) => {
+            if let Some(ref mut inner) = o.get() {
+                ui.vertical(|ui| {
+                    ui.label("Some:");
+                    draw_value(ui, inner);
+                });
+            } else {
+                ui.label("None");
+            }
+        }
+
     }
 }
 
@@ -195,6 +206,16 @@ fn draw_value_ref(ui: &mut egui::Ui, value: &ValueReflection) {
         ValueReflection::CEnum(e) => {
             let name = e.variants.iter().find(|it| it.0 == *e.val).unwrap().1;
             ui.label(&format!("{}", name));
+        }
+        ValueReflection::Option(o) => {
+            if let Some(ref inner) = o.get_ref() {
+                ui.vertical(|ui| {
+                    ui.label("Some:");
+                    draw_value_ref(ui, inner);
+                });
+            } else {
+                ui.label("None");
+            }
         }
     }
 }
