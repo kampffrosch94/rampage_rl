@@ -73,8 +73,8 @@ pub fn draw_wip(c: &mut dyn ContextTrait) {
         let room = area.carve(&mut tm.tiles, rand);
         e.add(room);
     }
-    world.process();
 
+    // connect rooms via astar dig
     'outer: loop {
         world.process();
         for (a, room_a) in query!(world, &a, Room(a)) {
@@ -92,6 +92,17 @@ pub fn draw_wip(c: &mut dyn ContextTrait) {
             }
         }
         world.process();
+        break;
+    }
+
+    // place up and down stairs in rooms that are far apart
+    for (room_a,) in query!(world, Room) {
+        let room_b = query!(world, Room)
+            .map(|(r,)| r)
+            .max_by_key(|r| r.pos().manhattan_distance(room_a.pos()))
+            .unwrap();
+        tm.tiles[room_a.pos()] = LogicTile::UpStairs;
+        tm.tiles[room_b.pos()] = LogicTile::DownStairs;
         break;
     }
 

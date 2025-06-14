@@ -14,6 +14,8 @@ pub enum DrawTile {
     SkullWallTop,
     SkullWallBot,
     GrayFloor,
+    DownStairs,
+    UpStairs,
 }
 
 impl DrawTile {
@@ -23,6 +25,8 @@ impl DrawTile {
             DrawTile::SkullWallTop => (0, 5),
             DrawTile::SkullWallBot => (1, 5),
             DrawTile::GrayFloor => (0, 6),
+            DrawTile::DownStairs => (7, 16),
+            DrawTile::UpStairs => (8, 16),
         };
 
         let src = Rect::new(sx as f32 * TILE_DIM, sy as f32 * TILE_DIM, TILE_DIM, TILE_DIM);
@@ -37,6 +41,8 @@ pub enum LogicTile {
     Wall,
     Floor,
     Empty,
+    UpStairs,
+    DownStairs,
 }
 
 #[derive(Debug, Clone, Copy, Quicksilver)]
@@ -54,6 +60,8 @@ pub fn generate_draw_tile(lt: LogicTile, env: Environment, below: LogicTile) -> 
             },
             LogicTile::Floor => DrawTile::GrayFloor,
             LogicTile::Empty => DrawTile::Empty,
+            LogicTile::UpStairs => DrawTile::UpStairs,
+            LogicTile::DownStairs => DrawTile::DownStairs,
         },
     }
 }

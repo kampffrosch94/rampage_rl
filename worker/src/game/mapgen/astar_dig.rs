@@ -52,6 +52,8 @@ pub fn astar_orth_dig(tm: &TileMap, start: Pos, goal: Pos) -> Option<Vec<Pos>> {
                 LogicTile::Empty => continue,
                 LogicTile::Wall => 10,
                 LogicTile::Floor => 1,
+                LogicTile::DownStairs => 1,
+                LogicTile::UpStairs => 1,
             };
             let new_cost = cost[current] + step_cost;
             if new_cost < cost[next] {

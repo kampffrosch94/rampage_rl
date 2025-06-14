@@ -3,7 +3,6 @@ use cosync::CosyncInput;
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::draw_wip;
-use quicksilver::reflections::reflect;
 use tile_map::TileMap;
 mod creature;
 mod tile_map;
@@ -61,9 +60,9 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     draw_systems(c, world);
     draw_wip(c);
 
-    for (mut actor,) in query!(world, mut Actor) {
-        c.inspect(&mut reflect(&mut *actor));
-    }
+    // for (mut actor,) in query!(world, mut Actor) {
+    // c.inspect(&mut reflect(&mut *actor));
+    // }
 }
 
 fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
