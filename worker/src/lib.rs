@@ -1,5 +1,7 @@
+#[cfg(not(target_arch = "wasm32"))]
 use std::{ffi::c_void, panic::AssertUnwindSafe};
 
+#[cfg(not(target_arch = "wasm32"))]
 use base::{ContextTrait, PersistWrapper};
 pub use fleeting::FleetingState;
 pub use game::update_inner;
@@ -14,6 +16,7 @@ mod util;
 
 pub const GRIDSIZE: f32 = 16.;
 
+#[cfg(not(target_arch = "wasm32"))]
 #[unsafe(no_mangle)]
 pub extern "C" fn permanent_state() -> PersistWrapper {
     let state = PersistentState::new();
@@ -24,6 +27,7 @@ pub extern "C" fn permanent_state() -> PersistWrapper {
     PersistWrapper { ptr, size, align }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[unsafe(no_mangle)]
 pub extern "C" fn fleeting_state_create() -> PersistWrapper {
     let state = FleetingState::new();
@@ -34,6 +38,7 @@ pub extern "C" fn fleeting_state_create() -> PersistWrapper {
     PersistWrapper { ptr, size, align }
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[unsafe(no_mangle)]
 pub extern "C" fn fleeting_state_dispose(pers: &mut PersistWrapper, fleet: PersistWrapper) {
     let ptr = fleet.ptr as *mut FleetingState;
@@ -42,6 +47,7 @@ pub extern "C" fn fleeting_state_dispose(pers: &mut PersistWrapper, fleet: Persi
     boxed.co.run_blocking(&mut pers.ref_mut::<PersistentState>().world);
 }
 
+#[cfg(not(target_arch = "wasm32"))]
 #[unsafe(no_mangle)]
 #[allow(improper_ctypes_definitions)]
 pub extern "C" fn update(
