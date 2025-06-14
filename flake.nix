@@ -67,6 +67,7 @@
             cargo-llvm-lines
             cargo-machete
             cargo-nextest
+            renderdoc
           ];
           # stuff we need to run
           LD_LIBRARY_PATH =
