@@ -464,6 +464,7 @@ dependencies = [
 [[package]]
 name = "froql"
 version = "0.1.0"
+source = "git+https://github.com/kampffrosch94/froql.git#d0b845bb2ed4a198223edd43a74d5b1939bff51e"
 dependencies = [
  "froql_macro",
  "hi_sparse_bitset",
@@ -472,6 +473,7 @@ dependencies = [
 [[package]]
 name = "froql_macro"
 version = "0.1.0"
+source = "git+https://github.com/kampffrosch94/froql.git#d0b845bb2ed4a198223edd43a74d5b1939bff51e"
 
 [[package]]
 name = "fsevent-sys"
@@ -1030,6 +1032,7 @@ dependencies = [
 [[package]]
 name = "quicksilver"
 version = "0.1.0"
+source = "git+https://github.com/kampffrosch94/quicksilver.git#bb12217856c35fcf894581872f68917c8d562c29"
 dependencies = [
  "quicksilver_derive",
 ]
@@ -1037,6 +1040,7 @@ dependencies = [
 [[package]]
 name = "quicksilver_derive"
 version = "0.1.0"
+source = "git+https://github.com/kampffrosch94/quicksilver.git#bb12217856c35fcf894581872f68917c8d562c29"
 
 [[package]]
 name = "quote"

@@ -10,5 +10,7 @@ opt-level = 3
 #debug=true #careful with code size
 
 [workspace.dependencies]
-#nanoserde = { git = "https://github.com/not-fl3/nanoserde.git", branch= "master" }
-quicksilver = { path = "../quicksilver/quicksilver", version = "0.1.0"}
+#froql = { version = "0.1.0", path = "../../fast_queries/froql" }
+froql = { version = "0.1.0", git = "https://github.com/kampffrosch94/froql.git" }
+#quicksilver = { path = "../quicksilver/quicksilver", version = "0.1.0"}
+quicksilver = { git = "https://github.com/kampffrosch94/quicksilver.git", version = "0.1.0"}
