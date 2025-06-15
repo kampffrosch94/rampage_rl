@@ -2,13 +2,13 @@ use base::{Color, ContextTrait, FPos, Input, Pos, Rect};
 use cosync::CosyncInput;
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
-use mapgen::draw_wip;
+use mapgen::{generate_map, place_enemies};
 use tile_map::TileMap;
 mod creature;
 mod tile_map;
 mod tiles;
 pub mod types;
-use tiles::{Decor, LogicTile, TILE_SIZE, pos_to_drawpos};
+use tiles::{Decor, TILE_SIZE, pos_to_drawpos};
 use types::*;
 use ui::handle_ui;
 mod mapgen;
@@ -58,10 +58,9 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     handle_ui(c, world, f);
     update_systems(c, world, f);
     draw_systems(c, world);
-    draw_wip(c);
 
     // for (mut actor,) in query!(world, mut Actor) {
-    // c.inspect(&mut reflect(&mut *actor));
+    //     c.inspect(&mut reflect(&mut *actor));
     // }
 }
 
@@ -212,26 +211,22 @@ pub fn create_world() -> World {
     let mut world = World::new();
     register_components(&mut world);
 
+    // TODO get properly random seed
+    let tm = generate_map(12345);
+
     let _player = world
         .create()
         .add(Player { pulse: 60., last_action: 0 })
         .add(DrawPos(FPos::new(0., 0.)))
         .add(Actor {
-            pos: Pos::new(1, 1),
+            pos: tm.up_stairs,
             sprite: CreatureSprite::Dwarf,
             hp: HP { max: 10, current: 10 },
         });
 
-    let _goblin = world.create().add(DrawPos(FPos::new(0., 0.))).add(Actor {
-        pos: Pos::new(4, 4),
-        sprite: CreatureSprite::Goblin,
-        hp: HP { max: 5, current: 5 },
-    });
-
-    let mut tm = TileMap::new(12, 12, LogicTile::Floor);
-    tm.enwall();
     world.singleton_add(tm);
-    // TODO get properly random seed
+    place_enemies(&mut world, 12345);
+
     world.singleton_add(RandomGenerator::new(12345));
 
     world.process();

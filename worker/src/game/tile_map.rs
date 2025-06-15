@@ -5,7 +5,7 @@ use froql::{entity_store::Entity, query, world::World};
 use quicksilver::Quicksilver;
 use quicksilver::empty::EmptyContainer;
 
-use super::tiles::{Decor, Environment, LogicTile, TILE_SIZE};
+use super::tiles::{Decor, DrawTile, Environment, LogicTile, TILE_SIZE};
 use crate::game::Actor;
 use crate::game::tiles::generate_draw_tile;
 
@@ -13,18 +13,29 @@ use crate::game::tiles::generate_draw_tile;
 pub struct TileMap {
     pub tiles: Grid<LogicTile>,
     #[quicksilver(skip)]
-    actors: HashMap<Pos, Entity>,
-    decor: Vec<DecorWithPos>,
+    pub actors: HashMap<Pos, Entity>,
+    pub decor: Vec<DecorWithPos>,
+    pub up_stairs: Pos,
+    pub down_stairs: Pos,
+    pub rooms: Vec<Room>,
 }
 
 #[derive(Debug, Quicksilver)]
-struct DecorWithPos(Pos, Decor);
+pub struct DecorWithPos(Pos, Decor);
 
 impl TileMap {
     pub fn new(w: i32, h: i32, start_tile: LogicTile) -> Self {
-        Self { tiles: Grid::new(w, h, start_tile), actors: HashMap::new(), decor: Vec::new() }
+        Self {
+            tiles: Grid::new(w, h, start_tile),
+            actors: HashMap::new(),
+            decor: Vec::new(),
+            up_stairs: Pos::new(0, 0),
+            down_stairs: Pos::new(0, 0),
+            rooms: Vec::new(),
+        }
     }
 
+    #[allow(unused)]
     /// put a wall on the outside
     pub fn enwall(&mut self) {
         let y_max = self.tiles.height - 1;
@@ -51,6 +62,20 @@ impl TileMap {
             let y = y_base + pos.y as f32 * TILE_SIZE;
             draw_tile.draw(c, x, y);
         }
+
+        // up and down stairs
+        {
+            let pos = self.up_stairs;
+            let x = x_base + pos.x as f32 * TILE_SIZE;
+            let y = y_base + pos.y as f32 * TILE_SIZE;
+            DrawTile::UpStairs.draw(c, x, y);
+
+            let pos = self.down_stairs;
+            let x = x_base + pos.x as f32 * TILE_SIZE;
+            let y = y_base + pos.y as f32 * TILE_SIZE;
+            DrawTile::DownStairs.draw(c, x, y);
+        }
+
         for DecorWithPos(pos, decor) in &self.decor {
             let x = x_base + pos.x as f32 * TILE_SIZE;
             let y = y_base + pos.y as f32 * TILE_SIZE;
@@ -77,5 +102,46 @@ impl TileMap {
 
     pub fn get_actor(&self, pos: Pos) -> Option<Entity> {
         self.actors.get(&pos).copied()
+    }
+}
+
+#[derive(Debug, Quicksilver, Clone, Copy)]
+pub struct Room {
+    pub x: i32,
+    pub y: i32,
+    pub w: i32,
+    pub h: i32,
+}
+
+impl Room {
+    pub fn pos(&self) -> Pos {
+        let x = self.x + self.w / 2;
+        let y = self.y + self.h / 2;
+        Pos { x, y }
+    }
+
+    pub fn tile_count(&self) -> i32 {
+        self.w * self.h
+    }
+
+    /// 0..(self.tile_count())
+    pub fn tile_pos(&self, nr: i32) -> Pos {
+        let dx = nr.rem_euclid(self.w);
+        let dy = nr.div_euclid(self.w);
+        Pos::new(self.x + dx, self.y + dy)
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn room_test() {
+        let r = Room { x: 0, y: 0, w: 5, h: 3 };
+        assert_eq!(15, r.tile_count());
+        assert_eq!(Pos::new(0, 0), r.tile_pos(0));
+        assert_eq!(Pos::new(3, 0), r.tile_pos(3));
+        assert_eq!(Pos::new(4, 2), r.tile_pos(14));
     }
 }

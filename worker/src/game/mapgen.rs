@@ -1,6 +1,6 @@
 use crate::rand::RandomGenerator;
 use base::Color;
-use base::ContextTrait;
+use base::FPos;
 use base::Pos;
 use base::Rect;
 use base::grids::Grid;
@@ -11,13 +11,18 @@ use froql::world::World;
 
 mod astar_dig;
 
+use super::creature::CreatureSprite;
+use super::tile_map::Room;
 use super::tile_map::TileMap;
 use super::tiles::LogicTile;
 use super::tiles::TILE_SIZE;
+use super::types::Actor;
+use super::types::DrawPos;
+use super::types::HP;
 enum Connected {}
 
-pub fn draw_wip(c: &mut dyn ContextTrait) {
-    let rand = &mut RandomGenerator::new(12345);
+pub fn generate_map(seed: u64) -> TileMap {
+    let rand = &mut RandomGenerator::new(seed);
 
     let world = &mut World::new();
     world.register_component::<Room>();
@@ -63,30 +68,30 @@ pub fn draw_wip(c: &mut dyn ContextTrait) {
         world.process();
     }
 
-    for (area, color, z_level) in query!(world, Area, Color, ZLevel) {
-        c.draw_rect(area.as_rect().move_by(0., 1000.), *color, z_level.0);
-    }
+    // for (area, color, z_level) in query!(world, Area, Color, ZLevel) {
+    //     c.draw_rect(area.as_rect().move_by(0., 1000.), *color, z_level.0);
+    // }
 
     let mut tm = TileMap::new(width, height, LogicTile::Wall);
 
     for (e, area) in query!(world, &this, Area, !Inside(_, this)) {
         let room = area.carve(&mut tm.tiles, rand);
         e.add(room);
+        tm.rooms.push(room);
     }
 
     // connect rooms via astar dig
     'outer: loop {
         world.process();
         for (a, room_a) in query!(world, &a, Room(a)) {
-            if let Some((b, room_b)) =
-                query!(world, &b, Room(b), !Connected(b, *a), *a != b).next()
-            {
+            for (b, room_b) in query!(world, &b, Room(b), !Connected(b, *a), *a != b) {
                 a.relate_to::<Connected>(*b);
-                if let Some(path) = astar_dig::astar_orth_dig(&tm, room_a.pos(), room_b.pos())
-                {
-                    for pos in path {
-                        tm.tiles[pos] = LogicTile::Floor;
-                    }
+                let Some(path) = astar_dig::astar_orth_dig(&tm, room_a.pos(), room_b.pos())
+                else {
+                    panic!("failed digging")
+                };
+                for pos in path {
+                    tm.tiles[pos] = LogicTile::Floor;
                 }
                 continue 'outer;
             }
@@ -101,12 +106,31 @@ pub fn draw_wip(c: &mut dyn ContextTrait) {
             .map(|(r,)| r)
             .max_by_key(|r| r.pos().manhattan_distance(room_a.pos()))
             .unwrap();
-        tm.tiles[room_a.pos()] = LogicTile::UpStairs;
-        tm.tiles[room_b.pos()] = LogicTile::DownStairs;
+        tm.up_stairs = room_a.pos();
+        tm.down_stairs = room_b.pos();
         break;
     }
 
-    tm.draw(c, 0., 1000.);
+    return tm;
+}
+
+pub fn place_enemies(world: &mut World, seed: u64) {
+    let rand = &mut RandomGenerator::new(seed);
+    let tm = world.singleton::<TileMap>();
+    for room in &tm.rooms {
+        for t in 0..room.tile_count() {
+            if rand.next_in_range(0, 1000) > 20 {
+                continue;
+            }
+            let _goblin = world.create_deferred().add(DrawPos(FPos::new(0., 0.))).add(Actor {
+                pos: room.tile_pos(t),
+                sprite: CreatureSprite::Goblin,
+                hp: HP { max: 5, current: 5 },
+            });
+        }
+    }
+    drop(tm);
+    world.process();
 }
 
 enum Inside {}
@@ -122,6 +146,7 @@ struct Area {
 }
 
 impl Area {
+    #[allow(unused)]
     fn as_rect(&self) -> Rect {
         Rect {
             x: self.x as f32 * TILE_SIZE,
@@ -183,21 +208,5 @@ impl Area {
         let to = Pos::new(x + w, y + h);
         grid.fill_rect(from, to, LogicTile::Floor);
         Room { x, y, w, h }
-    }
-}
-
-#[derive(Debug)]
-struct Room {
-    x: i32,
-    y: i32,
-    w: i32,
-    h: i32,
-}
-
-impl Room {
-    fn pos(&self) -> Pos {
-        let x = self.x + self.w / 2;
-        let y = self.y + self.h / 2;
-        Pos { x, y }
     }
 }

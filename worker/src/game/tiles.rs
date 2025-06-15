@@ -41,8 +41,6 @@ pub enum LogicTile {
     Wall,
     Floor,
     Empty,
-    UpStairs,
-    DownStairs,
 }
 
 #[derive(Debug, Clone, Copy, Quicksilver)]
@@ -60,8 +58,6 @@ pub fn generate_draw_tile(lt: LogicTile, env: Environment, below: LogicTile) -> 
             },
             LogicTile::Floor => DrawTile::GrayFloor,
             LogicTile::Empty => DrawTile::Empty,
-            LogicTile::UpStairs => DrawTile::UpStairs,
-            LogicTile::DownStairs => DrawTile::DownStairs,
         },
     }
 }
