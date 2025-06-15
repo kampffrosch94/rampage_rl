@@ -1,118 +1,7 @@
 //! vendored from https://github.com/nsmryan/shadowcasting (CC0 license)
 //! with some adaptions for my code base here
 
-use std::ops::{Add, Mul, Sub};
-
-#[derive(Copy, Clone, Debug)]
-struct Rational {
-    nr: isize,
-    denom: isize,
-}
-
-impl PartialEq for Rational {
-    fn eq(&self, other: &Self) -> bool {
-        let a = self.normalize();
-        let b = other.normalize();
-        a.nr == b.nr && a.denom == b.denom
-    }
-}
-
-impl PartialOrd for Rational {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        let a = self.normalize();
-        let b = other.normalize();
-        let x = a.nr as i128 * b.denom as i128;
-        let y = b.nr as i128 * a.denom as i128;
-        x.partial_cmp(&y)
-    }
-}
-
-impl Rational {
-    fn new(nr: isize, denom: isize) -> Self {
-        if denom == 0 {
-            panic!("Denominator cannot be zero.");
-        }
-
-        Rational { nr, denom }.normalize()
-    }
-
-    fn normalize(self) -> Rational {
-        let Self { nr, denom } = self;
-        let gcd_val = gcd(nr.abs(), denom.abs());
-        let mut nr = nr / gcd_val;
-        let mut denom = denom / gcd_val;
-
-        if denom < 0 {
-            nr = -nr;
-            denom = -denom;
-        }
-
-        Rational { nr, denom }
-    }
-
-    fn as_float(self) -> f32 {
-        self.nr as f32 / self.denom as f32
-    }
-
-    /// Rounds towards minus infinity.
-    fn floor(self) -> isize {
-        if self.nr >= 0 {
-            self.nr / self.denom
-        } else {
-            (self.nr - self.denom + 1) / self.denom
-        }
-    }
-
-    /// Rounds towards plus infinity.
-    fn ceil(self) -> isize {
-        if self.nr >= 0 {
-            (self.nr + self.denom - 1) / self.denom
-        } else {
-            self.nr / self.denom
-        }
-    }
-}
-
-fn gcd(a: isize, b: isize) -> isize {
-    if b == 0 { a } else { gcd(b, a % b) }
-}
-
-impl Sub for Rational {
-    type Output = Rational;
-
-    fn sub(self, rhs: Self) -> Self::Output {
-        // a/b - c/d = (ad - bc) / bd
-        let common_denom = self.denom * rhs.denom;
-        let nr = self.nr * rhs.denom - rhs.nr * self.denom;
-        Rational::new(nr, common_denom)
-    }
-}
-
-impl Add for Rational {
-    type Output = Rational;
-
-    fn add(self, rhs: Self) -> Self::Output {
-        // a/b + c/d = (ad + bc) / bd
-        let common_denom = self.denom * rhs.denom;
-        let nr = self.nr * rhs.denom + rhs.nr * self.denom;
-        Rational::new(nr, common_denom)
-    }
-}
-
-impl Mul for Rational {
-    type Output = Rational;
-
-    fn mul(self, rhs: Self) -> Self::Output {
-        // (a/b) * (c/d) = (a*c) / (b*d)
-        let nr = self.nr * rhs.nr;
-        let denom = self.denom * rhs.denom;
-        Rational::new(nr, denom)
-    }
-}
-
-/// This Pos type is expected to be generate enough to allow the user
-/// to cast into and out of their own type, such as from the euclid crate.
-pub type Pos = (isize, isize);
+use crate::{Pos, rational::Rational};
 
 /// Compute FOV information for a given position using the shadow mapping algorithm.
 ///
@@ -123,10 +12,6 @@ pub type Pos = (isize, isize);
 /// The mark_visible closure provides the ability to collect visible tiles. This
 /// may push them to a vector (captured in the closure's environment), or
 /// modify a cloned version of the map.
-///
-///
-/// I tried to write a nicer API which would modify the map as a separate user
-/// data, but I can't work out the lifetime annotations.
 pub fn compute_fov<F, G>(origin: Pos, is_blocking: &mut F, mark_visible: &mut G)
 where
     F: FnMut(Pos) -> bool,
@@ -205,33 +90,34 @@ impl Cardinal {
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Debug)]
 struct Quadrant {
     cardinal: Cardinal,
-    ox: isize,
-    oy: isize,
+    ox: i32,
+    oy: i32,
 }
 
 impl Quadrant {
     fn new(cardinal: Cardinal, origin: Pos) -> Quadrant {
-        return Quadrant { cardinal, ox: origin.0, oy: origin.1 };
+        return Quadrant { cardinal, ox: origin.x, oy: origin.y };
     }
 
     fn transform(&self, tile: Pos) -> Pos {
-        let (row, col) = tile;
+        let row = tile.x;
+        let col = tile.y;
 
         match self.cardinal {
             Cardinal::North => {
-                return (self.ox + col, self.oy - row);
+                return Pos::new(self.ox + col, self.oy - row);
             }
 
             Cardinal::South => {
-                return (self.ox + col, self.oy + row);
+                return Pos::new(self.ox + col, self.oy + row);
             }
 
             Cardinal::East => {
-                return (self.ox + row, self.oy + col);
+                return Pos::new(self.ox + row, self.oy + col);
             }
 
             Cardinal::West => {
-                return (self.ox - row, self.oy + col);
+                return Pos::new(self.ox - row, self.oy + col);
             }
         }
     }
@@ -239,13 +125,13 @@ impl Quadrant {
 
 #[derive(Copy, Clone, Debug)]
 struct Row {
-    depth: isize,
+    depth: i32,
     start_slope: Rational,
     end_slope: Rational,
 }
 
 impl Row {
-    fn new(depth: isize, start_slope: Rational, end_slope: Rational) -> Row {
+    fn new(depth: i32, start_slope: Rational, end_slope: Rational) -> Row {
         return Row { depth, start_slope, end_slope };
     }
 
@@ -259,7 +145,7 @@ impl Row {
 
         let depth = self.depth;
 
-        return (min_col..=max_col).map(move |col| (depth, col));
+        return (min_col..=max_col).map(move |col| Pos::new(depth, col));
     }
 
     fn next(&self) -> Row {
@@ -268,12 +154,13 @@ impl Row {
 }
 
 fn slope(tile: Pos) -> Rational {
-    let (row_depth, col) = tile;
+    let row_depth = tile.x;
+    let col = tile.y;
     return Rational::new(2 * col - 1, 2 * row_depth);
 }
 
 fn is_symmetric(row: Row, tile: Pos) -> bool {
-    let (_row_depth, col) = tile;
+    let col = tile.y;
 
     let depth_times_start = Rational::new(row.depth, 1) * row.start_slope;
     let depth_times_end = Rational::new(row.depth, 1) * row.end_slope;
@@ -285,11 +172,11 @@ fn is_symmetric(row: Row, tile: Pos) -> bool {
     return symmetric;
 }
 
-fn round_ties_up(n: Rational) -> isize {
+fn round_ties_up(n: Rational) -> i32 {
     return (n + Rational::new(1, 2)).floor();
 }
 
-fn round_ties_down(n: Rational) -> isize {
+fn round_ties_down(n: Rational) -> i32 {
     return (n - Rational::new(1, 2)).ceil();
 }
 
@@ -298,20 +185,23 @@ mod test {
     use super::*;
 
     fn inside_map<T>(pos: Pos, map: &Vec<Vec<T>>) -> bool {
-        let is_inside = (pos.1 as usize) < map.len() && (pos.0 as usize) < map[0].len();
+        let is_inside = (pos.y as usize) < map.len() && (pos.x as usize) < map[0].len();
         return is_inside;
     }
 
     #[track_caller]
-    fn matching_visible(expected: Vec<Vec<usize>>, visible: Vec<(isize, isize)>) {
+    fn matching_visible(expected: Vec<Vec<usize>>, visible: Vec<Pos>) {
         for y in 0..expected.len() {
             for x in 0..expected[0].len() {
-                if visible.contains(&(x as isize, y as isize)) {
+                if visible.contains(&Pos::new(x as i32, y as i32)) {
                     print!("1");
                 } else {
                     print!("0");
                 }
-                assert_eq!(expected[y][x] == 1, visible.contains(&(x as isize, y as isize)));
+                assert_eq!(
+                    expected[y][x] == 1,
+                    visible.contains(&Pos::new(x as i32, y as i32))
+                );
             }
             println!();
         }
@@ -329,7 +219,7 @@ mod test {
         ];
 
         let mut is_blocking = |pos: Pos| {
-            return !inside_map(pos, &tiles) || tiles[pos.1 as usize][pos.0 as usize] == 1;
+            return !inside_map(pos, &tiles) || tiles[pos.y as usize][pos.x as usize] == 1;
         };
 
         let mut visible = Vec::new();
@@ -339,7 +229,7 @@ mod test {
             }
         };
 
-        compute_fov(origin, &mut is_blocking, &mut mark_visible);
+        compute_fov(origin.into(), &mut is_blocking, &mut mark_visible);
 
         let expected = vec![
             vec![1, 1, 1, 1, 1, 1, 1],
@@ -363,7 +253,7 @@ mod test {
         ];
 
         let mut is_blocking = |pos: Pos| {
-            return !inside_map(pos, &tiles) || tiles[pos.1 as usize][pos.0 as usize] == 1;
+            return !inside_map(pos, &tiles) || tiles[pos.y as usize][pos.x as usize] == 1;
         };
 
         let mut visible = Vec::new();
@@ -373,7 +263,7 @@ mod test {
             }
         };
 
-        compute_fov(origin, &mut is_blocking, &mut mark_visible);
+        compute_fov(origin.into(), &mut is_blocking, &mut mark_visible);
 
         let expected = vec![
             vec![1, 1, 1, 1, 1, 1, 1],
@@ -398,21 +288,21 @@ mod test {
 
         let mut is_blocking = |pos: Pos| {
             let outside =
-                (pos.1 as usize) >= tiles.len() || (pos.0 as usize) >= tiles[0].len();
-            return outside || tiles[pos.1 as usize][pos.0 as usize] == 1;
+                (pos.y as usize) >= tiles.len() || (pos.x as usize) >= tiles[0].len();
+            return outside || tiles[pos.y as usize][pos.x as usize] == 1;
         };
 
         let mut visible = Vec::new();
         let mut mark_visible = |pos: Pos| {
             let outside =
-                (pos.1 as usize) >= tiles.len() || (pos.0 as usize) >= tiles[0].len();
+                (pos.y as usize) >= tiles.len() || (pos.x as usize) >= tiles[0].len();
 
             if !outside && !visible.contains(&pos) {
                 visible.push(pos);
             }
         };
 
-        compute_fov(origin, &mut is_blocking, &mut mark_visible);
+        compute_fov(origin.into(), &mut is_blocking, &mut mark_visible);
 
         let expected = vec![
             vec![1, 1, 1, 1, 1, 1, 1],

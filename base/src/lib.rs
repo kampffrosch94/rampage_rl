@@ -4,6 +4,7 @@ pub mod circle;
 pub mod grids;
 pub mod input;
 pub mod pos;
+pub mod rational;
 pub mod rect;
 pub mod shadowcasting;
 pub mod text;
