@@ -18,8 +18,8 @@ impl PartialOrd for Rational {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         let a = self.normalize();
         let b = other.normalize();
-        let x = a.nr as i128 * b.denom as i128;
-        let y = b.nr as i128 * a.denom as i128;
+        let x = a.nr as i64 * b.denom as i64;
+        let y = b.nr as i64 * a.denom as i64;
         x.partial_cmp(&y)
     }
 }

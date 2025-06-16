@@ -16,6 +16,7 @@ use quicksilver::Quicksilver;
 use std::any::TypeId;
 use std::any::type_name;
 use std::cell::RefCell;
+use std::collections::HashSet;
 
 use crate::ecs_setup::{
     ecs_types, generate_load, generate_re_register, generate_register, generate_save,
@@ -54,11 +55,14 @@ pub struct DeltaTime(pub f32);
 /// just here to check that the macro below works
 pub enum ExampleRel {}
 
+pub struct Fov(pub HashSet<Pos>);
+
 ecs_types!(
     Components(
         Circle,
         Rect,
         DeltaTime,
+        Fov,
         Pos[persist],
         Player[persist],
         Actor[persist],

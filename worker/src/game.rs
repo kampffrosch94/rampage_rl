@@ -1,14 +1,18 @@
-use base::{Color, ContextTrait, FPos, Input, Pos, Rect};
+use std::collections::HashSet;
+
+use base::{Color, ContextTrait, FPos, Input, Pos, Rect, shadowcasting};
 use cosync::CosyncInput;
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};
-use tile_map::TileMap;
+use tile_map::{DecorWithPos, TileMap};
 mod creature;
 mod tile_map;
 mod tiles;
 pub mod types;
-use tiles::{Decor, TILE_SIZE, pos_to_drawpos};
+use tiles::{
+    Decor, DrawTile, Environment, LogicTile, TILE_SIZE, generate_draw_tile, pos_to_drawpos,
+};
 use types::*;
 use ui::handle_ui;
 mod mapgen;
@@ -173,19 +177,86 @@ fn update_systems(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingS
     // pc input may queue animation
     if f.co.is_empty() {
         for (e, actor, mut draw_pos) in query!(world, &this, Actor, mut DrawPos) {
+            // update draw position
             draw_pos.0 = pos_to_drawpos(actor.pos);
+            // remove dead actors
             if actor.hp.current <= 0 {
                 e.destroy();
             }
         }
-
         world.process();
+
+        // update player fov
+        for (tm, actor, mut fov) in query!(world, $ TileMap, _ Player, Actor, mut Fov) {
+            shadowcasting::compute_fov(
+                actor.pos,
+                &mut |pos| tm.blocks_vision(pos),
+                &mut |pos| {
+                    fov.0.insert(pos);
+                },
+            );
+        }
     }
 }
 
 pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
+    let (fov,) = query!(world, Fov, _ Player).next().unwrap();
+
+    // draw tile map
+    {
+        let tm = world.singleton::<TileMap>();
+        let x_base = 0.;
+        let y_base = 0.;
+        let env = Environment::Catacomb;
+
+        for (pos, lt) in tm.tiles.iter_coords() {
+            if !fov.0.contains(&pos) {
+                continue;
+            }
+
+            let mut pos_below = pos.clone();
+            pos_below.y += 1;
+            let below = (&tm).tiles.get_opt(pos_below).unwrap_or(&LogicTile::Empty);
+            let draw_tile = generate_draw_tile(*lt, env, *below);
+            let x = x_base + pos.x as f32 * TILE_SIZE;
+            let y = y_base + pos.y as f32 * TILE_SIZE;
+            draw_tile.draw(c, x, y);
+        }
+
+        // up and down stairs
+        {
+            let pos = tm.up_stairs;
+            let x = x_base + pos.x as f32 * TILE_SIZE;
+            let y = y_base + pos.y as f32 * TILE_SIZE;
+            if fov.0.contains(&pos) {
+                DrawTile::UpStairs.draw(c, x, y);
+            }
+
+            let pos = tm.down_stairs;
+            let x = x_base + pos.x as f32 * TILE_SIZE;
+            let y = y_base + pos.y as f32 * TILE_SIZE;
+            if fov.0.contains(&pos) {
+                DrawTile::UpStairs.draw(c, x, y);
+            }
+        }
+
+        for DecorWithPos(pos, decor) in &tm.decor {
+            if !fov.0.contains(&pos) {
+                continue;
+            }
+
+            let x = x_base + pos.x as f32 * TILE_SIZE;
+            let y = y_base + pos.y as f32 * TILE_SIZE;
+            decor.draw(c, x, y);
+        }
+    };
+
     // draw actors
     for (actor, draw_pos) in query!(world, Actor, DrawPos) {
+        if !fov.0.contains(&actor.pos) {
+            continue;
+        }
+
         let (x, y) = draw_pos.0.into();
         actor.sprite.draw(c, x, y);
 
@@ -202,9 +273,6 @@ pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
             c.draw_rect(rect, Color::GREEN, Z_HP_BAR);
         }
     }
-
-    let tm = world.singleton::<TileMap>();
-    tm.draw(c, 0., 0.);
 }
 
 pub fn create_world() -> World {
@@ -222,7 +290,8 @@ pub fn create_world() -> World {
             pos: tm.up_stairs,
             sprite: CreatureSprite::Dwarf,
             hp: HP { max: 10, current: 10 },
-        });
+        })
+        .add(Fov(HashSet::new()));
 
     world.singleton_add(tm);
     place_enemies(&mut world, 12345);

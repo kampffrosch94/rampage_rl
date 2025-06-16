@@ -1,13 +1,12 @@
 use std::collections::HashMap;
 
-use base::{ContextTrait, Pos, grids::Grid};
+use base::{Pos, grids::Grid};
 use froql::{entity_store::Entity, query, world::World};
 use quicksilver::Quicksilver;
 use quicksilver::empty::EmptyContainer;
 
-use super::tiles::{Decor, DrawTile, Environment, LogicTile, TILE_SIZE};
+use super::tiles::{Decor, LogicTile};
 use crate::game::Actor;
-use crate::game::tiles::generate_draw_tile;
 
 #[derive(Debug, Quicksilver)]
 pub struct TileMap {
@@ -21,7 +20,7 @@ pub struct TileMap {
 }
 
 #[derive(Debug, Quicksilver)]
-pub struct DecorWithPos(Pos, Decor);
+pub struct DecorWithPos(pub Pos, pub Decor);
 
 impl TileMap {
     pub fn new(w: i32, h: i32, start_tile: LogicTile) -> Self {
@@ -51,38 +50,6 @@ impl TileMap {
         }
     }
 
-    pub fn draw(&self, c: &mut dyn ContextTrait, x_base: f32, y_base: f32) {
-        let env = Environment::Catacomb;
-        for (pos, lt) in self.tiles.iter_coords() {
-            let mut pos_below = pos.clone();
-            pos_below.y += 1;
-            let below = self.tiles.get_opt(pos_below).unwrap_or(&LogicTile::Empty);
-            let draw_tile = generate_draw_tile(*lt, env, *below);
-            let x = x_base + pos.x as f32 * TILE_SIZE;
-            let y = y_base + pos.y as f32 * TILE_SIZE;
-            draw_tile.draw(c, x, y);
-        }
-
-        // up and down stairs
-        {
-            let pos = self.up_stairs;
-            let x = x_base + pos.x as f32 * TILE_SIZE;
-            let y = y_base + pos.y as f32 * TILE_SIZE;
-            DrawTile::UpStairs.draw(c, x, y);
-
-            let pos = self.down_stairs;
-            let x = x_base + pos.x as f32 * TILE_SIZE;
-            let y = y_base + pos.y as f32 * TILE_SIZE;
-            DrawTile::DownStairs.draw(c, x, y);
-        }
-
-        for DecorWithPos(pos, decor) in &self.decor {
-            let x = x_base + pos.x as f32 * TILE_SIZE;
-            let y = y_base + pos.y as f32 * TILE_SIZE;
-            decor.draw(c, x, y);
-        }
-    }
-
     pub fn add_decor(&mut self, pos: Pos, decor: Decor) {
         self.decor.push(DecorWithPos(pos, decor));
     }
@@ -90,6 +57,10 @@ impl TileMap {
     pub fn is_blocked(&self, pos: Pos) -> bool {
         self.actors.contains_key(&pos)
             || self.tiles.get_opt(pos).map(|tile| *tile == LogicTile::Wall).unwrap_or(false)
+    }
+
+    pub fn blocks_vision(&self, pos: Pos) -> bool {
+        self.tiles.get_opt(pos).map(|tile| *tile == LogicTile::Wall).unwrap_or(false)
     }
 
     pub fn update_actors(world: &mut World) {
