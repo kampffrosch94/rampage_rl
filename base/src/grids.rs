@@ -169,7 +169,7 @@ impl<T: Clone> Grid<T> {
     /// Returns an iterator over the rows of the grid.
     ///
     /// ```
-    /// use grids::Grid;
+    /// use base::grids::Grid;
     ///
     /// let mut grid = Grid::new(3, 2, 0);
     ///
