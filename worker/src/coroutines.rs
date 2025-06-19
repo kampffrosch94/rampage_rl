@@ -7,7 +7,7 @@ use std::task::Context;
 use std::task::Poll;
 use std::task::Waker;
 
-type World = u8;
+use froql::world::World;
 
 #[derive(Default)]
 struct StateHolder {
@@ -15,12 +15,12 @@ struct StateHolder {
 }
 
 #[derive(Clone, Default)]
-struct CoAccess {
+pub struct CoAccess {
     state: Rc<RefCell<StateHolder>>,
 }
 
 impl CoAccess {
-    fn access(&mut self) -> &mut World {
+    pub fn get(&mut self) -> &mut World {
         unsafe { &mut *self.state.borrow_mut().world.unwrap().as_ptr() }
     }
 
@@ -66,11 +66,11 @@ pub struct CoroutineRuntime {
 }
 
 impl CoroutineRuntime {
-    fn new() -> Self {
+    pub fn new() -> Self {
         Self { routines: Vec::new(), access: CoAccess::default() }
     }
 
-    fn add_future<Fut, F>(&mut self, f: F)
+    pub fn queue<Fut, F>(&mut self, f: F)
     where
         Fut: Future<Output = ()> + 'static,
         F: FnOnce(CoAccess) -> Fut,
@@ -80,13 +80,13 @@ impl CoroutineRuntime {
         self.routines.push(p);
     }
 
-    fn run_complete(&mut self, world: &mut World) {
+    pub fn run_until_stall(&mut self, world: &mut World) {
         while self.routines.len() > 0 {
-            self.run_step(world);
+            self.run_blocking(world);
         }
     }
 
-    fn run_step(&mut self, world: &mut World) {
+    pub fn run_blocking(&mut self, world: &mut World) {
         let mut cx = Context::from_waker(Waker::noop());
         unsafe { self.access.fill_with(world) };
         for i in 0..self.routines.len() {
@@ -101,44 +101,27 @@ impl CoroutineRuntime {
         }
         self.access.empty_out();
     }
+
+    pub fn is_empty(&self) -> bool {
+        self.routines.is_empty()
+    }
 }
 
 #[cfg(test)]
 mod test {
-    use std::task::Waker;
-
     use super::*;
 
-    async fn foobar(mut a: CoAccess) {
+    async fn foobar(mut _a: CoAccess) {
         println!("foo");
         sleep_ticks(3).await;
-        *a.access() = 0;
         println!("bar");
     }
 
     #[test]
-    fn test_basic() {
-        let mut cx = Context::from_waker(Waker::noop());
-
-        let mut world = 42;
-        let state = Rc::new(RefCell::new(StateHolder { world: NonNull::new(&raw mut world) }));
-        let acc = CoAccess { state: state.clone() };
-        let mut future = Box::pin(foobar(acc));
-        assert_eq!(future.as_mut().poll(&mut cx), Poll::Pending);
-        println!("{world}");
-        assert_eq!(future.as_mut().poll(&mut cx), Poll::Pending);
-        assert_eq!(future.as_mut().poll(&mut cx), Poll::Pending);
-        assert_eq!(future.as_mut().poll(&mut cx), Poll::Ready(()));
-        println!("{world}");
-    }
-
-    #[test]
     fn test_runtime() {
-        let mut world = 42;
+        let mut world = World::new();
         let mut rt = CoroutineRuntime::new();
-        rt.add_future(foobar);
-        println!("{world}");
-        rt.run_complete(&mut world);
-        println!("{world}");
+        rt.queue(foobar);
+        rt.run_blocking(&mut world);
     }
 }

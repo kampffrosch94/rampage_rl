@@ -1,14 +1,16 @@
 use froql::world::World;
 
+use crate::coroutines::CoroutineRuntime;
+
 /// dropped and recreated on reload
 /// you can change this definition without breaking hotreloading
 pub struct FleetingState {
-    pub co: cosync::Cosync<World>,
+    pub co: CoroutineRuntime,
 }
 
 impl FleetingState {
     pub fn new() -> Self {
-        let co = cosync::Cosync::new();
+        let co = CoroutineRuntime::new();
 
         // co.queue(move |mut input: CosyncInput<PersistentState>| async move {
         //     for _ in 0..5 {

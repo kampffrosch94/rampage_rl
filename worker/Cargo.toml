@@ -8,6 +8,5 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 base.path = "../base"
-cosync = "0.2.1"
 froql.workspace = true
 quicksilver.workspace = true

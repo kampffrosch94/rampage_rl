@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
 use base::{Color, ContextTrait, FPos, Input, Pos, Rect, shadowcasting};
-use cosync::CosyncInput;
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};
@@ -18,7 +17,10 @@ use ui::handle_ui;
 mod mapgen;
 mod ui;
 
-use crate::{fleeting::FleetingState, persistent::PersistentState, rand::RandomGenerator};
+use crate::{
+    coroutines::{sleep_ticks, CoAccess}, fleeting::FleetingState, persistent::PersistentState,
+    rand::RandomGenerator,
+};
 
 pub const Z_TILES: i32 = 0;
 pub const Z_HP_BAR: i32 = 9;
@@ -110,7 +112,7 @@ fn spawn_bump_attack_animation(
     let animation_time = 0.15;
     let mut elapsed = 0.0;
     const PART_FORWARD: f32 = 0.5;
-    f.co.queue(move |mut input: CosyncInput<World>| async move {
+    f.co.queue(async move |mut input: CoAccess|{
         loop {
             {
                 let world = input.get();
@@ -132,7 +134,7 @@ fn spawn_bump_attack_animation(
                     break;
                 }
             }
-            cosync::sleep_ticks(1).await;
+            sleep_ticks(1).await;
         }
         let world = input.get();
         world.get_component_mut::<DrawPos>(e).0 = start;
@@ -150,7 +152,7 @@ fn spawn_move_animation(f: &mut FleetingState, e: Entity, start: Pos, end: Pos) 
     let end = pos_to_drawpos(end);
     let animation_time = 0.08;
     let mut elapsed = 0.0;
-    f.co.queue(move |mut input: CosyncInput<World>| async move {
+    f.co.queue(async move |mut input: CoAccess| {
         loop {
             {
                 let world = input.get();
@@ -162,7 +164,7 @@ fn spawn_move_animation(f: &mut FleetingState, e: Entity, start: Pos, end: Pos) 
                     break;
                 }
             }
-            cosync::sleep_ticks(1).await;
+            sleep_ticks(1).await;
         }
         let world = input.get();
         world.get_component_mut::<DrawPos>(e).0 = end;
