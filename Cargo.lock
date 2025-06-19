@@ -237,12 +237,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "cosync"
-version = "0.2.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3d47649af58ee81899f9b6236e99e8231af0437f7d6171728c6098d93018cc2a"
-
-[[package]]
 name = "crc32fast"
 version = "1.4.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1848,7 +1842,6 @@ name = "worker"
 version = "0.1.0"
 dependencies = [
  "base",
- "cosync",
  "froql",
  "quicksilver",
 ]
