@@ -114,7 +114,7 @@ fn spawn_bump_attack_animation(
     let animation_time = 0.15;
     let mut elapsed = 0.0;
     const PART_FORWARD: f32 = 0.5;
-    f.co.queue(async move |mut input: CoAccess| {
+    f.co.add_future(async move |mut input: CoAccess| {
         loop {
             {
                 let world = input.get();
@@ -154,7 +154,7 @@ fn spawn_move_animation(f: &mut FleetingState, e: Entity, start: Pos, end: Pos) 
     let end = pos_to_drawpos(end);
     let animation_time = 0.08;
     let mut elapsed = 0.0;
-    f.co.queue(async move |mut input: CoAccess| {
+    f.co.add_future(async move |mut input: CoAccess| {
         loop {
             {
                 let world = input.get();

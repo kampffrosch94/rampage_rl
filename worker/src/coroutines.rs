@@ -82,7 +82,7 @@ impl CoroutineRuntime {
         Self { routines: Vec::new(), access: CoAccess::new() }
     }
 
-    pub fn queue<Fut, F>(&mut self, f: F)
+    pub fn add_future<Fut, F>(&mut self, f: F)
     where
         Fut: Future<Output = ()> + 'static + Send,
         F: FnOnce(CoAccess) -> Fut,
@@ -137,7 +137,7 @@ mod test {
         world.singleton_add(42);
         let mut rt = CoroutineRuntime::new();
         assert_eq!(*world.singleton::<i32>(), 42);
-        rt.queue(foobar);
+        rt.add_future(foobar);
         rt.run_completing(&mut world);
         assert_eq!(*world.singleton::<i32>(), 0);
     }
