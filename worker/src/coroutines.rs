@@ -75,11 +75,16 @@ impl Future for SleepForTick {
 pub struct CoroutineRuntime {
     routines: Vec<Pin<Box<dyn Future<Output = ()>>>>,
     access: CoAccess,
+    cx: Context<'static>,
 }
 
 impl CoroutineRuntime {
     pub fn new() -> Self {
-        Self { routines: Vec::new(), access: CoAccess::new() }
+        Self {
+            routines: Vec::new(),
+            access: CoAccess::new(),
+            cx: Context::from_waker(Waker::noop()),
+        }
     }
 
     pub fn add_future<Fut, F>(&mut self, f: F)
@@ -100,11 +105,10 @@ impl CoroutineRuntime {
     }
 
     pub fn run_step(&mut self, world: &mut World) {
-        let mut cx = Context::from_waker(Waker::noop());
         unsafe { self.access.fill_with(world) };
         for i in 0..self.routines.len() {
             let c = &mut self.routines[i];
-            let remove = match c.as_mut().poll(&mut cx) {
+            let remove = match c.as_mut().poll(&mut self.cx) {
                 Poll::Ready(()) => true,
                 Poll::Pending => false,
             };
