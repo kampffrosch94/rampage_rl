@@ -6,6 +6,7 @@ use base::{ContextTrait, PersistWrapper};
 pub use fleeting::FleetingState;
 pub use game::update_inner;
 pub use persistent::PersistentState;
+mod coroutines;
 mod dijstra;
 mod ecs_setup;
 mod fleeting;
