@@ -1,18 +1,37 @@
 use std::cell::RefCell;
 use std::future::Future;
 use std::pin::Pin;
+use std::ptr::NonNull;
 use std::rc::Rc;
 use std::task::Context;
 use std::task::Poll;
 use std::task::Waker;
 
+type World = u8;
+
+#[derive(Default)]
 struct StateHolder {
-    world: *mut u8,
+    world: Option<NonNull<World>>,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 struct CoAccess {
     state: Rc<RefCell<StateHolder>>,
+}
+
+impl CoAccess {
+    fn access(&mut self) -> &mut World {
+        unsafe { &mut *self.state.borrow_mut().world.unwrap().as_ptr() }
+    }
+
+    unsafe fn fill_with(&mut self, world: &mut World) {
+        self.state.borrow_mut().world =
+            Some(unsafe { NonNull::new_unchecked(world as *mut World) });
+    }
+
+    fn empty_out(&mut self) {
+        self.state.borrow_mut().world = None;
+    }
 }
 
 pub fn sleep_ticks(ticks: usize) -> SleepForTick {
@@ -47,6 +66,10 @@ pub struct CoroutineRuntime {
 }
 
 impl CoroutineRuntime {
+    fn new() -> Self {
+        Self { routines: Vec::new(), access: CoAccess::default() }
+    }
+
     fn add_future<Fut, F>(&mut self, f: F)
     where
         Fut: Future<Output = ()> + 'static,
@@ -57,20 +80,26 @@ impl CoroutineRuntime {
         self.routines.push(p);
     }
 
-    fn run_complete(&mut self) {
-        let mut cx = Context::from_waker(Waker::noop());
+    fn run_complete(&mut self, world: &mut World) {
         while self.routines.len() > 0 {
-            for i in 0..self.routines.len() {
-                let c = &mut self.routines[i];
-                let remove = match c.as_mut().poll(&mut cx) {
-                    Poll::Ready(()) => true,
-                    Poll::Pending => false,
-                };
-                if remove {
-                    let _ = self.routines.remove(i);
-                }
+            self.run_step(world);
+        }
+    }
+
+    fn run_step(&mut self, world: &mut World) {
+        let mut cx = Context::from_waker(Waker::noop());
+        unsafe { self.access.fill_with(world) };
+        for i in 0..self.routines.len() {
+            let c = &mut self.routines[i];
+            let remove = match c.as_mut().poll(&mut cx) {
+                Poll::Ready(()) => true,
+                Poll::Pending => false,
+            };
+            if remove {
+                let _ = self.routines.remove(i);
             }
         }
+        self.access.empty_out();
     }
 }
 
@@ -80,12 +109,10 @@ mod test {
 
     use super::*;
 
-    async fn foobar(a: CoAccess) {
+    async fn foobar(mut a: CoAccess) {
         println!("foo");
         sleep_ticks(3).await;
-        unsafe {
-            *a.state.borrow_mut().world = 0;
-        }
+        *a.access() = 0;
         println!("bar");
     }
 
@@ -94,7 +121,7 @@ mod test {
         let mut cx = Context::from_waker(Waker::noop());
 
         let mut world = 42;
-        let state = Rc::new(RefCell::new(StateHolder { world: &raw mut world }));
+        let state = Rc::new(RefCell::new(StateHolder { world: NonNull::new(&raw mut world) }));
         let acc = CoAccess { state: state.clone() };
         let mut future = Box::pin(foobar(acc));
         assert_eq!(future.as_mut().poll(&mut cx), Poll::Pending);
@@ -108,17 +135,10 @@ mod test {
     #[test]
     fn test_runtime() {
         let mut world = 42;
-        let holder = StateHolder { world: &raw mut world };
-        let state = Rc::new(RefCell::new(holder));
-        let access = CoAccess { state: state.clone() };
-
-        let mut rt = CoroutineRuntime {
-            routines: Vec::new(),
-            access,
-        };
+        let mut rt = CoroutineRuntime::new();
         rt.add_future(foobar);
         println!("{world}");
-        rt.run_complete();
+        rt.run_complete(&mut world);
         println!("{world}");
     }
 }
