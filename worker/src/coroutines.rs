@@ -14,10 +14,18 @@ struct StateHolder {
     world: Option<NonNull<World>>,
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct CoAccess {
     state: Rc<RefCell<StateHolder>>,
 }
+
+// can't actually Send this between threads
+// but now we can make the futures require Send
+// which gives us compile time checks on if we are holding a reference accross await points
+//
+// to make sure nothing untoward happens
+// access must go through the CosyncRuntime and can only happen singlethreaded, so we are good
+unsafe impl Send for CoAccess {}
 
 impl CoAccess {
     pub fn get(&mut self) -> &mut World {
@@ -31,6 +39,10 @@ impl CoAccess {
 
     fn empty_out(&mut self) {
         self.state.borrow_mut().world = None;
+    }
+
+    fn new() -> Self {
+        Self { state: Default::default() }
     }
 }
 
@@ -67,12 +79,12 @@ pub struct CoroutineRuntime {
 
 impl CoroutineRuntime {
     pub fn new() -> Self {
-        Self { routines: Vec::new(), access: CoAccess::default() }
+        Self { routines: Vec::new(), access: CoAccess::new() }
     }
 
     pub fn queue<Fut, F>(&mut self, f: F)
     where
-        Fut: Future<Output = ()> + 'static,
+        Fut: Future<Output = ()> + 'static + Send,
         F: FnOnce(CoAccess) -> Fut,
     {
         let acc = self.access.clone();
@@ -80,13 +92,13 @@ impl CoroutineRuntime {
         self.routines.push(p);
     }
 
-    pub fn run_until_stall(&mut self, world: &mut World) {
+    pub fn run_completing(&mut self, world: &mut World) {
         while self.routines.len() > 0 {
-            self.run_blocking(world);
+            self.run_step(world);
         }
     }
 
-    pub fn run_blocking(&mut self, world: &mut World) {
+    pub fn run_step(&mut self, world: &mut World) {
         let mut cx = Context::from_waker(Waker::noop());
         unsafe { self.access.fill_with(world) };
         for i in 0..self.routines.len() {
@@ -111,17 +123,22 @@ impl CoroutineRuntime {
 mod test {
     use super::*;
 
-    async fn foobar(mut _a: CoAccess) {
+    async fn foobar(mut a: CoAccess) {
         println!("foo");
         sleep_ticks(3).await;
+        let world = a.get();
+        *world.singleton_mut::<i32>() = 0;
         println!("bar");
     }
 
     #[test]
     fn test_runtime() {
         let mut world = World::new();
+        world.singleton_add(42);
         let mut rt = CoroutineRuntime::new();
+        assert_eq!(*world.singleton::<i32>(), 42);
         rt.queue(foobar);
-        rt.run_blocking(&mut world);
+        rt.run_completing(&mut world);
+        assert_eq!(*world.singleton::<i32>(), 0);
     }
 }

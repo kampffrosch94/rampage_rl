@@ -18,7 +18,9 @@ mod mapgen;
 mod ui;
 
 use crate::{
-    coroutines::{sleep_ticks, CoAccess}, fleeting::FleetingState, persistent::PersistentState,
+    coroutines::{CoAccess, sleep_ticks},
+    fleeting::FleetingState,
+    persistent::PersistentState,
     rand::RandomGenerator,
 };
 
@@ -55,7 +57,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
         world.singleton_mut::<DeltaTime>().0 = c.delta();
     }
 
-    f.co.run_until_stall(world);
+    f.co.run_step(world);
 
     c.draw_texture("tiles", -228., -950., 5);
     c.draw_texture("rogues", -600., -950., 5);
@@ -112,7 +114,7 @@ fn spawn_bump_attack_animation(
     let animation_time = 0.15;
     let mut elapsed = 0.0;
     const PART_FORWARD: f32 = 0.5;
-    f.co.queue(async move |mut input: CoAccess|{
+    f.co.queue(async move |mut input: CoAccess| {
         loop {
             {
                 let world = input.get();
