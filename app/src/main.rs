@@ -33,7 +33,7 @@ pub unsafe extern "C" fn __cxa_thread_atexit_impl() {}
 
 fn window_conf() -> Conf {
     Conf {
-        window_title: "Roguelike".to_owned(),
+        window_title: "RampageRL".to_owned(),
         fullscreen: false,
         high_dpi: false,
         //sample_count: 1,
