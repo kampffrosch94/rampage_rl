@@ -1026,7 +1026,7 @@ dependencies = [
 [[package]]
 name = "quicksilver"
 version = "0.1.0"
-source = "git+https://github.com/kampffrosch94/quicksilver.git#bb12217856c35fcf894581872f68917c8d562c29"
+source = "git+https://github.com/kampffrosch94/quicksilver.git#1a5ba470b6b38e62c66426449b595066bfda82ea"
 dependencies = [
  "quicksilver_derive",
 ]
@@ -1034,7 +1034,7 @@ dependencies = [
 [[package]]
 name = "quicksilver_derive"
 version = "0.1.0"
-source = "git+https://github.com/kampffrosch94/quicksilver.git#bb12217856c35fcf894581872f68917c8d562c29"
+source = "git+https://github.com/kampffrosch94/quicksilver.git#1a5ba470b6b38e62c66426449b595066bfda82ea"
 
 [[package]]
 name = "quote"
@@ -1172,6 +1172,12 @@ name = "simd-adler32"
 version = "0.3.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d66dc143e6b11c1eddc06d5c423cfc97062865baf299914ab64caa38182078fe"
+
+[[package]]
+name = "simple-easing"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "832ddd7df0d98d6fd93b973c330b7c8e0742d5cb8f1afc7dea89dba4d2531aa1"
 
 [[package]]
 name = "skrifa"
@@ -1844,6 +1850,7 @@ dependencies = [
  "base",
  "froql",
  "quicksilver",
+ "simple-easing",
 ]
 
 [[package]]

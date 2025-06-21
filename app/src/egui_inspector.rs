@@ -141,6 +141,9 @@ pub fn draw_value(ui: &mut egui::Ui, value: &mut ValueReflection) {
             }
         }
 
+        ref outer @ ValueReflection::HashSet(_) => {
+            draw_value_ref(ui, outer);
+        }
     }
 }
 
@@ -216,6 +219,18 @@ fn draw_value_ref(ui: &mut egui::Ui, value: &ValueReflection) {
             } else {
                 ui.label("None");
             }
+        }
+
+        ValueReflection::HashSet(hsreflection) => {
+            egui::Grid::new(next_id()).min_col_width(50.).num_columns(2).striped(true).show(
+                ui,
+                |ui| {
+                    for element in hsreflection.get_elements_ref() {
+                        draw_value_ref(ui, &element);
+                        ui.end_row();
+                    }
+                },
+            );
         }
     }
 }

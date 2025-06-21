@@ -113,7 +113,7 @@ fn spawn_bump_attack_animation(
     let end = pos_to_drawpos(p_end);
     let animation_time = 0.15;
     let mut elapsed = 0.0;
-    const PART_FORWARD: f32 = 0.5;
+    const PART_FORWARD: f32 = 0.7;
     f.co.add_future(async move |mut input: CoAccess| {
         loop {
             {
@@ -121,17 +121,12 @@ fn spawn_bump_attack_animation(
                 let dt = world.singleton::<DeltaTime>().0;
                 elapsed += dt;
                 let mut draw_pos = world.get_component_mut::<DrawPos>(e);
-                if elapsed < animation_time * PART_FORWARD {
-                    let lerpiness = (elapsed / animation_time) * 1.5;
-                    draw_pos.0 = start.lerp(end, lerpiness);
-                } else {
-                    // let lerpiness = (elapsed / animation_time) * 1.5;
-                    let lerpiness = elapsed / animation_time;
-                    draw_pos.0 = end.lerp(start, lerpiness);
-                    // TODO calculate and apply damage
-                    // TODO healthbar
-                    // TODO death
-                }
+                let lerpiness = {
+                    use simple_easing::*;
+                    let lerp_in = elapsed / animation_time;
+                    cubic_in_out(roundtrip(lerp_in)) * PART_FORWARD
+                };
+                draw_pos.0 = start.lerp(end, lerpiness);
                 if elapsed >= animation_time * PART_FORWARD {
                     break;
                 }
@@ -152,7 +147,7 @@ fn spawn_bump_attack_animation(
 fn spawn_move_animation(f: &mut FleetingState, e: Entity, start: Pos, end: Pos) {
     let start = pos_to_drawpos(start);
     let end = pos_to_drawpos(end);
-    let animation_time = 0.08;
+    let animation_time = 0.10;
     let mut elapsed = 0.0;
     f.co.add_future(async move |mut input: CoAccess| {
         loop {
@@ -161,7 +156,13 @@ fn spawn_move_animation(f: &mut FleetingState, e: Entity, start: Pos, end: Pos) 
                 let dt = world.singleton::<DeltaTime>().0;
                 elapsed += dt;
                 let mut draw_pos = world.get_component_mut::<DrawPos>(e);
-                draw_pos.0 = start.lerp(end, elapsed / animation_time);
+                let lerpiness = {
+                    use simple_easing::*;
+                    let t = elapsed / animation_time;
+                    sine_in_out(t)
+                    // circ_in_out(t)
+                };
+                draw_pos.0 = start.lerp(end, lerpiness);
                 if elapsed >= animation_time {
                     break;
                 }

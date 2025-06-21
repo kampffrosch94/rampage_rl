@@ -55,6 +55,7 @@ pub struct DeltaTime(pub f32);
 /// just here to check that the macro below works
 pub enum ExampleRel {}
 
+#[derive(Debug, Quicksilver)]
 pub struct Fov(pub HashSet<Pos>);
 
 ecs_types!(
@@ -62,7 +63,7 @@ ecs_types!(
         Circle,
         Rect,
         DeltaTime,
-        Fov,
+        Fov[persist],
         Pos[persist],
         Player[persist],
         Actor[persist],

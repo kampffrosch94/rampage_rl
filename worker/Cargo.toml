@@ -10,3 +10,4 @@ crate-type = ["cdylib", "lib"]
 base.path = "../base"
 froql.workspace = true
 quicksilver.workspace = true
+simple-easing = "1.0.1"
