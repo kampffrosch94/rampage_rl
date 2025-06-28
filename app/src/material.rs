@@ -3,6 +3,7 @@ use macroquad::{
     prelude::*,
 };
 
+#[cfg(not(target_arch = "wasm32"))]
 const VERTEX: &str = r#"
 #version 330 core
 
@@ -21,8 +22,50 @@ void main() {
 
 "#;
 
+#[cfg(target_arch = "wasm32")]
+const VERTEX: &str = r#"
+#version 300 es
+
+layout (location = 0) in vec3 position;
+layout (location = 1) in vec2 texcoord;
+
+out vec2 uv;
+
+uniform mat4 Model;
+uniform mat4 Projection;
+
+void main() {
+    gl_Position = Projection * Model * vec4(position, 1.0);
+    uv = texcoord;
+}
+
+"#;
+
+
+#[cfg(not(target_arch = "wasm32"))]
 const FRAGMENT: &str = r#"
 #version 330 core
+precision highp float;
+
+uniform sampler2D Texture;
+uniform float time;
+uniform vec2 texture_resolution;
+
+varying vec2 uv;
+
+void main() {
+    vec2 pix = 0.5 + (uv * texture_resolution);
+    // float scale_factor = sin(time * 0.4) * 2.0;
+    // pix = pix  / scale_factor;
+    pix = floor(pix) + min(fract(pix) / fwidth(pix), 1.0) - 0.5;
+    gl_FragColor = texture2D(Texture, pix/ texture_resolution);
+}
+
+"#;
+
+#[cfg(target_arch = "wasm32")]
+const FRAGMENT: &str = r#"
+#version 300 es
 precision highp float;
 
 uniform sampler2D Texture;
