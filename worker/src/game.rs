@@ -52,7 +52,6 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
 
     if !world.singleton_has::<DeltaTime>() {
         world.singleton_add(DeltaTime(c.delta()));
-        world.process();
     } else {
         world.singleton_mut::<DeltaTime>().0 = c.delta();
     }
@@ -299,6 +298,7 @@ pub fn create_world() -> World {
         .add(Fov(HashSet::new()));
 
     world.singleton_add(tm);
+    world.singleton_add(TurnCount { aut: 0 });
     place_enemies(&mut world, 12345);
 
     world.singleton_add(RandomGenerator::new(12345));

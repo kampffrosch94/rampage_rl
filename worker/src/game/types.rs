@@ -52,6 +52,12 @@ pub struct DrawPos(pub FPos);
 /// Set early in the game loop.
 pub struct DeltaTime(pub f32);
 
+#[derive(Debug, Quicksilver)]
+pub struct TurnCount{
+    /// 1 tenth of a turn
+    pub aut: i64,
+}
+
 /// just here to check that the macro below works
 pub enum ExampleRel {}
 
@@ -63,6 +69,7 @@ ecs_types!(
         Circle,
         Rect,
         DeltaTime,
+        TurnCount[persist],
         Fov[persist],
         Pos[persist],
         Player[persist],
