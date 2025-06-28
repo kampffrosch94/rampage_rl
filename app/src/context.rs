@@ -9,6 +9,7 @@ use quicksilver::reflections::ValueReflection;
 use crate::{
     camera::{CameraWrapper, screen_camera},
     draw::kf_draw_texture,
+    material::SpriterShader,
     text::Texter,
     util::texture_store::TextureStore,
 };
@@ -27,6 +28,7 @@ pub struct Context {
 
 pub struct ContextInner {
     pub texter: Texter,
+    pub sprite_shader: SpriterShader,
 }
 
 impl ContextTrait for Context {
@@ -88,7 +90,8 @@ impl ContextTrait for Context {
         if let Some(texture) = self.textures.get(name) {
             let source = None;
             let params = DrawTextureParams { source, ..Default::default() };
-            let command = move |_: &mut ContextInner| {
+            let command = move |i: &mut ContextInner| {
+                i.sprite_shader.set(&texture);
                 kf_draw_texture(&texture, x, y, WHITE, params);
             };
             self.draw_buffer
@@ -113,7 +116,8 @@ impl ContextTrait for Context {
             let source =
                 Some(macroquad::math::Rect { x: src.x, y: src.y, w: src.w, h: src.h });
             let params = DrawTextureParams { source, ..Default::default() };
-            let command = move |_: &mut ContextInner| {
+            let command = move |i: &mut ContextInner| {
+                i.sprite_shader.set(&texture);
                 kf_draw_texture(&texture, x, y, WHITE, params);
             };
             self.draw_buffer
@@ -138,7 +142,8 @@ impl ContextTrait for Context {
                 Some(macroquad::math::Rect { x: src.x, y: src.y, w: src.w, h: src.h });
             let dest_size = Some(vec2(target.w, target.h));
             let params = DrawTextureParams { source, dest_size, ..Default::default() };
-            let command = move |_: &mut ContextInner| {
+            let command = move |i: &mut ContextInner| {
+                i.sprite_shader.set(&texture);
                 kf_draw_texture(&texture, target.x, target.y, WHITE, params);
             };
             self.draw_buffer
@@ -234,7 +239,7 @@ impl Context {
             camera: Default::default(),
             textures: Default::default(),
             loading: Default::default(),
-            inner: ContextInner { texter: Texter::new() },
+            inner: ContextInner { texter: Texter::new(), sprite_shader: SpriterShader::new() },
             #[cfg(feature = "hotreload")]
             egui_ctx: None,
             #[cfg(feature = "hotreload")]
@@ -258,6 +263,7 @@ impl Context {
             if !camera_switched && draw.z_level >= 1000 {
                 camera_switched = true;
                 set_camera(&screen_camera());
+                gl_use_default_material();
             }
             (draw.command)(&mut self.inner);
         }

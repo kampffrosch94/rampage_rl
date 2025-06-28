@@ -10,6 +10,7 @@ mod egui_inspector;
 #[cfg(feature = "hotreload")]
 mod egui_macroquad;
 mod fps_counter;
+mod material;
 mod text;
 
 #[cfg(all(feature = "staticlink", feature = "hotreload"))]
