@@ -71,10 +71,10 @@ impl CameraWrapper {
             self.scale = new_scale;
         }
 
-        if self.scale_tween.is_finished() && self.offset_tween.is_finished() {
-            self.offset.x = self.offset.x.round();
-            self.offset.y = self.offset.y.round();
-        }
+        // if self.scale_tween.is_finished() && self.offset_tween.is_finished() {
+        //     self.offset.x = self.offset.x.round();
+        //     self.offset.y = self.offset.y.round();
+        // }
 
         self.camera = Self::create_camera(self.scale, self.offset.into());
         self.set();

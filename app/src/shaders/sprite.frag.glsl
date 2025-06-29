@@ -1,17 +1,15 @@
-#version 300 es
+#version 100
+#extension GL_OES_standard_derivatives : enable
 precision highp float;
 
+varying vec2 uv;
+
 uniform sampler2D Texture;
-uniform float time;
 uniform vec2 texture_resolution;
 
-in vec2 uv;
-out vec4 outColor; 
-
 void main() {
-    vec2 pix = 0.5 + (uv * texture_resolution);
-    // float scale_factor = sin(time * 0.4) * 2.0;
-    // pix = pix  / scale_factor;
-    pix = floor(pix) + min(fract(pix) / fwidth(pix), 1.0) - 0.5;
-    outColor = texture(Texture, pix/ texture_resolution);
+    vec2 pix = uv.xy * texture_resolution;
+    pix = floor(pix) + min(fract(pix) / fwidth(pix), 1.0) - 0.50;
+
+    gl_FragColor = texture2D(Texture, pix / texture_resolution) ;
 }
