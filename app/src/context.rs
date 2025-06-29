@@ -9,7 +9,7 @@ use quicksilver::reflections::ValueReflection;
 use crate::{
     camera::{CameraWrapper, screen_camera},
     draw::kf_draw_texture,
-    material::SpriterShader,
+    material::SpriteShader,
     text::Texter,
     util::texture_store::TextureStore,
 };
@@ -28,7 +28,7 @@ pub struct Context {
 
 pub struct ContextInner {
     pub texter: Texter,
-    pub sprite_shader: SpriterShader,
+    pub sprite_shader: SpriteShader,
 }
 
 impl ContextTrait for Context {
@@ -239,7 +239,7 @@ impl Context {
             camera: Default::default(),
             textures: Default::default(),
             loading: Default::default(),
-            inner: ContextInner { texter: Texter::new(), sprite_shader: SpriterShader::new() },
+            inner: ContextInner { texter: Texter::new(), sprite_shader: SpriteShader::new() },
             #[cfg(feature = "hotreload")]
             egui_ctx: None,
             #[cfg(feature = "hotreload")]

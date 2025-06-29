@@ -3,93 +3,17 @@ use macroquad::{
     prelude::*,
 };
 
-#[cfg(not(target_arch = "wasm32"))]
-const VERTEX: &str = r#"
-#version 330 core
+const VERTEX: &str = include_str!("shaders/sprite.vert.glsl");
 
-layout (location = 0) in vec3 position;
-layout (location = 1) in vec2 texcoord;
+const FRAGMENT: &str = include_str!("shaders/sprite.frag.glsl");
 
-out vec2 uv;
-
-uniform mat4 Model;
-uniform mat4 Projection;
-
-void main() {
-    gl_Position = Projection * Model * vec4(position, 1.0);
-    uv = texcoord;
-}
-
-"#;
-
-#[cfg(target_arch = "wasm32")]
-const VERTEX: &str = r#"
-#version 300 es
-
-layout (location = 0) in vec3 position;
-layout (location = 1) in vec2 texcoord;
-
-out vec2 uv;
-
-uniform mat4 Model;
-uniform mat4 Projection;
-
-void main() {
-    gl_Position = Projection * Model * vec4(position, 1.0);
-    uv = texcoord;
-}
-
-"#;
-
-
-#[cfg(not(target_arch = "wasm32"))]
-const FRAGMENT: &str = r#"
-#version 330 core
-precision highp float;
-
-uniform sampler2D Texture;
-uniform float time;
-uniform vec2 texture_resolution;
-
-varying vec2 uv;
-
-void main() {
-    vec2 pix = 0.5 + (uv * texture_resolution);
-    // float scale_factor = sin(time * 0.4) * 2.0;
-    // pix = pix  / scale_factor;
-    pix = floor(pix) + min(fract(pix) / fwidth(pix), 1.0) - 0.5;
-    gl_FragColor = texture2D(Texture, pix/ texture_resolution);
-}
-
-"#;
-
-#[cfg(target_arch = "wasm32")]
-const FRAGMENT: &str = r#"
-#version 300 es
-precision highp float;
-
-uniform sampler2D Texture;
-uniform float time;
-uniform vec2 texture_resolution;
-
-varying vec2 uv;
-
-void main() {
-    vec2 pix = 0.5 + (uv * texture_resolution);
-    // float scale_factor = sin(time * 0.4) * 2.0;
-    // pix = pix  / scale_factor;
-    pix = floor(pix) + min(fract(pix) / fwidth(pix), 1.0) - 0.5;
-    gl_FragColor = texture2D(Texture, pix/ texture_resolution);
-}
-
-"#;
-
-pub struct SpriterShader {
+pub struct SpriteShader {
     mat: Material,
 }
 
-impl SpriterShader {
+impl SpriteShader {
     pub fn new() -> Self {
+        println!("Loading material");
         let mat = load_material(
             ShaderSource::Glsl { vertex: VERTEX, fragment: FRAGMENT },
             MaterialParams {
@@ -107,8 +31,10 @@ impl SpriterShader {
                 },
                 ..Default::default()
             },
-        )
-        .unwrap();
+        );
+        println!("Material loaded.");
+        dbg!(&mat);
+        let mat = mat.expect("Shader compilation failed.");
 
         Self { mat }
     }
@@ -121,3 +47,4 @@ impl SpriterShader {
         mat.set_uniform("texture_resolution", res);
     }
 }
+
