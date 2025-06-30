@@ -15,9 +15,17 @@ run-static:
 web-build:
     cargo build --target wasm32-unknown-unknown --release -F staticlink --no-default-features
 
-web-deploy:
+
+web-serve:
     @just web-build
-    @just -f ~/data/Programming/static/7drl_2025_web_publish/justfile deploy
+    cp -r assets/ target/wasm32-unknown-unknown/release
+    cp web/* target/wasm32-unknown-unknown/release
+    @just web-server
+
+[working-directory: 'target/wasm32-unknown-unknown/release']
+web-server:
+    python -m http.server 8000
+
 
 profile:
     cargo flamegraph --no-default-features -f staticlink

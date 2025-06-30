@@ -1,8 +1,8 @@
 #version 100
 precision highp float;
 
-varying vec3 position;
-varying vec2 texcoord;
+attribute vec3 position;
+attribute vec2 texcoord;
 
 varying vec2 uv;
 

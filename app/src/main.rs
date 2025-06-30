@@ -202,6 +202,7 @@ async fn main() {
         egui_macroquad::draw();
         */
 
+        gl_use_default_material();
         next_frame().await;
     }
 }

@@ -42,6 +42,7 @@ impl SpriteShader {
     /// reset with gl_use_default_material
     pub fn set(&self, texture: &Texture2D) {
         let Self { mat, .. } = self;
+        gl_use_material(mat);
         mat.set_uniform("time", 0. as f32);
         let res: [f32; 2] = [texture.width(), texture.height()];
         mat.set_uniform("texture_resolution", res);

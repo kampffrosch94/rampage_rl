@@ -24,7 +24,7 @@ impl DrawTile {
             DrawTile::Empty => (0, 2),
             DrawTile::SkullWallTop => (0, 5),
             DrawTile::SkullWallBot => (1, 5),
-            DrawTile::GrayFloor => (0, 6),
+            DrawTile::GrayFloor => (8, 6),
             DrawTile::DownStairs => (7, 16),
             DrawTile::UpStairs => (8, 16),
         };
