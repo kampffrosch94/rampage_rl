@@ -240,7 +240,7 @@ pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
             let x = x_base + pos.x as f32 * TILE_SIZE;
             let y = y_base + pos.y as f32 * TILE_SIZE;
             if fov.0.contains(&pos) {
-                DrawTile::UpStairs.draw(c, x, y);
+                DrawTile::DownStairs.draw(c, x, y);
             }
         }
 
