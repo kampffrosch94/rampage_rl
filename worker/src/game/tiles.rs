@@ -21,17 +21,16 @@ pub enum DrawTile {
 
 impl DrawTile {
     pub fn draw(&self, c: &mut dyn ContextTrait, x: f32, y: f32) {
-        let (sx, sy) = match self {
+        let src = match self {
             DrawTile::Empty => (0, 2),
             DrawTile::SkullWallTop => (0, 5),
             DrawTile::SkullWallBot => (1, 5),
-            DrawTile::GrayFloor => (8, 6),
+            DrawTile::GrayFloor => (0, 6),
             DrawTile::DownStairs => (7, 16),
             DrawTile::UpStairs => (8, 16),
         };
 
-        let offset = TILE_DIM + 2. * TILE_EXTRUSION;
-        let src = Rect::new(sx as f32 * offset + TILE_EXTRUSION, sy as f32 * offset + TILE_EXTRUSION, TILE_DIM, TILE_DIM);
+        let src = extruded_source(src);
         let target = Rect::new(x, y, TILE_DIM * TILE_SCALE, TILE_DIM * TILE_SCALE);
         c.draw_texture_part_scaled("tiles", src, target, Z_TILES);
     }
@@ -80,13 +79,25 @@ pub enum Decor {
 
 impl Decor {
     pub fn draw(&self, c: &mut dyn ContextTrait, x: f32, y: f32) {
-        let (sx, sy) = match self {
+        let src = match self {
             Decor::BloodRed1 => (0, 22),
             Decor::BloodRed2 => (1, 22),
         };
 
-        let src = Rect::new(sx as f32 * TILE_DIM, sy as f32 * TILE_DIM, TILE_DIM, TILE_DIM);
+        let src = extruded_source(src);
         let target = Rect::new(x, y, TILE_DIM * TILE_SCALE, TILE_DIM * TILE_SCALE);
         c.draw_texture_part_scaled("tiles", src, target, Z_TILES);
     }
+}
+
+/// our tileset is extruded
+/// this computes the source rect for a sprite in the tileset
+fn extruded_source((sx, sy): (i32, i32)) -> Rect {
+    let offset = TILE_DIM + 2. * TILE_EXTRUSION;
+    Rect::new(
+        sx as f32 * offset + TILE_EXTRUSION,
+        sy as f32 * offset + TILE_EXTRUSION,
+        TILE_DIM,
+        TILE_DIM,
+    )
 }
