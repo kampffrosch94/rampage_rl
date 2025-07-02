@@ -53,7 +53,7 @@ pub struct DrawPos(pub FPos);
 pub struct DeltaTime(pub f32);
 
 #[derive(Debug, Quicksilver)]
-pub struct TurnCount{
+pub struct TurnCount {
     /// 1 tenth of a turn
     pub aut: i64,
 }
