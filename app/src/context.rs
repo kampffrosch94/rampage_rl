@@ -90,8 +90,8 @@ impl ContextTrait for Context {
         if let Some(texture) = self.textures.get(name) {
             let source = None;
             let params = DrawTextureParams { source, ..Default::default() };
-            let command = move |i: &mut ContextInner| {
-                i.sprite_shader.set(&texture);
+            let command = move |_i: &mut ContextInner| {
+                // i.sprite_shader.set(&texture);
                 kf_draw_texture(&texture, x, y, WHITE, params);
             };
             self.draw_buffer
@@ -116,8 +116,8 @@ impl ContextTrait for Context {
             let source =
                 Some(macroquad::math::Rect { x: src.x, y: src.y, w: src.w, h: src.h });
             let params = DrawTextureParams { source, ..Default::default() };
-            let command = move |i: &mut ContextInner| {
-                i.sprite_shader.set(&texture);
+            let command = move |_i: &mut ContextInner| {
+                // i.sprite_shader.set(&texture);
                 kf_draw_texture(&texture, x, y, WHITE, params);
             };
             self.draw_buffer
@@ -142,8 +142,8 @@ impl ContextTrait for Context {
                 Some(macroquad::math::Rect { x: src.x, y: src.y, w: src.w, h: src.h });
             let dest_size = Some(vec2(target.w, target.h));
             let params = DrawTextureParams { source, dest_size, ..Default::default() };
-            let command = move |i: &mut ContextInner| {
-                i.sprite_shader.set(&texture);
+            let command = move |_i: &mut ContextInner| {
+                // i.sprite_shader.set(&texture);
                 kf_draw_texture(&texture, target.x, target.y, WHITE, params);
             };
             self.draw_buffer
