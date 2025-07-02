@@ -2,6 +2,7 @@ use crate::game::Z_TILES;
 use base::{ContextTrait, FPos, Pos, Rect};
 use quicksilver::Quicksilver;
 
+pub const TILE_EXTRUSION: f32 = 1.;
 pub const TILE_DIM: f32 = 32.;
 pub const TILE_SCALE: f32 = 2.0;
 pub const TILE_SIZE: f32 = TILE_DIM * TILE_SCALE;
@@ -29,7 +30,8 @@ impl DrawTile {
             DrawTile::UpStairs => (8, 16),
         };
 
-        let src = Rect::new(sx as f32 * TILE_DIM, sy as f32 * TILE_DIM, TILE_DIM, TILE_DIM);
+        let offset = TILE_DIM + 2. * TILE_EXTRUSION;
+        let src = Rect::new(sx as f32 * offset + TILE_EXTRUSION, sy as f32 * offset + TILE_EXTRUSION, TILE_DIM, TILE_DIM);
         let target = Rect::new(x, y, TILE_DIM * TILE_SCALE, TILE_DIM * TILE_SCALE);
         c.draw_texture_part_scaled("tiles", src, target, Z_TILES);
     }
