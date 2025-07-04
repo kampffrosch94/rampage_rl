@@ -4,6 +4,7 @@ use base::{Color, ContextTrait, FPos, Input, Pos, Rect, shadowcasting};
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};
+use quicksilver::{reflections::reflect, reflections_ref::reflect_ref};
 use tile_map::{DecorWithPos, TileMap};
 mod creature;
 mod tile_map;
@@ -66,9 +67,11 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     update_systems(c, world, f);
     draw_systems(c, world);
 
-    // for (mut actor,) in query!(world, mut Actor) {
-    //     c.inspect(&mut reflect(&mut *actor));
-    // }
+    let tc = world.singleton::<TurnCount>();
+    c.inspect(&mut reflect_ref(&*tc));
+    for (mut actor, ) in query!(world, mut Actor) {
+        c.inspect(&mut reflect(&mut *actor));
+    }
 }
 
 fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
@@ -291,9 +294,11 @@ pub fn create_world() -> World {
         .add(Player { pulse: 60., last_action: 0 })
         .add(DrawPos(FPos::new(0., 0.)))
         .add(Actor {
+            name: "Player".into(),
             pos: tm.up_stairs,
             sprite: CreatureSprite::Dwarf,
             hp: HP { max: 10, current: 10 },
+            next_turn: 0,
         })
         .add(Fov(HashSet::new()));
 

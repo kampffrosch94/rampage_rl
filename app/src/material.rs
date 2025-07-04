@@ -48,4 +48,3 @@ impl SpriteShader {
         mat.set_uniform("texture_resolution", res);
     }
 }
-

@@ -123,9 +123,11 @@ pub fn place_enemies(world: &mut World, seed: u64) {
                 continue;
             }
             let _goblin = world.create_deferred().add(DrawPos(FPos::new(0., 0.))).add(Actor {
+                name: "Goblin".into(),
                 pos: room.tile_pos(t),
                 sprite: CreatureSprite::Goblin,
                 hp: HP { max: 5, current: 5 },
+                next_turn: 0,
             });
         }
     }

@@ -180,6 +180,8 @@ async fn main() {
 
         ctx.process().await;
 
+        gl_use_default_material();
+
         #[cfg(feature = "hotreload")]
         {
             if egui_drawn_before {
@@ -189,20 +191,6 @@ async fn main() {
             ctx.egui_drawn = false;
         }
 
-        /*
-        egui_macroquad::ui(|egui_ctx| {
-            egui_macroquad::egui::Window::new("egui ❤ macroquad")
-                .show(egui_ctx, |ui| {
-                    ui.label("Test");
-                });
-        });
-
-        // Draw things before egui
-
-        egui_macroquad::draw();
-        */
-
-        gl_use_default_material();
         next_frame().await;
     }
 }

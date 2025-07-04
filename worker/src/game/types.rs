@@ -40,9 +40,12 @@ pub struct HP {
 
 #[derive(Debug, Quicksilver)]
 pub struct Actor {
+    pub name: String,
     pub pos: Pos,
     pub sprite: CreatureSprite,
     pub hp: HP,
+    /// when is this actors next turn in aut
+    pub next_turn: i64,
 }
 
 #[derive(Debug, Quicksilver)]

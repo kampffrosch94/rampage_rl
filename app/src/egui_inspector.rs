@@ -47,10 +47,13 @@ fn draw_reflection_ref(ui: &mut egui::Ui, r: &StructReflection) {
     );
 }
 
-fn draw_numeric<Num: emath::Numeric>(ui: &mut egui::Ui, value: &mut RefOrMut<Num>) {
+fn draw_numeric<Num: emath::Numeric + std::fmt::Display>(
+    ui: &mut egui::Ui,
+    value: &mut RefOrMut<Num>,
+) {
     match value {
-        RefOrMut::Ref(_val) => {
-            todo!();
+        RefOrMut::Ref(val) => {
+            ui.label(&format!("{}", *val));
         }
         RefOrMut::Mut(val) => {
             ui.add(egui::DragValue::new(*val));
@@ -173,8 +176,8 @@ fn draw_value_ref(ui: &mut egui::Ui, value: &ValueReflection) {
         ValueReflection::USize(it) => {
             draw_numeric_ref(ui, it);
         }
-        ValueReflection::Bool(_it) => {
-            todo!();
+        ValueReflection::Bool(it) => {
+            ui.label(format!("{it:?}"));
         }
         ValueReflection::String(s) => {
             ui.label(&**s);
@@ -243,8 +246,8 @@ fn draw_numeric_ref<Num: emath::Numeric + std::fmt::Display>(
         RefOrMut::Ref(val) => {
             ui.label(&format!("{}", *val));
         }
-        RefOrMut::Mut(_val) => {
-            todo!();
+        RefOrMut::Mut(val) => {
+            ui.label(&format!("{}", *val));
         }
     }
 }
