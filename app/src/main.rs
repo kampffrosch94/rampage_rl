@@ -167,11 +167,12 @@ async fn main() {
             #[cfg(feature = "hotreload")]
             egui.ui(|_, egui_ctx| {
                 egui_ctx.set_pixels_per_point(1.5);
-
                 egui::SidePanel::left("my_left_panel").show(egui_ctx, |ui| {
-                    ctx.egui_ctx = Some(unsafe { std::mem::transmute(ui) });
-                    worker.update(ctx);
-                    ctx.egui_ctx = None;
+                    egui::ScrollArea::vertical().show(ui, |ui| {
+                        ctx.egui_ctx = Some(unsafe { std::mem::transmute(ui) });
+                        worker.update(ctx);
+                        ctx.egui_ctx = None;
+                    });
                 });
             });
         } else {
