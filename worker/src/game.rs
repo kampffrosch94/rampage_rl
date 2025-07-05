@@ -69,7 +69,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
 
     let tc = world.singleton::<TurnCount>();
     c.inspect(&mut reflect_ref(&*tc));
-    for (mut actor, ) in query!(world, mut Actor) {
+    for (mut actor,) in query!(world, mut Actor) {
         c.inspect(&mut reflect(&mut *actor));
     }
 }
@@ -98,9 +98,14 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState)
                         spawn_bump_attack_animation(f, *e, player.pos, new_pos, other, 1);
                     }
                 }
+                player.next_turn += 10;
             }
         }
     }
+}
+
+fn ai_turn(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState, actor: Entity) {
+    // TODO do something
 }
 
 fn spawn_bump_attack_animation(
@@ -176,10 +181,25 @@ fn spawn_move_animation(f: &mut FleetingState, e: Entity, start: Pos, end: Pos) 
     });
 }
 
+fn next_turn_actor(world: &World) -> Entity {
+    query!(world, &this, Actor)
+        .min_by_key(|(e, a)| (a.next_turn, e.id.0))
+        .map(|(e, _a)| e.entity)
+        .unwrap()
+}
+
 fn update_systems(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
     TileMap::update_actors(world);
-    if f.co.is_empty() {
-        pc_inputs(c, world, f);
+    // while loop so we can process npcs that don't queue animations in batch
+    while f.co.is_empty() {
+        let next = next_turn_actor(world);
+        if world.has_component::<Player>(next) {
+            pc_inputs(c, world, f);
+            break;
+        } else {
+            ai_turn(c, world, f, next);
+            world.get_component_mut::<Actor>(next).next_turn += 10;
+        }
     }
     // pc input may queue animation
     if f.co.is_empty() {
