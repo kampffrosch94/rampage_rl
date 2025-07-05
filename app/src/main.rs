@@ -49,70 +49,30 @@ async fn main() {
     #[cfg(feature = "staticlink")]
     let mut worker = static_worker::StaticWorker::new();
 
-    set_default_filter_mode(FilterMode::Nearest);
-
     let mut last_mouse_pos = mouse_position();
     let ctx = &mut context::Context::new();
+
     #[cfg(not(feature = "staticlink"))]
     let prefix = "..";
     #[cfg(feature = "staticlink")]
     let prefix = ".";
-    ctx.textures
-        .load_texture(format!("{prefix}/assets/32rogues/extruded-tileset.png"), "tiles", false)
-        .await
-        .unwrap();
 
-    ctx.textures
-        .load_texture(format!("{prefix}/assets/32rogues/rogues.png"), "rogues", false)
-        .await
-        .unwrap();
+    let asset_paths = [
+        ("assets/32rogues/extruded-tileset.png", "tiles", false),
+        ("assets/32rogues/rogues.png", "rogues", false),
+        ("assets/pixeltest.png", "test", false),
+        ("assets/32rogues/monsters.png", "monsters", false),
+        ("assets/32rogues/items.png", "items", false),
+        ("assets/32rogues/animals.png", "animals", false),
+        ("assets/32rogues/autotiles.png", "autotiles", false),
+        ("assets/32rogues/32rogues-palette.png", "palette", false),
+        ("assets/32rogues/items-palette-swaps.png", "items-swaps", false),
+        ("assets/32rogues/animated-tiles.png", "animated-tiles", false),
+    ];
 
-    ctx.textures
-        .load_texture(format!("{prefix}/assets/pixeltest.png"), "test", false)
-        .await
-        .unwrap();
-
-    ctx.textures
-        .load_texture(format!("{prefix}/assets/32rogues/monsters.png"), "monsters", false)
-        .await
-        .unwrap();
-
-    ctx.textures
-        .load_texture(format!("{prefix}/assets/32rogues/items.png"), "items", false)
-        .await
-        .unwrap();
-    ctx.textures
-        .load_texture(format!("{prefix}/assets/32rogues/animals.png"), "animals", false)
-        .await
-        .unwrap();
-    ctx.textures
-        .load_texture(format!("{prefix}/assets/32rogues/autotiles.png"), "autotiles", false)
-        .await
-        .unwrap();
-    ctx.textures
-        .load_texture(
-            format!("{prefix}/assets/32rogues/animated-tiles.png"),
-            "animated-tiles",
-            false,
-        )
-        .await
-        .unwrap();
-    ctx.textures
-        .load_texture(
-            format!("{prefix}/assets/32rogues/32rogues-palette.png"),
-            "palette",
-            false,
-        )
-        .await
-        .unwrap();
-    ctx.textures
-        .load_texture(
-            format!("{prefix}/assets/32rogues/items-palette-swaps.png"),
-            "items-swaps",
-            false,
-        )
-        .await
-        .unwrap();
+    for (path, shorthand, aa) in asset_paths {
+        ctx.textures.load_texture(format!("{prefix}/{path}"), shorthand, aa).await.unwrap();
+    }
 
     let mut fps_counter = FPSCounter::new();
 
