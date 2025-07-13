@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use base::{Color, ContextTrait, FPos, Input, Pos, Rect, shadowcasting};
+use base::{Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};
@@ -20,6 +20,7 @@ mod ui;
 
 use crate::{
     coroutines::{CoAccess, sleep_ticks},
+    dijstra::{dijkstra, dijkstra_path},
     fleeting::FleetingState,
     persistent::PersistentState,
     rand::RandomGenerator,
@@ -104,8 +105,49 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState)
     }
 }
 
-fn ai_turn(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState, actor: Entity) {
-    // TODO do something
+fn ai_turn(_c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState, npc: Entity) {
+    // set up pathfinding dijsktra map
+    println!("-------------");
+    let start = world.get_component::<Actor>(npc).pos;
+    let tm = world.singleton::<TileMap>();
+    let grid = {
+        let mut grid = Grid::new(tm.tiles.width, tm.tiles.height, 0);
+        let mut seeds = Vec::new();
+        for (player,) in query!(world, Actor, _ Player) {
+            grid[player.pos] = 4;
+            seeds.push(player.pos);
+            dbg!(&player.pos);
+        }
+        let cost_function = |pos| if tm.is_blocked(pos) && pos != start { 999999 } else { 1 };
+        dijkstra(&mut grid, &seeds, cost_function);
+        grid
+    };
+
+    // do pathfinding
+    let start = world.get_component::<Actor>(npc).pos;
+    let path = dijkstra_path(&grid, start);
+
+    if path.len() > 1
+        && let Some(next) = path[1..].first()
+        && !tm.is_blocked(*next)
+    {
+        let mut actor = world.get_component_mut::<Actor>(npc);
+        spawn_move_animation(f, npc, actor.pos, *next);
+        actor.pos = *next;
+        actor.next_turn += 10;
+    } else {
+        // TODO add attacking player
+        let mut actor = world.get_component_mut::<Actor>(npc);
+        dbg!(&actor.pos);
+        println!("Can't move. {path:?}");
+        for (x, y, val) in grid.iter() {
+            if *val > 0 {
+                println!("Value {val}: ({x},{y})")
+            }
+        }
+        actor.next_turn += 10;
+        println!("-------------");
+    }
 }
 
 fn spawn_bump_attack_animation(
