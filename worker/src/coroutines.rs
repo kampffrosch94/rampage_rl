@@ -106,7 +106,8 @@ impl CoroutineRuntime {
 
     pub fn run_step(&mut self, world: &mut World) {
         unsafe { self.access.fill_with(world) };
-        for i in 0..self.routines.len() {
+        let mut i = 0;
+        while i < self.routines.len() {
             let c = &mut self.routines[i];
             let remove = match c.as_mut().poll(&mut self.cx) {
                 Poll::Ready(()) => true,
@@ -114,6 +115,8 @@ impl CoroutineRuntime {
             };
             if remove {
                 let _ = self.routines.remove(i);
+            } else {
+                i += 1;
             }
         }
         self.access.empty_out();

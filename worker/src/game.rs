@@ -4,7 +4,7 @@ use base::{Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasti
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};
-use quicksilver::{reflections::reflect, reflections_ref::reflect_ref};
+use quicksilver::{reflections::reflect};
 use tile_map::{DecorWithPos, TileMap};
 mod creature;
 mod tile_map;
@@ -68,8 +68,6 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     update_systems(c, world, f);
     draw_systems(c, world);
 
-    let tc = world.singleton::<TurnCount>();
-    c.inspect(&mut reflect_ref(&*tc));
     for (mut actor,) in query!(world, mut Actor) {
         c.inspect(&mut reflect(&mut *actor));
     }
@@ -114,7 +112,7 @@ fn ai_turn(_c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState, 
         let mut grid = Grid::new(tm.tiles.width, tm.tiles.height, 0);
         let mut seeds = Vec::new();
         for (player,) in query!(world, Actor, _ Player) {
-            grid[player.pos] = 4;
+            grid[player.pos] = 25;
             seeds.push(player.pos);
             dbg!(&player.pos);
         }
@@ -232,17 +230,16 @@ fn next_turn_actor(world: &World) -> Entity {
 
 fn update_systems(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
     TileMap::update_actors(world);
-    // while loop so we can process npcs that don't queue animations in batch
-    while f.co.is_empty() {
-        let next = next_turn_actor(world);
-        if world.has_component::<Player>(next) {
-            pc_inputs(c, world, f);
-            break;
-        } else {
+    if f.co.is_empty() {
+        let mut next = next_turn_actor(world);
+        while !world.has_component::<Player>(next) {
             ai_turn(c, world, f, next);
-            world.get_component_mut::<Actor>(next).next_turn += 10;
+            TileMap::update_actors(world);
+            next = next_turn_actor(world);
         }
+        pc_inputs(c, world, f);
     }
+
     // pc input may queue animation
     if f.co.is_empty() {
         for (e, actor, mut draw_pos) in query!(world, &this, Actor, mut DrawPos) {
