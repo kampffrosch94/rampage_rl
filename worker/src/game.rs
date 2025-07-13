@@ -4,7 +4,7 @@ use base::{Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasti
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};
-use quicksilver::{reflections::reflect};
+use quicksilver::reflections::reflect;
 use tile_map::{DecorWithPos, TileMap};
 mod creature;
 mod tile_map;
@@ -105,7 +105,6 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState)
 
 fn ai_turn(_c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState, npc: Entity) {
     // set up pathfinding dijsktra map
-    println!("-------------");
     let start = world.get_component::<Actor>(npc).pos;
     let tm = world.singleton::<TileMap>();
     let grid = {
@@ -114,7 +113,6 @@ fn ai_turn(_c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState, 
         for (player,) in query!(world, Actor, _ Player) {
             grid[player.pos] = 25;
             seeds.push(player.pos);
-            dbg!(&player.pos);
         }
         let cost_function = |pos| if tm.is_blocked(pos) && pos != start { 999999 } else { 1 };
         dijkstra(&mut grid, &seeds, cost_function);
@@ -136,15 +134,7 @@ fn ai_turn(_c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState, 
     } else {
         // TODO add attacking player
         let mut actor = world.get_component_mut::<Actor>(npc);
-        dbg!(&actor.pos);
-        println!("Can't move. {path:?}");
-        for (x, y, val) in grid.iter() {
-            if *val > 0 {
-                println!("Value {val}: ({x},{y})")
-            }
-        }
         actor.next_turn += 10;
-        println!("-------------");
     }
 }
 
