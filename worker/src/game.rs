@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use base::{Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
+use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};
@@ -63,14 +63,15 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     c.draw_texture("tiles", -228., -950., 5);
     c.draw_texture("rogues", -600., -950., 5);
     c.draw_texture("monsters", -1100., -950., 5);
+    // c.draw_circle(Circle { pos: FPos::new(150., 60.), radius: 30. }, Color::WHITE, 15);
 
     handle_ui(c, world, f);
     update_systems(c, world, f);
     draw_systems(c, world);
 
-    for (mut actor,) in query!(world, mut Actor) {
-        c.inspect(&mut reflect(&mut *actor));
-    }
+    //     for (mut actor,) in query!(world, mut Actor) {
+    //         c.inspect(&mut reflect(&mut *actor));
+    //     }
 }
 
 fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
