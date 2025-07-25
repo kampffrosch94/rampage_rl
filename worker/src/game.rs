@@ -29,8 +29,15 @@ use crate::{
 pub const Z_TILES: i32 = 0;
 pub const Z_HP_BAR: i32 = 9;
 pub const Z_SPRITE: i32 = 10;
+pub const Z_DEBUG: i32 = 999;
 pub const Z_UI_BG: i32 = 1000;
 pub const Z_UI_TEXT: i32 = 1100;
+
+pub fn highlight_tile(c: &mut dyn ContextTrait, pos: Pos)  {
+    let rect = Rect::new(pos.x as f32 * TILE_SIZE, pos.y as f32 * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+    c.draw_rect(rect, Color::YELLOW, Z_DEBUG);
+} 
+
 
 pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut FleetingState) {
     if c.is_pressed(Input::RestartGame) {
@@ -63,15 +70,17 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     c.draw_texture("tiles", -228., -950., 5);
     c.draw_texture("rogues", -600., -950., 5);
     c.draw_texture("monsters", -1100., -950., 5);
-    // c.draw_circle(Circle { pos: FPos::new(150., 60.), radius: 30. }, Color::WHITE, 15);
+    c.draw_circle(Circle { pos: FPos::new(50., 60.), radius: 30. }, Color::WHITE, 15);
 
     handle_ui(c, world, f);
     update_systems(c, world, f);
     draw_systems(c, world);
 
-    //     for (mut actor,) in query!(world, mut Actor) {
-    //         c.inspect(&mut reflect(&mut *actor));
-    //     }
+    highlight_tile(c, Pos::new(1,1));
+
+        for (mut actor,) in query!(world, mut Actor) {
+            c.inspect(&mut reflect(&mut *actor));
+        }
 }
 
 fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
