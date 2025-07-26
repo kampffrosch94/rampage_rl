@@ -33,11 +33,11 @@ pub const Z_DEBUG: i32 = 999;
 pub const Z_UI_BG: i32 = 1000;
 pub const Z_UI_TEXT: i32 = 1100;
 
-pub fn highlight_tile(c: &mut dyn ContextTrait, pos: Pos)  {
-    let rect = Rect::new(pos.x as f32 * TILE_SIZE, pos.y as f32 * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+pub fn highlight_tile(c: &mut dyn ContextTrait, pos: Pos) {
+    let rect =
+        Rect::new(pos.x as f32 * TILE_SIZE, pos.y as f32 * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     c.draw_rect(rect, Color::YELLOW, Z_DEBUG);
-} 
-
+}
 
 pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut FleetingState) {
     if c.is_pressed(Input::RestartGame) {
@@ -76,11 +76,11 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     update_systems(c, world, f);
     draw_systems(c, world);
 
-    highlight_tile(c, Pos::new(1,1));
+    highlight_tile(c, Pos::new(1, 1));
 
-        for (mut actor,) in query!(world, mut Actor) {
-            c.inspect(&mut reflect(&mut *actor));
-        }
+    for (mut actor,) in query!(world, mut Actor) {
+        c.inspect(&mut reflect(&mut *actor));
+    }
 }
 
 fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
