@@ -6,6 +6,7 @@ use base::Rect;
 use froql::relation::Relation;
 use froql::world::World;
 
+use crate::coroutines::CoroutineStore;
 use crate::ecs_setup::EntityComponent;
 use crate::ecs_setup::OriginTarget;
 use crate::ecs_setup::SerializedState;
@@ -72,6 +73,7 @@ ecs_types!(
         Circle,
         Rect,
         DeltaTime,
+        CoroutineStore,
         TurnCount[persist],
         Fov[persist],
         Pos[persist],

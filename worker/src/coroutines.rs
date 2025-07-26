@@ -98,6 +98,13 @@ impl CoroutineRuntime {
         self.routines.push(p);
     }
 
+    pub fn add_from_store(&mut self, store: &mut CoroutineStore) {
+        for f in store.routines.drain(..) {
+            let acc = self.access.clone();
+            self.routines.push(f(acc));
+        }
+    }
+
     pub fn run_completing(&mut self, world: &mut World) {
         while self.routines.len() > 0 {
             self.run_step(world);
@@ -127,6 +134,37 @@ impl CoroutineRuntime {
     }
 }
 
+/// for temporarily storing coroutines
+pub struct CoroutineStore {
+    routines: Vec<Box<dyn FnOnce(CoAccess) -> Pin<Box<dyn Future<Output = ()>>>>>,
+    pub blockers: usize,
+}
+
+impl CoroutineStore {
+    pub fn new() -> Self {
+        Self { routines: Vec::new(), blockers: 0 }
+    }
+
+    pub fn is_blocked(&self) -> bool {
+        self.blockers > 0
+    }
+
+    pub fn not_blocked(&self) -> bool {
+        self.blockers == 0
+    }
+
+    pub fn add_future<Fut, F>(&mut self, f: F)
+    where
+        // Send bound is so that &mut World references can't be held across suspend points
+        Fut: Future<Output = ()> + 'static + Send,
+        F: FnOnce(CoAccess) -> Fut + 'static,
+    {
+        let wrap: Box<dyn FnOnce(CoAccess) -> Pin<Box<dyn Future<Output = ()>>>> =
+            Box::new(|acc: CoAccess| Box::pin(f(acc)));
+        self.routines.push(wrap);
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
@@ -146,6 +184,22 @@ mod test {
         let mut rt = CoroutineRuntime::new();
         assert_eq!(*world.singleton::<i32>(), 42);
         rt.add_future(foobar);
+        rt.run_completing(&mut world);
+        assert_eq!(*world.singleton::<i32>(), 0);
+    }
+
+    #[test]
+    fn test_store() {
+        let mut world = World::new();
+        world.singleton_add(42);
+        let mut rt = CoroutineRuntime::new();
+        let mut store = CoroutineStore::new();
+        let bar = async |_acc: CoAccess| println!("Hi");
+        store.add_future(foobar);
+        store.add_future(bar);
+        rt.add_from_store(&mut store);
+
+        assert_eq!(*world.singleton::<i32>(), 42);
         rt.run_completing(&mut world);
         assert_eq!(*world.singleton::<i32>(), 0);
     }

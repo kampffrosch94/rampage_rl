@@ -19,7 +19,7 @@ mod mapgen;
 mod ui;
 
 use crate::{
-    coroutines::{CoAccess, sleep_ticks},
+    coroutines::{CoAccess, CoroutineStore, sleep_ticks},
     dijstra::{dijkstra, dijkstra_path},
     fleeting::FleetingState,
     persistent::PersistentState,
@@ -59,6 +59,13 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
 
     let world = &mut s.world;
 
+    // add coroutines stored in previous frame
+    if !world.singleton_has::<CoroutineStore>() {
+        world.singleton_add(CoroutineStore::new());
+    } else {
+        f.co.add_from_store(&mut world.singleton_mut::<CoroutineStore>());
+    }
+
     if !world.singleton_has::<DeltaTime>() {
         world.singleton_add(DeltaTime(c.delta()));
     } else {
@@ -73,7 +80,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     c.draw_circle(Circle { pos: FPos::new(50., 60.), radius: 30. }, Color::WHITE, 15);
 
     handle_ui(c, world, f);
-    update_systems(c, world, f);
+    update_systems(c, world);
     draw_systems(c, world);
 
     highlight_tile(c, Pos::new(1, 1));
@@ -83,7 +90,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     }
 }
 
-fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
+fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
     const MOVEMENTS: [(Input, (i32, i32)); 8] = [
         (Input::MoveW, (-1, 0)),
         (Input::MoveE, (1, 0)),
@@ -100,11 +107,13 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState)
             if c.is_pressed(input) {
                 let new_pos = player.pos + dir;
                 if !tm.is_blocked(new_pos) {
-                    spawn_move_animation(f, *e, player.pos, new_pos);
+                    spawn_move_animation(world, *e, player.pos, new_pos, true);
                     player.pos = new_pos;
                 } else {
                     if let Some(other) = tm.get_actor(new_pos) {
-                        spawn_bump_attack_animation(f, *e, player.pos, new_pos, other, 1);
+                        spawn_bump_attack_animation(
+                            world, *e, player.pos, new_pos, other, 1, true,
+                        );
                     }
                 }
                 player.next_turn += 10;
@@ -113,7 +122,7 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState)
     }
 }
 
-fn ai_turn(_c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState, npc: Entity) {
+fn ai_turn(_c: &mut dyn ContextTrait, world: &mut World, npc: Entity) {
     // set up pathfinding dijsktra map
     let start = world.get_component::<Actor>(npc).pos;
     let tm = world.singleton::<TileMap>();
@@ -138,7 +147,7 @@ fn ai_turn(_c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState, 
         && !tm.is_blocked(*next)
     {
         let mut actor = world.get_component_mut::<Actor>(npc);
-        spawn_move_animation(f, npc, actor.pos, *next);
+        spawn_move_animation(world, npc, actor.pos, *next, true);
         actor.pos = *next;
         actor.next_turn += 10;
     } else {
@@ -149,19 +158,20 @@ fn ai_turn(_c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState, 
 }
 
 fn spawn_bump_attack_animation(
-    f: &mut FleetingState,
+    world: &World,
     e: Entity,
     p_start: Pos,
     p_end: Pos,
     target: Entity,
     damage: i32,
+    block: bool,
 ) {
     let start = pos_to_drawpos(p_start);
     let end = pos_to_drawpos(p_end);
     let animation_time = 0.15;
     let mut elapsed = 0.0;
     const PART_FORWARD: f32 = 0.7;
-    f.co.add_future(async move |mut input: CoAccess| {
+    add_coroutine(world, block, async move |mut input: CoAccess| {
         loop {
             {
                 let world = input.get();
@@ -191,12 +201,30 @@ fn spawn_bump_attack_animation(
     });
 }
 
-fn spawn_move_animation(f: &mut FleetingState, e: Entity, start: Pos, end: Pos) {
+fn add_coroutine<Fut, F>(world: &World, block: bool, f: F)
+where
+    Fut: Future<Output = ()> + 'static + Send,
+    F: FnOnce(CoAccess) -> Fut + 'static + Send,
+{
+    let mut store = world.singleton_mut::<CoroutineStore>();
+    if block {
+        store.blockers += 1;
+        let wrap = |mut acc: CoAccess| async move {
+            f(acc.clone()).await;
+            acc.get().singleton_mut::<CoroutineStore>().blockers -= 1;
+        };
+        store.add_future(wrap);
+    } else {
+        store.add_future(f);
+    }
+}
+
+fn spawn_move_animation(world: &World, e: Entity, start: Pos, end: Pos, block: bool) {
     let start = pos_to_drawpos(start);
     let end = pos_to_drawpos(end);
     let animation_time = 0.10;
     let mut elapsed = 0.0;
-    f.co.add_future(async move |mut input: CoAccess| {
+    add_coroutine(world, block, async move |mut input: CoAccess| {
         loop {
             {
                 let world = input.get();
@@ -228,20 +256,20 @@ fn next_turn_actor(world: &World) -> Entity {
         .unwrap()
 }
 
-fn update_systems(c: &mut dyn ContextTrait, world: &mut World, f: &mut FleetingState) {
+fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
     TileMap::update_actors(world);
-    if f.co.is_empty() {
+    if world.singleton::<CoroutineStore>().not_blocked() {
         let mut next = next_turn_actor(world);
         while !world.has_component::<Player>(next) {
-            ai_turn(c, world, f, next);
+            ai_turn(c, world, next);
             TileMap::update_actors(world);
             next = next_turn_actor(world);
         }
-        pc_inputs(c, world, f);
+        pc_inputs(c, world);
     }
 
-    // pc input may queue animation
-    if f.co.is_empty() {
+    // pc input may queue blocking animation
+    if world.singleton::<CoroutineStore>().not_blocked() {
         for (e, actor, mut draw_pos) in query!(world, &this, Actor, mut DrawPos) {
             // update draw position
             draw_pos.0 = pos_to_drawpos(actor.pos);
