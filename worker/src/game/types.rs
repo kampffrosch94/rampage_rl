@@ -6,6 +6,10 @@ use base::Rect;
 use froql::relation::Relation;
 use froql::world::World;
 
+use crate::animation::AnimationTarget;
+use crate::animation::AnimationTimer;
+use crate::animation::BumpAttackAnimation;
+use crate::animation::MovementAnimation;
 use crate::coroutines::CoroutineStore;
 use crate::ecs_setup::EntityComponent;
 use crate::ecs_setup::OriginTarget;
@@ -51,10 +55,16 @@ pub struct Actor {
 
 #[derive(Debug, Quicksilver)]
 pub struct DrawPos(pub FPos);
+impl DrawPos {
+    pub(crate) fn lerp(&self, end: DrawPos, lerpiness: f32) -> FPos {
+        todo!()
+    }
+}
 
-/// How much time passed since the last frame in seconds
+/// How much time passed since the start of the game in seconds
 /// Set early in the game loop.
-pub struct DeltaTime(pub f32);
+/// Used for animations
+pub struct GameTime(pub f32);
 
 #[derive(Debug, Quicksilver)]
 pub struct TurnCount {
@@ -72,7 +82,7 @@ ecs_types!(
     Components(
         Circle,
         Rect,
-        DeltaTime,
+        GameTime,
         CoroutineStore,
         TurnCount[persist],
         Fov[persist],
@@ -81,7 +91,10 @@ ecs_types!(
         Actor[persist],
         DrawPos[persist],
         TileMap[persist],
-        RandomGenerator[persist]
+        RandomGenerator[persist],
+        MovementAnimation,
+        BumpAttackAnimation,
+        AnimationTimer
     ),
-    Relations(ExampleRel[persist])
+    Relations(ExampleRel[persist], AnimationTarget)
 );

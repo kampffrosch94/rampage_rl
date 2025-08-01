@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, ops::Not};
 
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
 use creature::CreatureSprite;
@@ -6,19 +6,21 @@ use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};
 use quicksilver::reflections::reflect;
 use tile_map::{DecorWithPos, TileMap};
-mod creature;
-mod tile_map;
-mod tiles;
+pub mod creature;
+pub mod tile_map;
+pub mod tiles;
 pub mod types;
 use tiles::{
     Decor, DrawTile, Environment, LogicTile, TILE_SIZE, generate_draw_tile, pos_to_drawpos,
 };
 use types::*;
 use ui::handle_ui;
-mod mapgen;
-mod ui;
+pub mod mapgen;
+pub mod ui;
 
 use crate::{
+    animation,
+    animation::AnimationTarget,
     coroutines::{CoAccess, CoroutineStore, sleep_ticks},
     dijstra::{dijkstra, dijkstra_path},
     fleeting::FleetingState,
@@ -66,13 +68,14 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
         f.co.add_from_store(&mut world.singleton_mut::<CoroutineStore>());
     }
 
-    if !world.singleton_has::<DeltaTime>() {
-        world.singleton_add(DeltaTime(c.delta()));
+    if !world.singleton_has::<GameTime>() {
+        world.singleton_add(GameTime(0.));
     } else {
-        world.singleton_mut::<DeltaTime>().0 = c.delta();
+        world.singleton_mut::<GameTime>().0 += c.delta();
     }
 
-    f.co.run_step(world);
+    // f.co.run_step(world);
+    animation::handle_animations(world);
 
     c.draw_texture("tiles", -228., -950., 5);
     c.draw_texture("rogues", -600., -950., 5);
@@ -107,12 +110,12 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
             if c.is_pressed(input) {
                 let new_pos = player.pos + dir;
                 if !tm.is_blocked(new_pos) {
-                    spawn_move_animation(world, *e, player.pos, new_pos, true);
+                    animation::spawn_move_animation(world, *e, player.pos, new_pos);
                     player.pos = new_pos;
                 } else {
                     if let Some(other) = tm.get_actor(new_pos) {
-                        spawn_bump_attack_animation(
-                            world, *e, player.pos, new_pos, other, 1, true,
+                        animation::spawn_bump_attack_animation(
+                            world, *e, other, player.pos, new_pos, 1,
                         );
                     }
                 }
@@ -147,7 +150,7 @@ fn ai_turn(_c: &mut dyn ContextTrait, world: &mut World, npc: Entity) {
         && !tm.is_blocked(*next)
     {
         let mut actor = world.get_component_mut::<Actor>(npc);
-        spawn_move_animation(world, npc, actor.pos, *next, true);
+        animation::spawn_move_animation(world, npc, actor.pos, *next);
         actor.pos = *next;
         actor.next_turn += 10;
     } else {
@@ -157,98 +160,6 @@ fn ai_turn(_c: &mut dyn ContextTrait, world: &mut World, npc: Entity) {
     }
 }
 
-fn spawn_bump_attack_animation(
-    world: &World,
-    e: Entity,
-    p_start: Pos,
-    p_end: Pos,
-    target: Entity,
-    damage: i32,
-    block: bool,
-) {
-    let start = pos_to_drawpos(p_start);
-    let end = pos_to_drawpos(p_end);
-    let animation_time = 0.15;
-    let mut elapsed = 0.0;
-    const PART_FORWARD: f32 = 0.7;
-    add_coroutine(world, block, async move |mut input: CoAccess| {
-        loop {
-            {
-                let world = input.get();
-                let dt = world.singleton::<DeltaTime>().0;
-                elapsed += dt;
-                let mut draw_pos = world.get_component_mut::<DrawPos>(e);
-                let lerpiness = {
-                    use simple_easing::*;
-                    let lerp_in = elapsed / animation_time;
-                    cubic_in_out(roundtrip(lerp_in)) * PART_FORWARD
-                };
-                draw_pos.0 = start.lerp(end, lerpiness);
-                if elapsed >= animation_time * PART_FORWARD {
-                    break;
-                }
-            }
-            sleep_ticks(1).await;
-        }
-        let world = input.get();
-        world.get_component_mut::<DrawPos>(e).0 = start;
-        let mut tm = world.singleton_mut::<TileMap>();
-        let mut rand = world.singleton_mut::<RandomGenerator>();
-        let decor_pos = p_end + rand.random_direction();
-        let decor = rand.pick_random(&[Decor::BloodRed1, Decor::BloodRed2]);
-        tm.add_decor(decor_pos, decor);
-        world.get_component_mut::<Actor>(target).hp.current -= damage;
-    });
-}
-
-fn add_coroutine<Fut, F>(world: &World, block: bool, f: F)
-where
-    Fut: Future<Output = ()> + 'static + Send,
-    F: FnOnce(CoAccess) -> Fut + 'static + Send,
-{
-    let mut store = world.singleton_mut::<CoroutineStore>();
-    if block {
-        store.blockers += 1;
-        let wrap = |mut acc: CoAccess| async move {
-            f(acc.clone()).await;
-            acc.get().singleton_mut::<CoroutineStore>().blockers -= 1;
-        };
-        store.add_future(wrap);
-    } else {
-        store.add_future(f);
-    }
-}
-
-fn spawn_move_animation(world: &World, e: Entity, start: Pos, end: Pos, block: bool) {
-    let start = pos_to_drawpos(start);
-    let end = pos_to_drawpos(end);
-    let animation_time = 0.10;
-    let mut elapsed = 0.0;
-    add_coroutine(world, block, async move |mut input: CoAccess| {
-        loop {
-            {
-                let world = input.get();
-                let dt = world.singleton::<DeltaTime>().0;
-                elapsed += dt;
-                let mut draw_pos = world.get_component_mut::<DrawPos>(e);
-                let lerpiness = {
-                    use simple_easing::*;
-                    let t = elapsed / animation_time;
-                    sine_in_out(t)
-                    // circ_in_out(t)
-                };
-                draw_pos.0 = start.lerp(end, lerpiness);
-                if elapsed >= animation_time {
-                    break;
-                }
-            }
-            sleep_ticks(1).await;
-        }
-        let world = input.get();
-        world.get_component_mut::<DrawPos>(e).0 = end;
-    });
-}
-
 fn next_turn_actor(world: &World) -> Entity {
     query!(world, &this, Actor)
         .min_by_key(|(e, a)| (a.next_turn, e.id.0))
@@ -256,9 +167,13 @@ fn next_turn_actor(world: &World) -> Entity {
         .unwrap()
 }
 
+fn should_block_input(world: &World) -> bool {
+    query!(world, Player, AnimationTarget(_, this)).next().is_some()
+}
+
 fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
     TileMap::update_actors(world);
-    if world.singleton::<CoroutineStore>().not_blocked() {
+    if should_block_input(world).not() {
         let mut next = next_turn_actor(world);
         while !world.has_component::<Player>(next) {
             ai_turn(c, world, next);
@@ -266,11 +181,14 @@ fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
             next = next_turn_actor(world);
         }
         pc_inputs(c, world);
+        world.process();
     }
 
     // pc input may queue blocking animation
-    if world.singleton::<CoroutineStore>().not_blocked() {
-        for (e, actor, mut draw_pos) in query!(world, &this, Actor, mut DrawPos) {
+    if should_block_input(world).not() {
+        for (e, actor, mut draw_pos) in
+            query!(world, &this, Actor, mut DrawPos, !AnimationTarget(_, this))
+        {
             // update draw position
             draw_pos.0 = pos_to_drawpos(actor.pos);
             // remove dead actors
