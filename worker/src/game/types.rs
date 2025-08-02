@@ -9,6 +9,8 @@ use froql::world::World;
 use crate::animation::AnimationTarget;
 use crate::animation::AnimationTimer;
 use crate::animation::BumpAttackAnimation;
+use crate::animation::DecorSpawnAnimation;
+use crate::animation::HPBarAnimation;
 use crate::animation::MovementAnimation;
 use crate::coroutines::CoroutineStore;
 use crate::ecs_setup::EntityComponent;
@@ -101,6 +103,8 @@ ecs_types!(
         RandomGenerator[persist],
         MovementAnimation,
         BumpAttackAnimation,
+        HPBarAnimation,
+        DecorSpawnAnimation,
         AnimationTimer
     ),
     Relations(ExampleRel[persist], AnimationTarget)

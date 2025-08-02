@@ -1,10 +1,11 @@
 use base::{FPos, Pos};
-use froql::entity_view_deferred::EntityViewDeferred;
 use froql::query;
 use froql::{entity_store::Entity, world::World};
 use simple_easing::{cubic_in_out, roundtrip, sine_in_out};
 
-use crate::game::tiles::pos_to_drawpos;
+use crate::game::tile_map::TileMap;
+use crate::game::tiles::{Decor, pos_to_drawpos};
+use crate::game::types::DrawHealth;
 use crate::game::types::{Actor, GameTime};
 
 use crate::{
@@ -48,6 +49,16 @@ pub struct BumpAttackAnimation {
     end: FPos,
 }
 
+pub struct HPBarAnimation {
+    pub start_ratio: f32,
+    pub end_ratio: f32,
+}
+
+pub struct DecorSpawnAnimation {
+    pub decor: Decor,
+    pub pos: Pos,
+}
+
 pub fn handle_animations(world: &mut World) {
     let current_time = world.singleton::<GameTime>().0;
     // handle movement animation
@@ -82,6 +93,35 @@ pub fn handle_animations(world: &mut World) {
         }
     }
 
+    // HP Bar animation
+    for (timer, anim, mut draw_hp) in query!(
+        world,
+        AnimationTimer,
+        HPBarAnimation,
+        AnimationTarget(this, target),
+        mut DrawHealth(target)
+    ) {
+        if timer.is_active(current_time) {
+            let lerpiness = timer.normalize(current_time);
+            draw_hp.ratio = lerp(anim.start_ratio, anim.end_ratio, lerpiness);
+        }
+    }
+
+    // Decor spawn animation
+    for (mut tm, anim_e, timer, anim) in query!(
+        world,
+        mut $ TileMap,
+        &this,
+        AnimationTimer,
+        DecorSpawnAnimation,
+    ) {
+        if timer.start >= current_time {
+            tm.add_decor(anim.pos, anim.decor);
+            anim_e.destroy();
+        }
+    }
+    world.process();
+
     // remove animations that are done
     for (e, timer) in query!(world, &this, AnimationTimer,) {
         if current_time >= timer.end {
@@ -93,16 +133,20 @@ pub fn handle_animations(world: &mut World) {
     world.process();
 }
 
+pub fn lerp(a: f32, b: f32, t: f32) -> f32 {
+    a + t * (b - a)
+}
+
 pub fn spawn_bump_attack_animation(
     world: &World,
     e: Entity,
     target: Entity,
-    start: Pos,
-    end: Pos,
-    damage: i32,
+    start_p: Pos,
+    end_p: Pos,
+    hp_bar_animation: HPBarAnimation,
 ) {
-    let start = pos_to_drawpos(start);
-    let end = pos_to_drawpos(end);
+    let start = pos_to_drawpos(start_p);
+    let end = pos_to_drawpos(end_p);
     let animation_length = 0.15;
 
     let current_time = world.singleton::<GameTime>().0;
@@ -113,21 +157,35 @@ pub fn spawn_bump_attack_animation(
         .map(|(timer,)| timer.end)
         .fold(current_time, f32::max);
 
+    // bump animation
     world
         .create_deferred()
         .add(AnimationTimer { start: start_time, end: start_time + animation_length })
         .add(BumpAttackAnimation { start, end })
         .relate_to::<AnimationTarget>(e);
 
-    //     let world = input.get();
-    //     world.get_component_mut::<DrawPos>(e).0 = start;
-    //     let mut tm = world.singleton_mut::<TileMap>();
-    //     let mut rand = world.singleton_mut::<RandomGenerator>();
-    //     let decor_pos = p_end + rand.random_direction();
-    //     let decor = rand.pick_random(&[Decor::BloodRed1, Decor::BloodRed2]);
-    //     tm.add_decor(decor_pos, decor);
-    //     world.get_component_mut::<Actor>(target).hp.current -= damage;
-    // });
+    // hp bar animation
+    world
+        .create_deferred()
+        .add(AnimationTimer {
+            start: start_time + animation_length / 2.,
+            end: start_time + animation_length / 2.,
+        })
+        .add(hp_bar_animation)
+        .relate_to::<AnimationTarget>(target);
+
+    // spawn blood on ground
+    let mut rand = world.singleton_mut::<RandomGenerator>();
+    let decor_pos = end_p + rand.random_direction();
+    let decor = rand.pick_random(&[Decor::BloodRed1, Decor::BloodRed2]);
+    world
+        .create_deferred()
+        .add(AnimationTimer {
+            start: start_time + animation_length / 2.,
+            end: start_time + animation_length / 2.,
+        })
+        .add(DecorSpawnAnimation { decor, pos: decor_pos })
+        .relate_to::<AnimationTarget>(target);
 }
 
 pub fn spawn_move_animation(world: &World, e: Entity, start: Pos, end: Pos) {

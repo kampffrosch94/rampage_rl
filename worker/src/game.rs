@@ -18,9 +18,9 @@ use ui::handle_ui;
 pub mod mapgen;
 pub mod ui;
 
+use crate::animation::HPBarAnimation;
 use crate::{
-    animation,
-    animation::AnimationTarget,
+    animation::{self, AnimationTarget},
     coroutines::{CoAccess, CoroutineStore, sleep_ticks},
     dijstra::{dijkstra, dijkstra_path},
     fleeting::FleetingState,
@@ -116,11 +116,16 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
                 } else {
                     if let Some(other_e) = tm.get_actor(new_pos) {
                         let mut other = world.get_component_mut::<Actor>(other_e);
-                        let ratio_before = other.hp.ratio();
+                        let start_ratio = other.hp.ratio();
                         other.hp.current -= 1;
-                        let ratio_after = other.hp.ratio();
+                        let end_ratio = other.hp.ratio();
                         animation::spawn_bump_attack_animation(
-                            world, *e, other_e, player.pos, new_pos, 1,
+                            world,
+                            *e,
+                            other_e,
+                            player.pos,
+                            new_pos,
+                            HPBarAnimation { start_ratio, end_ratio },
                         );
                     }
                 }
@@ -189,32 +194,25 @@ fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
         world.process();
     }
 
-    // pc input may queue blocking animation
-    if should_block_input(world).not() {
-        for (e, actor, mut draw_pos, mut draw_health) in
-            query!(world, &this, Actor, mut DrawPos, mut DrawHealth, !AnimationTarget(_, this))
-        {
-            // update draw position
-            draw_pos.0 = pos_to_drawpos(actor.pos);
-            draw_health.ratio = actor.hp.current as f32 / actor.hp.max as f32;
+    for (e, actor, mut draw_pos, mut draw_health) in
+        query!(world, &this, Actor, mut DrawPos, mut DrawHealth, !AnimationTarget(_, this))
+    {
+        // update draw position
+        draw_pos.0 = pos_to_drawpos(actor.pos);
+        draw_health.ratio = actor.hp.current as f32 / actor.hp.max as f32;
 
-            // remove dead actors
-            if actor.hp.current <= 0 {
-                e.destroy();
-            }
+        // remove dead actors
+        if actor.hp.current <= 0 {
+            e.destroy();
         }
-        world.process();
+    }
+    world.process();
 
-        // update player fov
-        for (tm, actor, mut fov) in query!(world, $ TileMap, _ Player, Actor, mut Fov) {
-            shadowcasting::compute_fov(
-                actor.pos,
-                &mut |pos| tm.blocks_vision(pos),
-                &mut |pos| {
-                    fov.0.insert(pos);
-                },
-            );
-        }
+    // update player fov
+    for (tm, actor, mut fov) in query!(world, $ TileMap, _ Player, Actor, mut Fov) {
+        shadowcasting::compute_fov(actor.pos, &mut |pos| tm.blocks_vision(pos), &mut |pos| {
+            fov.0.insert(pos);
+        });
     }
 }
 
