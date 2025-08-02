@@ -24,6 +24,7 @@ use crate::{
     coroutines::{CoAccess, CoroutineStore, sleep_ticks},
     dijstra::{dijkstra, dijkstra_path},
     fleeting::FleetingState,
+    game::DrawHealth,
     persistent::PersistentState,
     rand::RandomGenerator,
 };
@@ -113,9 +114,13 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
                     animation::spawn_move_animation(world, *e, player.pos, new_pos);
                     player.pos = new_pos;
                 } else {
-                    if let Some(other) = tm.get_actor(new_pos) {
+                    if let Some(other_e) = tm.get_actor(new_pos) {
+                        let mut other = world.get_component_mut::<Actor>(other_e);
+                        let ratio_before = other.hp.ratio();
+                        other.hp.current -= 1;
+                        let ratio_after = other.hp.ratio();
                         animation::spawn_bump_attack_animation(
-                            world, *e, other, player.pos, new_pos, 1,
+                            world, *e, other_e, player.pos, new_pos, 1,
                         );
                     }
                 }
@@ -186,11 +191,13 @@ fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
 
     // pc input may queue blocking animation
     if should_block_input(world).not() {
-        for (e, actor, mut draw_pos) in
-            query!(world, &this, Actor, mut DrawPos, !AnimationTarget(_, this))
+        for (e, actor, mut draw_pos, mut draw_health) in
+            query!(world, &this, Actor, mut DrawPos, mut DrawHealth, !AnimationTarget(_, this))
         {
             // update draw position
             draw_pos.0 = pos_to_drawpos(actor.pos);
+            draw_health.ratio = actor.hp.current as f32 / actor.hp.max as f32;
+
             // remove dead actors
             if actor.hp.current <= 0 {
                 e.destroy();
@@ -264,22 +271,24 @@ pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
     };
 
     // draw actors
-    for (actor, draw_pos) in query!(world, Actor, DrawPos) {
+    for (draw_health, draw_pos, actor) in query!(world, DrawHealth, DrawPos, Actor) {
         if !fov.0.contains(&actor.pos) {
+            // TODO: actors shouldn't just disappear when they move outside the FOV
+            // so it should be also related to draw_pos :thonk:
             continue;
         }
 
         let (x, y) = draw_pos.0.into();
         actor.sprite.draw(c, x, y);
 
-        if actor.hp.current < actor.hp.max {
-            let hp_percent = actor.hp.current as f32 / actor.hp.max as f32;
+        if draw_health.ratio < 1.0 {
+            // let hp_percent = actor.hp.current as f32 / actor.hp.max as f32;
             let rect = Rect::new(x + TILE_SIZE * 0.1, y + TILE_SIZE, TILE_SIZE * 0.8, 5.);
             c.draw_rect(rect, Color::RED, Z_HP_BAR);
             let rect = Rect::new(
                 x + TILE_SIZE * 0.1,
                 y + TILE_SIZE,
-                TILE_SIZE * 0.8 * hp_percent,
+                TILE_SIZE * 0.8 * draw_health.ratio,
                 5.,
             );
             c.draw_rect(rect, Color::GREEN, Z_HP_BAR);
@@ -305,6 +314,7 @@ pub fn create_world() -> World {
             hp: HP { max: 10, current: 10 },
             next_turn: 0,
         })
+        .add(DrawHealth { ratio: 1.0 })
         .add(Fov(HashSet::new()));
 
     world.singleton_add(tm);

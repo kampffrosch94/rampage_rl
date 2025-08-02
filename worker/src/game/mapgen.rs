@@ -1,3 +1,4 @@
+use crate::game::DrawHealth;
 use crate::rand::RandomGenerator;
 use base::Color;
 use base::FPos;
@@ -122,13 +123,17 @@ pub fn place_enemies(world: &mut World, seed: u64) {
             if rand.next_in_range(0, 1000) > 20 {
                 continue;
             }
-            let _goblin = world.create_deferred().add(DrawPos(FPos::new(0., 0.))).add(Actor {
-                name: "Goblin".into(),
-                pos: room.tile_pos(t),
-                sprite: CreatureSprite::Goblin,
-                hp: HP { max: 5, current: 5 },
-                next_turn: 0,
-            });
+            let _goblin = world
+                .create_deferred()
+                .add(DrawPos(FPos::new(0., 0.)))
+                .add(Actor {
+                    name: "Goblin".into(),
+                    pos: room.tile_pos(t),
+                    sprite: CreatureSprite::Goblin,
+                    hp: HP { max: 5, current: 5 },
+                    next_turn: 0,
+                })
+                .add(DrawHealth { ratio: 1.0 });
         }
     }
     drop(tm);

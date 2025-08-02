@@ -43,6 +43,12 @@ pub struct HP {
     pub current: i32,
 }
 
+impl HP {
+    pub fn ratio(&self) -> f32 {
+        self.current as f32 / self.max as f32
+    }
+}
+
 #[derive(Debug, Quicksilver)]
 pub struct Actor {
     pub name: String,
@@ -55,10 +61,10 @@ pub struct Actor {
 
 #[derive(Debug, Quicksilver)]
 pub struct DrawPos(pub FPos);
-impl DrawPos {
-    pub(crate) fn lerp(&self, end: DrawPos, lerpiness: f32) -> FPos {
-        todo!()
-    }
+
+#[derive(Debug, Quicksilver)]
+pub struct DrawHealth {
+    pub ratio: f32,
 }
 
 /// How much time passed since the start of the game in seconds
@@ -90,6 +96,7 @@ ecs_types!(
         Player[persist],
         Actor[persist],
         DrawPos[persist],
+        DrawHealth[persist],
         TileMap[persist],
         RandomGenerator[persist],
         MovementAnimation,
