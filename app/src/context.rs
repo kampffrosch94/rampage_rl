@@ -182,6 +182,8 @@ impl ContextTrait for Context {
             Input::MoveNW => is_key_pressed(KeyCode::Kp7),
             Input::MoveN => is_key_pressed(KeyCode::Kp8) || is_key_pressed(KeyCode::Up),
             Input::MoveNE => is_key_pressed(KeyCode::Kp9),
+            Input::Confirm => is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space),
+            Input::Cancel => is_key_pressed(KeyCode::Escape),
         }
     }
 
@@ -193,6 +195,11 @@ impl ContextTrait for Context {
     fn mouse_world(&self) -> FPos {
         let m = self.camera.mouse_world();
         FPos { x: m.x, y: m.y }
+    }
+
+    fn camera_set_shake(&mut self, offset: FVec) {
+        self.camera.shake_offset.x = offset.x;
+        self.camera.shake_offset.y = offset.y;
     }
 
     fn set_text(

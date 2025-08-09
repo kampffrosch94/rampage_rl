@@ -6,6 +6,7 @@ pub struct CameraWrapper {
     pub scale: f32,
     pub scale_exp: i32,
     pub offset: Vec2f,
+    pub shake_offset: Vec2f,
     pub scale_tween: Tweener<f32, f32, Linear>,
     pub offset_tween: Tweener<Vec2f, f32, Linear>,
     pub camera: Camera2D,
@@ -26,10 +27,19 @@ impl CameraWrapper {
 
         let offset = Vec2f { x: -160., y: -40. };
         let offset_tween = Tweener::linear(offset, offset, 0.00);
+        let shake_offset = Vec2f { x: 0., y: 0. };
 
         let camera = Self::create_camera(scale, offset.into());
         set_camera(&camera);
-        CameraWrapper { scale, scale_exp, scale_tween, offset, offset_tween, camera }
+        CameraWrapper {
+            scale,
+            scale_exp,
+            scale_tween,
+            offset,
+            offset_tween,
+            camera,
+            shake_offset,
+        }
     }
 
     pub fn create_camera(scale: f32, offset: Vec2) -> Camera2D {
@@ -64,7 +74,8 @@ impl CameraWrapper {
         if !self.scale_tween.is_finished() {
             let point = Vec2f::from(self.camera.screen_to_world(mouse_position.into()));
             let new_scale = self.scale_tween.move_by(time);
-            let new_camera = Self::create_camera(new_scale, self.offset.into());
+            let offset = self.offset + self.shake_offset;
+            let new_camera = Self::create_camera(new_scale, offset.into());
             let new_point = Vec2f::from(new_camera.screen_to_world(mouse_position.into()));
             let pan_correction = new_point - point;
             self.offset -= pan_correction;
@@ -76,7 +87,8 @@ impl CameraWrapper {
         //     self.offset.y = self.offset.y.round();
         // }
 
-        self.camera = Self::create_camera(self.scale, self.offset.into());
+        let offset = self.offset + self.shake_offset;
+        self.camera = Self::create_camera(self.scale, offset.into());
         self.set();
         //cw_debug!("Camera scale: {} offset: {:?}", self.scale, self.offset);
         //cw_debug!("Camera scale_exp: {}", self.scale_exp);

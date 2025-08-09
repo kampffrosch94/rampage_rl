@@ -1,3 +1,4 @@
+#[repr(C)]
 #[derive(Debug, Clone, Copy)]
 pub enum Input {
     MouseLeft,
@@ -15,4 +16,6 @@ pub enum Input {
     MoveSW,
     MoveSE,
     MoveSkip,
+    Confirm,
+    Cancel,
 }

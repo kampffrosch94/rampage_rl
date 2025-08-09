@@ -1,6 +1,7 @@
 use std::{collections::HashSet, ops::Not};
 
 use crate::animation::AnimationTarget;
+use base::FVec;
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
@@ -48,6 +49,12 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
 
     s.re_register();
 
+
+    if c.is_pressed(Input::Confirm) {
+        c.camera_set_shake(FVec{ x: 150., y: 0. });
+    }
+
+
     if c.is_pressed(Input::Save) {
         println!("Saving game.");
         s.save();
@@ -65,8 +72,6 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
         world.singleton_mut::<GameTime>().0 += c.delta();
     }
 
-    // f.co.run_step(world);
-    animation::handle_animations(world);
 
     c.draw_texture("tiles", -228., -950., 5);
     c.draw_texture("rogues", -600., -950., 5);
@@ -75,6 +80,8 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
 
     handle_ui(c, world, f);
     update_systems(c, world);
+
+    animation::handle_animations(world);
     draw_systems(c, world);
 
     highlight_tile(c, Pos::new(1, 1));
