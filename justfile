@@ -9,6 +9,11 @@ watch:
 run:
     RUST_BACKTRACE=1 cargo run
 
+[working-directory: 'app']
+run-gdb:
+    cargo build
+    RUST_BACKTRACE=1 gdb ../target/debug/app
+
 run-static:
     cargo run -F staticlink --no-default-features
 
