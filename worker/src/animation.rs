@@ -1,4 +1,5 @@
-use base::{FPos, Pos};
+use base::{ContextTrait, FPos, FVec, Pos};
+use fastnoise_lite::{FastNoiseLite, NoiseType};
 use froql::query;
 use froql::{entity_store::Entity, world::World};
 use simple_easing::{cubic_in_out, roundtrip, sine_in_out};
@@ -55,7 +56,11 @@ pub struct DecorSpawnAnimation {
     pub pos: Pos,
 }
 
-pub fn handle_animations(world: &mut World) {
+pub struct CameraShakeAnimation {
+    pub noise: FastNoiseLite,
+}
+
+pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
     let current_time = world.singleton::<GameTime>().0;
     // handle movement animation
 
@@ -117,6 +122,19 @@ pub fn handle_animations(world: &mut World) {
     }
     world.process();
 
+    // Camera shake animation
+    c.camera_set_shake(FVec::ZERO); // if no animation is playing this stays at zero
+    for (anim, timer) in query!(world, CameraShakeAnimation, AnimationTimer) {
+        if timer.is_active(current_time) {
+            let strength = 1000.;
+            let range = 45.;
+            let lerpiness = timer.normalize(current_time) * strength;
+            let x = range * anim.noise.get_noise_2d(lerpiness, lerpiness);
+            let y = range * anim.noise.get_noise_2d(lerpiness + 50., lerpiness + 50.);
+            c.camera_set_shake(FVec { x, y });
+        }
+    }
+
     // remove animations that are done
     for (e, timer) in query!(world, &this, AnimationTimer,) {
         if current_time >= timer.end {
@@ -125,6 +143,7 @@ pub fn handle_animations(world: &mut World) {
             e.destroy();
         }
     }
+
     world.process();
 }
 
@@ -200,4 +219,19 @@ pub fn spawn_move_animation(world: &World, e: Entity, start: Pos, end: Pos) {
         .add(AnimationTimer { start: start_time, end: start_time + animation_length })
         .add(MovementAnimation { start, end })
         .relate_to::<AnimationTarget>(e);
+}
+
+pub fn spawn_camera_shake_animation(world: &mut World) {
+    let animation_length = 0.07;
+    let current_time = world.singleton::<GameTime>().0;
+    let start_time = current_time;
+
+    // seed determined by fair dice roll, guaranteed to be random
+    let mut noise = FastNoiseLite::with_seed(4);
+    noise.set_noise_type(Some(NoiseType::Perlin));
+
+    world
+        .create()
+        .add(AnimationTimer { start: start_time, end: start_time + animation_length })
+        .add(CameraShakeAnimation { noise });
 }

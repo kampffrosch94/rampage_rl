@@ -1,7 +1,6 @@
 use std::{collections::HashSet, ops::Not};
 
 use crate::animation::AnimationTarget;
-use base::FVec;
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
@@ -49,12 +48,6 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
 
     s.re_register();
 
-
-    if c.is_pressed(Input::Confirm) {
-        c.camera_set_shake(FVec{ x: 150., y: 0. });
-    }
-
-
     if c.is_pressed(Input::Save) {
         println!("Saving game.");
         s.save();
@@ -66,12 +59,15 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
 
     let world = &mut s.world;
 
+    if c.is_pressed(Input::Confirm) {
+        animation::spawn_camera_shake_animation(world);
+    }
+
     if !world.singleton_has::<GameTime>() {
         world.singleton_add(GameTime(0.));
     } else {
         world.singleton_mut::<GameTime>().0 += c.delta();
     }
-
 
     c.draw_texture("tiles", -228., -950., 5);
     c.draw_texture("rogues", -600., -950., 5);
@@ -81,7 +77,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     handle_ui(c, world, f);
     update_systems(c, world);
 
-    animation::handle_animations(world);
+    animation::handle_animations(c, world);
     draw_systems(c, world);
 
     highlight_tile(c, Pos::new(1, 1));
@@ -92,7 +88,8 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
 }
 
 fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
-    const MOVEMENTS: [(Input, (i32, i32)); 8] = [
+    let movements = [
+        // can't const this since drop glue may fail on hotreload
         (Input::MoveW, (-1, 0)),
         (Input::MoveE, (1, 0)),
         (Input::MoveN, (0, -1)),
@@ -104,7 +101,7 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
     ];
     for (e, mut player) in query!(world, &this, _ Player, mut Actor) {
         let tm = world.singleton::<TileMap>();
-        for (input, dir) in MOVEMENTS {
+        for (input, dir) in movements {
             if c.is_pressed(input) {
                 let new_pos = player.pos + dir;
                 if !tm.is_blocked(new_pos) {

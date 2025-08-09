@@ -9,6 +9,7 @@ use froql::world::World;
 use crate::animation::AnimationTarget;
 use crate::animation::AnimationTimer;
 use crate::animation::BumpAttackAnimation;
+use crate::animation::CameraShakeAnimation;
 use crate::animation::DecorSpawnAnimation;
 use crate::animation::HPBarAnimation;
 use crate::animation::MovementAnimation;
@@ -100,11 +101,13 @@ ecs_types!(
         DrawHealth[persist],
         TileMap[persist],
         RandomGenerator[persist],
-        MovementAnimation,
+        // animations
+        AnimationTimer,
         BumpAttackAnimation,
-        HPBarAnimation,
+        CameraShakeAnimation,
         DecorSpawnAnimation,
-        AnimationTimer
+        HPBarAnimation,
+        MovementAnimation
     ),
     Relations(ExampleRel[persist], AnimationTarget)
 );

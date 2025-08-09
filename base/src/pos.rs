@@ -136,6 +136,7 @@ impl Into<(f32, f32)> for FPos {
 }
 
 impl FVec {
+    pub const ZERO: FVec = FVec { x: 0., y: 0. };
     pub fn length(&self) -> f32 {
         (self.x.powi(2) + self.y.powi(2)).sqrt()
     }

@@ -8,6 +8,7 @@ crate-type = ["cdylib", "lib"]
 
 [dependencies]
 base.path = "../base"
+fastnoise-lite = "1.1.1"
 froql.workspace = true
 quicksilver.workspace = true
 simple-easing = "1.0.1"
