@@ -91,7 +91,6 @@ ecs_types!(
         Circle,
         Rect,
         GameTime,
-        CoroutineStore,
         TurnCount[persist],
         Fov[persist],
         Pos[persist],

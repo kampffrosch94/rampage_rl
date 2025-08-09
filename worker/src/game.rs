@@ -1,5 +1,6 @@
 use std::{collections::HashSet, ops::Not};
 
+use crate::animation::AnimationTarget;
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
@@ -10,18 +11,14 @@ pub mod creature;
 pub mod tile_map;
 pub mod tiles;
 pub mod types;
-use tiles::{
-    Decor, DrawTile, Environment, LogicTile, TILE_SIZE, generate_draw_tile, pos_to_drawpos,
-};
+use tiles::{DrawTile, Environment, LogicTile, TILE_SIZE, generate_draw_tile, pos_to_drawpos};
 use types::*;
 use ui::handle_ui;
 pub mod mapgen;
 pub mod ui;
-
 use crate::animation::HPBarAnimation;
 use crate::{
-    animation::{self, AnimationTarget},
-    coroutines::{CoAccess, CoroutineStore, sleep_ticks},
+    animation::{self},
     dijstra::{dijkstra, dijkstra_path},
     fleeting::FleetingState,
     game::DrawHealth,
@@ -61,13 +58,6 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     }
 
     let world = &mut s.world;
-
-    // add coroutines stored in previous frame
-    if !world.singleton_has::<CoroutineStore>() {
-        world.singleton_add(CoroutineStore::new());
-    } else {
-        f.co.add_from_store(&mut world.singleton_mut::<CoroutineStore>());
-    }
 
     if !world.singleton_has::<GameTime>() {
         world.singleton_add(GameTime(0.));

@@ -6,13 +6,9 @@ use simple_easing::{cubic_in_out, roundtrip, sine_in_out};
 use crate::game::tile_map::TileMap;
 use crate::game::tiles::{Decor, pos_to_drawpos};
 use crate::game::types::DrawHealth;
-use crate::game::types::{Actor, GameTime};
+use crate::game::types::GameTime;
 
-use crate::{
-    coroutines::{CoAccess, sleep_ticks},
-    game::types::DrawPos,
-    rand::RandomGenerator,
-};
+use crate::{game::types::DrawPos, rand::RandomGenerator};
 
 // Components and Relations
 
@@ -88,7 +84,6 @@ pub fn handle_animations(world: &mut World) {
             const PART_FORWARD: f32 = 0.7;
             let lerpiness =
                 cubic_in_out(roundtrip(timer.normalize(current_time))) * PART_FORWARD;
-
             draw_pos.0 = anim.start.lerp(anim.end, lerpiness);
         }
     }
