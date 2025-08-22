@@ -39,7 +39,7 @@ pub fn highlight_tile(c: &mut dyn ContextTrait, pos: Pos) {
     c.draw_rect(rect, Color::YELLOW, Z_DEBUG);
 }
 
-pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut FleetingState) {
+pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, _f: &mut FleetingState) {
     if c.is_pressed(Input::RestartGame) {
         println!("Restarting game.");
         s.restart();
@@ -74,7 +74,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, f: &mut F
     c.draw_texture("monsters", -1100., -950., 5);
     c.draw_circle(Circle { pos: FPos::new(50., 60.), radius: 30. }, Color::WHITE, 15);
 
-    handle_ui(c, world, f);
+    handle_ui(c, world);
     update_systems(c, world);
 
     animation::handle_animations(c, world);

@@ -3,8 +3,6 @@ use crate::game::Player;
 use base::{Color, ContextTrait, Rect, TextProperty, text::TextFamily};
 use froql::{query, world::World};
 
-use crate::FleetingState;
-
 use super::{Z_UI_BG, Z_UI_TEXT};
 
 #[repr(C)]
@@ -14,7 +12,7 @@ enum Label {
     PlayerStats,
 }
 
-pub fn handle_ui(c: &mut dyn ContextTrait, world: &mut World, _f: &mut FleetingState) {
+pub fn handle_ui(c: &mut dyn ContextTrait, world: &mut World) {
     side_menu(c, world);
 }
 
