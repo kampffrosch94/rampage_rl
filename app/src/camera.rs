@@ -1,3 +1,4 @@
+use derive_more::derive::From;
 use derive_more::derive::*;
 use macroquad::prelude::*;
 use tween::{Linear, TweenValue, Tweener};

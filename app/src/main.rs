@@ -42,8 +42,12 @@ fn window_conf() -> Conf {
     }
 }
 
-#[macroquad::main(window_conf)]
-async fn main() {
+fn main() {
+    println!("Starting");
+    macroquad::Window::from_config(window_conf(), inner_main());
+}
+
+async fn inner_main() {
     #[cfg(not(feature = "staticlink"))]
     let mut worker = WorkerReloader::new("../target/debug/libworker.so");
     #[cfg(feature = "staticlink")]
@@ -73,6 +77,8 @@ async fn main() {
     for (path, shorthand, aa) in asset_paths {
         ctx.textures.load_texture(format!("{prefix}/{path}"), shorthand, aa).await.unwrap();
     }
+
+    println!("Assets loaded.");
 
     let mut fps_counter = FPSCounter::new();
 
