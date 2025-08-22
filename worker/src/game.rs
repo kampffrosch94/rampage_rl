@@ -39,7 +39,11 @@ pub fn highlight_tile(c: &mut dyn ContextTrait, pos: Pos) {
     c.draw_rect(rect, Color::YELLOW, Z_DEBUG);
 }
 
-pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState, _f: &mut FleetingState) {
+pub fn update_inner(
+    c: &mut dyn ContextTrait,
+    s: &mut PersistentState,
+    _f: &mut FleetingState,
+) {
     if c.is_pressed(Input::RestartGame) {
         println!("Restarting game.");
         s.restart();
