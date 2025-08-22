@@ -45,7 +45,7 @@ macro_rules! generate_re_register {
             Result<(), ::froql::world::ReregisterError> {
             unsafe {
                 $(world.re_register_component::<$components>()?;)*
-                $(generate_register!(@rel world $relations $($flags)?);)*
+                $(generate_re_register!(@rel world $relations $($flags)?);)*
             }
             Ok(())
         }
