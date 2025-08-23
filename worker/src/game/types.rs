@@ -13,7 +13,6 @@ use crate::animation::CameraShakeAnimation;
 use crate::animation::DecorSpawnAnimation;
 use crate::animation::HPBarAnimation;
 use crate::animation::MovementAnimation;
-use crate::coroutines::CoroutineStore;
 use crate::ecs_setup::EntityComponent;
 use crate::ecs_setup::OriginTarget;
 use crate::ecs_setup::SerializedState;
