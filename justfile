@@ -14,6 +14,11 @@ run-gdb:
     cargo build
     RUST_BACKTRACE=1 gdb ../target/debug/app
 
+[working-directory: 'app']
+run-lldb:
+    cargo build -Zbuild-std
+    RUST_BACKTRACE=1 lldb ../target/debug/app
+
 run-static:
     cargo run -F staticlink --no-default-features
 
