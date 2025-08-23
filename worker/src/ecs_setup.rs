@@ -32,26 +32,6 @@ macro_rules! generate_register {
     };
 }
 
-macro_rules! generate_re_register {
-    (@rel $world:ident $ty:tt $flags:tt) => {
-        $world.re_register_relation::<$ty>()?;
-    };
-    (@rel $world:ident $ty:tt) => {
-        $world.re_register_relation::<$ty>()?;
-    };
-    (Components($($components:tt $([persist])?),*),
-     Relations($($relations:tt $(($flags:expr))? $([persist])? ),*)) => {
-        pub fn re_register_components(world: &mut World) ->
-            Result<(), ::froql::world::ReregisterError> {
-            unsafe {
-                $(world.re_register_component::<$components>()?;)*
-                $(generate_re_register!(@rel world $relations $($flags)?);)*
-            }
-            Ok(())
-        }
-    };
-}
-
 macro_rules! generate_save {
     (@rel $world:ident $state:ident $ty:tt persist) => {
         $state.relations.insert(
@@ -139,7 +119,6 @@ macro_rules! generate_load {
 macro_rules! ecs_types {
     ($($tokens:tt)+) => {
         generate_register!($($tokens)+);
-        generate_re_register!($($tokens)+);
         generate_save!($($tokens)+);
         generate_load!($($tokens)+);
     }
@@ -147,6 +126,5 @@ macro_rules! ecs_types {
 
 pub(crate) use ecs_types;
 pub(crate) use generate_load;
-pub(crate) use generate_re_register;
 pub(crate) use generate_register;
 pub(crate) use generate_save;

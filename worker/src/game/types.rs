@@ -25,9 +25,7 @@ use std::any::type_name;
 use std::cell::RefCell;
 use std::collections::HashSet;
 
-use crate::ecs_setup::{
-    ecs_types, generate_load, generate_re_register, generate_register, generate_save,
-};
+use crate::ecs_setup::{ecs_types, generate_load, generate_register, generate_save};
 
 use super::creature::CreatureSprite;
 use super::tile_map::TileMap;
