@@ -1,23 +1,25 @@
 default:
     @just --list
 
+export RUST_BACKTRACE := "1"
+
 [working-directory: 'worker']
 watch:
     cargo-watch -x build --clear  -d 0.05
 
 [working-directory: 'app']
 run:
-    RUST_BACKTRACE=1 cargo run
+    cargo run
 
 [working-directory: 'app']
 run-gdb:
     cargo build
-    RUST_BACKTRACE=1 gdb ../target/debug/app
+    gdb ../target/debug/app
 
 [working-directory: 'app']
 run-lldb:
     cargo build -Zbuild-std
-    RUST_BACKTRACE=1 lldb ../target/debug/app
+    lldb ../target/debug/app
 
 run-static:
     cargo run -F staticlink --no-default-features

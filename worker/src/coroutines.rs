@@ -90,7 +90,6 @@ impl CoroutineRuntime {
 
     pub fn add_future<Fut, F>(&mut self, f: F)
     where
-        // Send bound is so that &mut World references can't be held across suspend points
         Fut: Future<Output = ()> + 'static + Send,
         F: FnOnce(CoAccess) -> Fut,
     {
@@ -156,7 +155,6 @@ impl CoroutineStore {
 
     pub fn add_future<Fut, F>(&mut self, f: F)
     where
-        // Send bound is so that &mut World references can't be held across suspend points
         Fut: Future<Output = ()> + 'static + Send,
         F: FnOnce(CoAccess) -> Fut + 'static,
     {

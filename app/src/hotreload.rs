@@ -15,26 +15,19 @@ pub struct WorkerReloader {
     persist_state: PersistWrapper,
 }
 
-#[allow(improper_ctypes_definitions)]
-type UpdateFuncT =
-    extern "C" fn(&mut dyn ContextTrait, &mut PersistWrapper, &mut PersistWrapper) -> ();
-
-#[allow(improper_ctypes_definitions)]
-type FleetingStateCreateFuncT = extern "C" fn() -> PersistWrapper;
-
-#[allow(improper_ctypes_definitions)]
 type PermanentStateCreateFuncT = extern "C" fn() -> PersistWrapper;
 
 #[allow(improper_ctypes_definitions)]
-type FleetingStateDisposeFuncT = extern "C" fn(&mut PersistWrapper, PersistWrapper);
+type UpdateFuncT = extern "C" fn(&mut dyn ContextTrait, &mut PersistWrapper) -> ();
+
+type BeforeReloadFuncT = extern "C" fn(&mut PersistWrapper);
+
+type AfterReloadFuncT = extern "C" fn(&mut PersistWrapper);
 
 struct WorkerWrapper {
     #[allow(unused)]
     lib: libloading::Library,
-    #[allow(improper_ctypes_definitions)]
     update: UpdateFuncT,
-    /// renewed on hotreload
-    fleeting_state: PersistWrapper,
 }
 
 impl WorkerReloader {
@@ -48,7 +41,7 @@ impl WorkerReloader {
         watcher.watch(path.parent().unwrap(), RecursiveMode::NonRecursive).unwrap();
 
         let create: libloading::Symbol<PermanentStateCreateFuncT> =
-            unsafe { worker.lib.get(b"permanent_state").unwrap() };
+            unsafe { worker.lib.get(b"create_worker_state").unwrap() };
         let persist_state = create();
 
         let worker = Some(worker);
@@ -62,11 +55,7 @@ impl WorkerReloader {
             let symb: libloading::Symbol<UpdateFuncT> = lib.get(b"update").unwrap();
             let update: UpdateFuncT = std::mem::transmute(symb.into_raw());
 
-            let fleeting_state_create: libloading::Symbol<FleetingStateCreateFuncT> =
-                lib.get(b"fleeting_state_create").unwrap();
-            let fleeting_state = fleeting_state_create();
-
-            WorkerWrapper { lib, update, fleeting_state }
+            WorkerWrapper { lib, update }
         }
     }
 
@@ -87,19 +76,24 @@ impl WorkerReloader {
             // need to unload before we can reload
             {
                 let worker = self.worker.take().unwrap();
-                let fleeting_state_dispose: libloading::Symbol<FleetingStateDisposeFuncT> =
-                    unsafe { worker.lib.get(b"fleeting_state_dispose").unwrap() };
-                fleeting_state_dispose(&mut self.persist_state, worker.fleeting_state);
+                let before_reload: libloading::Symbol<BeforeReloadFuncT> =
+                    unsafe { worker.lib.get(b"before_reload").unwrap() };
+                before_reload(&mut self.persist_state);
             }
             println!("Reloading!");
-            self.worker = Some(Self::create_worker(&self.path));
+            let worker = Self::create_worker(&self.path);
+            {
+                let after_reload: libloading::Symbol<AfterReloadFuncT> =
+                    unsafe { worker.lib.get(b"after_reload").unwrap() };
+                after_reload(&mut self.persist_state);
+            }
+            self.worker = Some(worker);
         }
 
         let worker = self.worker.as_mut().unwrap();
         let update = worker.update;
-        let fleeting_state = &mut worker.fleeting_state;
         let ps = &mut self.persist_state;
 
-        update(ctx, ps, fleeting_state);
+        update(ctx, ps);
     }
 }

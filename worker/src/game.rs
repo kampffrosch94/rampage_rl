@@ -5,6 +5,7 @@ use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, sha
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};
+#[allow(unused)]
 use quicksilver::reflections::reflect;
 use tile_map::{DecorWithPos, TileMap};
 pub mod creature;
@@ -20,7 +21,6 @@ use crate::animation::HPBarAnimation;
 use crate::{
     animation::{self},
     dijstra::{dijkstra, dijkstra_path},
-    fleeting::FleetingState,
     game::DrawHealth,
     persistent::PersistentState,
     rand::RandomGenerator,
@@ -39,18 +39,12 @@ pub fn highlight_tile(c: &mut dyn ContextTrait, pos: Pos) {
     c.draw_rect(rect, Color::YELLOW, Z_DEBUG);
 }
 
-pub fn update_inner(
-    c: &mut dyn ContextTrait,
-    s: &mut PersistentState,
-    _f: &mut FleetingState,
-) {
+pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     if c.is_pressed(Input::RestartGame) {
         println!("Restarting game.");
         s.restart();
         println!("Game restarted.");
     }
-
-    s.re_register();
 
     if c.is_pressed(Input::Save) {
         println!("Saving game.");
@@ -61,7 +55,7 @@ pub fn update_inner(
         s.load();
     }
 
-    let world = &mut s.world;
+    let world = s.world.as_mut().unwrap();
 
     if c.is_pressed(Input::Confirm) {
         animation::spawn_camera_shake_animation(world);
@@ -86,7 +80,10 @@ pub fn update_inner(
 
     highlight_tile(c, Pos::new(1, 1));
 
-    for (mut actor,) in query!(world, mut Actor) {
+    let mut actors = query!(world, &this, _ Actor).map(|(e,)| e.entity).collect::<Vec<_>>();
+    actors.sort_by_key(|e| e.id.0);
+    for e in actors {
+        let mut actor = world.get_component_mut::<Actor>(e);
         c.inspect(&mut reflect(&mut *actor));
     }
 }
