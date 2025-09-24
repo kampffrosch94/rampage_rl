@@ -18,7 +18,7 @@ pub const GRIDSIZE: f32 = 16.;
 #[cfg(not(target_arch = "wasm32"))]
 #[unsafe(no_mangle)]
 pub extern "C" fn create_worker_state() -> PersistWrapper {
-    println!("Create state");
+    // println!("Create state");
     let state = PersistentState::new();
     let size = size_of_val(&state);
     let align = align_of_val(&state);
@@ -30,7 +30,7 @@ pub extern "C" fn create_worker_state() -> PersistWrapper {
 #[cfg(not(target_arch = "wasm32"))]
 #[unsafe(no_mangle)]
 pub extern "C" fn after_reload(pers: &mut PersistWrapper) {
-    println!("After reload.");
+    // println!("After reload.");
     let state = &mut pers.ref_mut::<PersistentState>();
     state.hot_load();
 }
@@ -38,7 +38,7 @@ pub extern "C" fn after_reload(pers: &mut PersistWrapper) {
 #[cfg(not(target_arch = "wasm32"))]
 #[unsafe(no_mangle)]
 pub extern "C" fn before_reload(pers: &mut PersistWrapper) {
-    println!("Before reload.");
+    // println!("Before reload.");
     let state = &mut pers.ref_mut::<PersistentState>();
     state.world.as_mut().unwrap().process();
     state.hot_save();

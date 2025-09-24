@@ -57,10 +57,6 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
 
     let world = s.world.as_mut().unwrap();
 
-    if c.is_pressed(Input::Confirm) {
-        animation::spawn_camera_shake_animation(world);
-    }
-
     if !world.singleton_has::<GameTime>() {
         world.singleton_add(GameTime(0.));
     } else {
@@ -74,12 +70,10 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
 
     handle_ui(c, world);
     update_systems(c, world);
-
     animation::handle_animations(c, world);
     draw_systems(c, world);
 
     highlight_tile(c, Pos::new(1, 1));
-
     let mut actors = query!(world, &this, _ Actor).map(|(e,)| e.entity).collect::<Vec<_>>();
     actors.sort_by_key(|e| e.id.0);
     for e in actors {
@@ -125,8 +119,26 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
                     }
                 }
                 player.next_turn += 10;
+                return;
             }
         }
+    }
+
+    if c.is_pressed(Input::Confirm) {
+        animation::spawn_camera_shake_animation(world);
+
+        // find enemies around player
+        let (player, player_actor) = query!(world, &this, _ Player, mut Actor).next().unwrap();
+        let player_pos = player_actor.pos;
+        let tm = world.singleton::<TileMap>();
+        for pos in player_pos.neighbors(&tm.tiles) {
+            if let Some(neighbor_e) = tm.get_actor(pos) {
+                let mut neighbor_actor = world.get_component_mut::<Actor>(neighbor_e);
+                neighbor_actor.hp.current -= 1;
+            }
+        }
+
+        return;
     }
 }
 
