@@ -27,7 +27,7 @@ pub fn side_menu(c: &mut dyn ContextTrait, world: &mut World) {
         Label::Heading,
         text_rect.cut_top(60.),
         &[(
-            "Stats:",
+            "STATS:",
             TextProperty::new()
                 .family(TextFamily::BloodCyrillic)
                 .color(Color::RED)

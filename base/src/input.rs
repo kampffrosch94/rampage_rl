@@ -18,4 +18,5 @@ pub enum Input {
     MoveSkip,
     Confirm,
     Cancel,
+    AbilityMenu,
 }

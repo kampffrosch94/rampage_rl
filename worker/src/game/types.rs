@@ -78,6 +78,20 @@ pub struct TurnCount {
     pub aut: i64,
 }
 
+#[derive(Debug, Quicksilver)]
+#[repr(C)]
+pub enum CurrentUIState {
+    Normal,
+    AbilitySelect,
+}
+
+
+#[derive(Debug, Quicksilver)]
+pub struct UIState {
+    current: CurrentUIState,
+}
+
+
 /// just here to check that the macro below works
 pub enum ExampleRel {}
 

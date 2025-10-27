@@ -66,7 +66,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     c.draw_texture("tiles", -228., -950., 5);
     c.draw_texture("rogues", -600., -950., 5);
     c.draw_texture("monsters", -1100., -950., 5);
-    c.draw_circle(Circle { pos: FPos::new(50., 60.), radius: 30. }, Color::WHITE, 15);
+    c.draw_circle(Circle { pos: FPos::new(50., 60.), radius: 300. }, Color::WHITE, 15);
 
     handle_ui(c, world);
     update_systems(c, world);
@@ -127,8 +127,8 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
     if c.is_pressed(Input::Confirm) {
         animation::spawn_camera_shake_animation(world);
 
-        // find enemies around player
-        let (player, player_actor) = query!(world, &this, _ Player, mut Actor).next().unwrap();
+        // find enemies around player and damage them
+        let (player_actor,) = query!(world, _ Player, mut Actor).next().unwrap();
         let player_pos = player_actor.pos;
         let tm = world.singleton::<TileMap>();
         for pos in player_pos.neighbors(&tm.tiles) {
