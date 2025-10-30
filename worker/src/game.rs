@@ -66,7 +66,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     c.draw_texture("tiles", -228., -950., 5);
     c.draw_texture("rogues", -600., -950., 5);
     c.draw_texture("monsters", -1100., -950., 5);
-    c.draw_circle(Circle { pos: FPos::new(50., 60.), radius: 300. }, Color::WHITE, 15);
+    c.draw_circle(Circle { pos: FPos::new(50., 60.), radius: 30. }, Color::WHITE, 15);
 
     handle_ui(c, world);
     update_systems(c, world);
@@ -184,20 +184,30 @@ fn next_turn_actor(world: &World) -> Entity {
         .unwrap()
 }
 
-fn should_block_input(world: &World) -> bool {
+/// returns true if there is some animation targeting the player
+fn player_is_animation_target(world: &World) -> bool {
     query!(world, Player, AnimationTarget(_, this)).next().is_some()
 }
 
 fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
     TileMap::update_actors(world);
-    if should_block_input(world).not() {
+    if !player_is_animation_target(world) {
+        // sanity check
+        let next = next_turn_actor(world);
+        assert!(world.has_component::<Player>(next));
+
+        // handle player input
+        TileMap::update_actors(world);
+        pc_inputs(c, world);
+        world.process();
+
+        // handle AI input after player
         let mut next = next_turn_actor(world);
         while !world.has_component::<Player>(next) {
-            ai_turn(c, world, next);
             TileMap::update_actors(world);
+            ai_turn(c, world, next);
             next = next_turn_actor(world);
         }
-        pc_inputs(c, world);
         world.process();
     }
 
@@ -323,6 +333,7 @@ pub fn create_world() -> World {
         .add(Fov(HashSet::new()));
 
     world.singleton_add(tm);
+    world.singleton_add(CurrentUIState::default());
     world.singleton_add(TurnCount { aut: 0 });
     place_enemies(&mut world, 12345);
 
@@ -330,4 +341,57 @@ pub fn create_world() -> World {
 
     world.process();
     world
+}
+
+#[cfg(test)]
+mod test {
+    use std::{
+        any::{TypeId, type_name},
+        cell::RefCell,
+        collections::HashMap,
+    };
+
+    use froql::query_helper::trivial_query_one_component;
+
+    use crate::ecs_setup::EntityComponent;
+
+    use super::*;
+
+    /// For quickly testing stuff when reloading breaks after adding new state.
+    #[test]
+    fn test_persist() {
+        let mut world = World::new();
+        register_components(&mut world);
+        world.singleton_add(CurrentUIState::default());
+
+        let s = save_world(&world);
+        println!("------------");
+        println!("{s}");
+        let _w2 = load_world(&s);
+    }
+
+    #[test]
+    fn test_enum_problem() {
+        let mut world = World::new();
+        register_components(&mut world);
+        world.singleton_add(CurrentUIState::default());
+
+        {
+            let mut components = HashMap::new();
+            let mut buffer = Vec::new();
+            for id in
+                trivial_query_one_component(&world, TypeId::of::<RefCell<CurrentUIState>>())
+            {
+                let r = world.get_component_by_entityid::<CurrentUIState>(id);
+                let s = ::quicksilver::reflections_ref::reflect_ref(&*r).to_json();
+                buffer.push(EntityComponent(id.0, s));
+            }
+            let s = ::quicksilver::reflections_ref::reflect_ref(&buffer).to_json();
+            components.insert(type_name::<CurrentUIState>().to_string(), buffer);
+            println!("{components:?}");
+            println!("===");
+            let s = ::quicksilver::reflections_ref::reflect_ref(&components).to_json();
+            println!("{s}");
+        }
+    }
 }

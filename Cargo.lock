@@ -1034,7 +1034,7 @@ dependencies = [
 [[package]]
 name = "quicksilver"
 version = "0.1.0"
-source = "git+https://github.com/kampffrosch94/quicksilver.git#12f1deecf123e0834affa139a941dccd22201ae2"
+source = "git+https://github.com/kampffrosch94/quicksilver.git#8c75efed26186a5020b662de7ca75c7052d1c619"
 dependencies = [
  "quicksilver_derive",
 ]
@@ -1042,7 +1042,7 @@ dependencies = [
 [[package]]
 name = "quicksilver_derive"
 version = "0.1.0"
-source = "git+https://github.com/kampffrosch94/quicksilver.git#12f1deecf123e0834affa139a941dccd22201ae2"
+source = "git+https://github.com/kampffrosch94/quicksilver.git#8c75efed26186a5020b662de7ca75c7052d1c619"
 
 [[package]]
 name = "quote"

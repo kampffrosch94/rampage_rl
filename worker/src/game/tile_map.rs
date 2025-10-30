@@ -63,6 +63,8 @@ impl TileMap {
         self.tiles.get_opt(pos).map(|tile| *tile == LogicTile::Wall).unwrap_or(false)
     }
 
+    /// Updates the cache of where actors are in the tilemap.
+    /// This is used for lookup of actors by position and pathfinding.
     pub fn update_actors(world: &mut World) {
         let mut tm = world.singleton_mut::<TileMap>();
         tm.actors.clear();

@@ -78,19 +78,13 @@ pub struct TurnCount {
     pub aut: i64,
 }
 
-#[derive(Debug, Quicksilver)]
 #[repr(C)]
+#[derive(Debug, Quicksilver, Default)]
 pub enum CurrentUIState {
+    #[default]
     Normal,
-    AbilitySelect,
+    Inventory,
 }
-
-
-#[derive(Debug, Quicksilver)]
-pub struct UIState {
-    current: CurrentUIState,
-}
-
 
 /// just here to check that the macro below works
 pub enum ExampleRel {}
@@ -112,6 +106,8 @@ ecs_types!(
         DrawHealth[persist],
         TileMap[persist],
         RandomGenerator[persist],
+        // ui
+        CurrentUIState[persist],
         // animations
         AnimationTimer,
         BumpAttackAnimation,

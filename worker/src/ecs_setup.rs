@@ -5,6 +5,7 @@ type TypeName = String;
 
 #[derive(Default, Debug, Quicksilver)]
 pub struct OriginTarget(pub u32, pub u32);
+/// An Entity ID and a component serialized as a `String`
 #[derive(Default, Debug, Quicksilver)]
 pub struct EntityComponent(pub u32, pub String);
 
