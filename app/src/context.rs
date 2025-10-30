@@ -184,6 +184,7 @@ impl ContextTrait for Context {
             Input::MoveNE => is_key_pressed(KeyCode::Kp9),
             Input::Confirm => is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space),
             Input::Cancel => is_key_pressed(KeyCode::Escape),
+            Input::Inventory => is_key_pressed(KeyCode::I),
         }
     }
 
