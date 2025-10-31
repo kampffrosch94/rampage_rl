@@ -1,4 +1,4 @@
-use std::{collections::HashSet, ops::Not};
+use std::collections::HashSet;
 
 use crate::animation::AnimationTarget;
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
@@ -14,7 +14,7 @@ pub mod tiles;
 pub mod types;
 use tiles::{DrawTile, Environment, LogicTile, TILE_SIZE, generate_draw_tile, pos_to_drawpos};
 use types::*;
-use ui::handle_ui;
+use ui::{MessageLog, handle_ui, log_message, ui_inventory};
 pub mod mapgen;
 pub mod ui;
 use crate::animation::HPBarAnimation;
@@ -74,6 +74,10 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     draw_systems(c, world);
 
     highlight_tile(c, Pos::new(1, 1));
+
+    let mut s = world.singleton_mut::<CurrentUIState>();
+    c.inspect(&mut reflect(&mut *s));
+
     let mut actors = query!(world, &this, _ Actor).map(|(e,)| e.entity).collect::<Vec<_>>();
     actors.sort_by_key(|e| e.id.0);
     for e in actors {
@@ -108,7 +112,7 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
                         let start_ratio = other.hp.ratio();
                         other.hp.current -= 1;
                         let end_ratio = other.hp.ratio();
-                        animation::spawn_bump_attack_animation(
+                        let animation = animation::spawn_bump_attack_animation(
                             world,
                             *e,
                             other_e,
@@ -116,12 +120,18 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
                             new_pos,
                             HPBarAnimation { start_ratio, end_ratio },
                         );
+                        let msg = format!("{} attacked {}.", player.name, other.name);
+                        log_message(world, msg, Some(animation));
                     }
                 }
                 player.next_turn += 10;
                 return;
             }
         }
+    }
+
+    if c.is_pressed(Input::Inventory) {
+        *world.singleton_mut::<CurrentUIState>() = CurrentUIState::Inventory;
     }
 
     if c.is_pressed(Input::Confirm) {
@@ -190,6 +200,22 @@ fn player_is_animation_target(world: &World) -> bool {
 }
 
 fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
+    let state: CurrentUIState = *world.singleton();
+    match state {
+        CurrentUIState::Normal => update_systems_normal(c, world),
+        CurrentUIState::Inventory => update_systems_inventory(c, world),
+    };
+}
+
+fn update_systems_inventory(c: &mut dyn ContextTrait, world: &mut World) {
+    if c.is_pressed(Input::Cancel) {
+        *world.singleton_mut::<CurrentUIState>() = CurrentUIState::Normal;
+    }
+
+    ui_inventory(c, world);
+}
+
+fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
     TileMap::update_actors(world);
     if !player_is_animation_target(world) {
         // sanity check
@@ -220,6 +246,9 @@ fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
 
         // remove dead actors
         if actor.hp.current <= 0 {
+            let msg = format!("{} died.", actor.name);
+            log_message(world, msg, None);
+
             e.destroy();
         }
     }
@@ -335,6 +364,7 @@ pub fn create_world() -> World {
     world.singleton_add(tm);
     world.singleton_add(CurrentUIState::default());
     world.singleton_add(TurnCount { aut: 0 });
+    world.singleton_add(MessageLog::default());
     place_enemies(&mut world, 12345);
 
     world.singleton_add(RandomGenerator::new(12345));
@@ -345,16 +375,6 @@ pub fn create_world() -> World {
 
 #[cfg(test)]
 mod test {
-    use std::{
-        any::{TypeId, type_name},
-        cell::RefCell,
-        collections::HashMap,
-    };
-
-    use froql::query_helper::trivial_query_one_component;
-
-    use crate::ecs_setup::EntityComponent;
-
     use super::*;
 
     /// For quickly testing stuff when reloading breaks after adding new state.
@@ -368,30 +388,5 @@ mod test {
         println!("------------");
         println!("{s}");
         let _w2 = load_world(&s);
-    }
-
-    #[test]
-    fn test_enum_problem() {
-        let mut world = World::new();
-        register_components(&mut world);
-        world.singleton_add(CurrentUIState::default());
-
-        {
-            let mut components = HashMap::new();
-            let mut buffer = Vec::new();
-            for id in
-                trivial_query_one_component(&world, TypeId::of::<RefCell<CurrentUIState>>())
-            {
-                let r = world.get_component_by_entityid::<CurrentUIState>(id);
-                let s = ::quicksilver::reflections_ref::reflect_ref(&*r).to_json();
-                buffer.push(EntityComponent(id.0, s));
-            }
-            let s = ::quicksilver::reflections_ref::reflect_ref(&buffer).to_json();
-            components.insert(type_name::<CurrentUIState>().to_string(), buffer);
-            println!("{components:?}");
-            println!("===");
-            let s = ::quicksilver::reflections_ref::reflect_ref(&components).to_json();
-            println!("{s}");
-        }
     }
 }

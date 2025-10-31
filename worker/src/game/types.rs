@@ -16,6 +16,10 @@ use crate::animation::MovementAnimation;
 use crate::ecs_setup::EntityComponent;
 use crate::ecs_setup::OriginTarget;
 use crate::ecs_setup::SerializedState;
+use crate::game::ui::MessageInhibitor;
+use crate::game::ui::MessageLog;
+use crate::game::ui::MessageOrder;
+use crate::game::ui::PendingMessage;
 use crate::rand::RandomGenerator;
 use froql::entity_store::EntityId;
 use froql::query_helper::trivial_query_one_component;
@@ -79,15 +83,12 @@ pub struct TurnCount {
 }
 
 #[repr(C)]
-#[derive(Debug, Quicksilver, Default)]
+#[derive(Debug, Quicksilver, Default, Clone, Copy)]
 pub enum CurrentUIState {
     #[default]
     Normal,
     Inventory,
 }
-
-/// just here to check that the macro below works
-pub enum ExampleRel {}
 
 #[derive(Debug, Quicksilver)]
 pub struct Fov(pub HashSet<Pos>);
@@ -108,6 +109,8 @@ ecs_types!(
         RandomGenerator[persist],
         // ui
         CurrentUIState[persist],
+        MessageLog[persist],
+        PendingMessage[persist],
         // animations
         AnimationTimer,
         BumpAttackAnimation,
@@ -116,5 +119,5 @@ ecs_types!(
         HPBarAnimation,
         MovementAnimation
     ),
-    Relations(ExampleRel[persist], AnimationTarget)
+    Relations(AnimationTarget, MessageInhibitor, MessageOrder[persist])
 );

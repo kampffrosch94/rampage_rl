@@ -158,7 +158,7 @@ pub fn spawn_bump_attack_animation(
     start_p: Pos,
     end_p: Pos,
     hp_bar_animation: HPBarAnimation,
-) {
+) -> Entity {
     let start = pos_to_drawpos(start_p);
     let end = pos_to_drawpos(end_p);
     let animation_length = 0.15;
@@ -172,11 +172,12 @@ pub fn spawn_bump_attack_animation(
         .fold(current_time, f32::max);
 
     // bump animation
-    world
+    let animation_e = world
         .create_deferred()
         .add(AnimationTimer { start: start_time, end: start_time + animation_length })
         .add(BumpAttackAnimation { start, end })
-        .relate_to::<AnimationTarget>(e);
+        .relate_to::<AnimationTarget>(e)
+        .entity;
 
     // hp bar animation
     world
@@ -200,6 +201,8 @@ pub fn spawn_bump_attack_animation(
         })
         .add(DecorSpawnAnimation { decor, pos: decor_pos })
         .relate_to::<AnimationTarget>(target);
+
+    return animation_e;
 }
 
 pub fn spawn_move_animation(world: &World, e: Entity, start: Pos, end: Pos) {
