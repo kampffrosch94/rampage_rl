@@ -10,6 +10,7 @@ mod dijstra;
 mod ecs_setup;
 mod game;
 mod persistent;
+mod quicksilver_glue;
 mod rand;
 mod util;
 
