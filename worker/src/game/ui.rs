@@ -148,7 +148,8 @@ fn ui_message_log(c: &mut dyn ContextTrait, world: &mut World) {
     }
 
     let mlog = world.singleton::<MessageLog>();
-    let text = mlog.messages.join("\n");
+    let start = (mlog.messages.len() - 7).max(0);
+    let text = mlog.messages[start..].join("\n");
 
     draw_text(c, Label::MessageLogText, text_rect, &[(&text, TextProperty::new())], Z_UI_TEXT);
 }
