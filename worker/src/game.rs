@@ -18,6 +18,7 @@ use ui::{MessageLog, handle_ui, log_message, ui_inventory};
 pub mod mapgen;
 pub mod ui;
 use crate::animation::HPBarAnimation;
+use crate::game::ui::PendingMessage;
 use crate::{
     animation::{self},
     dijstra::{dijkstra, dijkstra_path},
@@ -77,6 +78,10 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
 
     let mut s = world.singleton_mut::<CurrentUIState>();
     c.inspect(&mut reflect(&mut *s));
+
+    for (mut msg,) in query!(world, mut PendingMessage) {
+        c.inspect(&mut reflect(&mut *msg));
+    }
 
     let mut actors = query!(world, &this, _ Actor).map(|(e,)| e.entity).collect::<Vec<_>>();
     actors.sort_by_key(|e| e.id.0);

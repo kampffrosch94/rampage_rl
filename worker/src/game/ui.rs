@@ -24,7 +24,7 @@ pub struct MessageLog {
 
 #[derive(Debug, Quicksilver)]
 pub struct PendingMessage {
-    msg: String,
+    pub msg: String,
 }
 
 /// Relation from an inhibitor to a Message
@@ -148,7 +148,7 @@ fn ui_message_log(c: &mut dyn ContextTrait, world: &mut World) {
     }
 
     let mlog = world.singleton::<MessageLog>();
-    let start = (mlog.messages.len().saturating_sub(7)).max(0);
+    let start = (mlog.messages.len().saturating_sub(6)).max(0);
     let text = mlog.messages[start..].join("\n");
 
     draw_text(c, Label::MessageLogText, text_rect, &[(&text, TextProperty::new())], Z_UI_TEXT);

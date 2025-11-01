@@ -121,7 +121,7 @@ pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
         AnimationTimer,
         DecorSpawnAnimation,
     ) {
-        if timer.start >= current_time {
+        if timer.start <= current_time {
             tm.add_decor(anim.pos, anim.decor);
             anim_e.destroy();
         }
@@ -190,7 +190,7 @@ pub fn spawn_bump_attack_animation(
         .create_deferred()
         .add(AnimationTimer {
             start: start_time + animation_length / 2.,
-            end: start_time + animation_length / 2.,
+            end: start_time + animation_length,
         })
         .add(hp_bar_animation)
         .relate_to::<AnimationTarget>(target);
@@ -202,8 +202,8 @@ pub fn spawn_bump_attack_animation(
     world
         .create_deferred()
         .add(AnimationTimer {
-            start: start_time + animation_length / 2.,
-            end: start_time + animation_length / 2.,
+            start: start_time + animation_length * 0.75,
+            end: start_time + animation_length * 0.75,
         })
         .add(DecorSpawnAnimation { decor, pos: decor_pos })
         .relate_to::<AnimationTarget>(target);
