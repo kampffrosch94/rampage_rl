@@ -5,6 +5,7 @@ use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, sha
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};
+use quicksilver::Quicksilver;
 #[allow(unused)]
 use quicksilver::reflections::reflect;
 use tile_map::{DecorWithPos, TileMap};
@@ -34,6 +35,12 @@ pub const Z_DEBUG: i32 = 999;
 pub const Z_UI_BG: i32 = 1000;
 pub const Z_UI_TEXT: i32 = 1100;
 
+#[derive(Quicksilver)]
+pub struct DebugOptions {
+    slow_mode: bool,
+    slowdown_factor: i32,
+}
+
 pub fn highlight_tile(c: &mut dyn ContextTrait, pos: Pos) {
     let rect =
         Rect::new(pos.x as f32 * TILE_SIZE, pos.y as f32 * TILE_SIZE, TILE_SIZE, TILE_SIZE);
@@ -61,7 +68,10 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     if !world.singleton_has::<GameTime>() {
         world.singleton_add(GameTime(0.));
     } else {
-        world.singleton_mut::<GameTime>().0 += c.delta();
+        let debug = world.singleton::<DebugOptions>();
+        let delta =
+            if debug.slow_mode { c.delta() / debug.slowdown_factor as f32 } else { c.delta() };
+        world.singleton_mut::<GameTime>().0 += delta;
     }
 
     c.draw_texture("tiles", -228., -950., 5);
@@ -75,6 +85,9 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     draw_systems(c, world);
 
     highlight_tile(c, Pos::new(1, 1));
+
+    let mut s = world.singleton_mut::<DebugOptions>();
+    c.inspect(&mut reflect(&mut *s));
 
     let mut s = world.singleton_mut::<CurrentUIState>();
     c.inspect(&mut reflect(&mut *s));
@@ -366,9 +379,11 @@ pub fn create_world() -> World {
         .add(Fov(HashSet::new()));
 
     world.singleton_add(tm);
+
     world.singleton_add(CurrentUIState::default());
     world.singleton_add(TurnCount { aut: 0 });
     world.singleton_add(MessageLog::default());
+    world.singleton_add(DebugOptions { slowdown_factor: 20, slow_mode: false });
     place_enemies(&mut world, 12345);
 
     world.singleton_add(RandomGenerator::new(12345));

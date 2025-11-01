@@ -18,6 +18,7 @@ use crate::animation::MovementAnimation;
 use crate::ecs_setup::EntityComponent;
 use crate::ecs_setup::OriginTarget;
 use crate::ecs_setup::SerializedState;
+use crate::game::DebugOptions;
 use crate::game::ui::MessageInhibitor;
 use crate::game::ui::MessageLog;
 use crate::game::ui::MessageOrder;
@@ -119,7 +120,8 @@ ecs_types!(
         CameraShakeAnimation,
         DecorSpawnAnimation,
         HPBarAnimation,
-        MovementAnimation
+        MovementAnimation,
+        DebugOptions
     ),
     Relations(
         AnimationTarget,
