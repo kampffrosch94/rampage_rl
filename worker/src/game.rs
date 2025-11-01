@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use crate::animation::AnimationTarget;
+use crate::animation::{AnimationCleanup, AnimationTarget};
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
@@ -108,20 +108,27 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
                     player.pos = new_pos;
                 } else {
                     if let Some(other_e) = tm.get_actor(new_pos) {
-                        let mut other = world.get_component_mut::<Actor>(other_e);
-                        let start_ratio = other.hp.ratio();
-                        other.hp.current -= 1;
-                        let end_ratio = other.hp.ratio();
+                        let other_e = world.view_deferred(other_e);
+                        let mut other_a = other_e.get_mut::<Actor>();
+                        let start_ratio = other_a.hp.ratio();
+                        other_a.hp.current -= 1;
+                        let end_ratio = other_a.hp.ratio();
                         let animation = animation::spawn_bump_attack_animation(
                             world,
                             *e,
-                            other_e,
+                            *other_e,
                             player.pos,
                             new_pos,
                             HPBarAnimation { start_ratio, end_ratio },
                         );
-                        let msg = format!("{} attacked {}.", player.name, other.name);
-                        log_message(world, msg, Some(animation));
+                        let msg = format!("{} attacks {}.", player.name, other_a.name);
+                        log_message(world, msg, animation);
+
+                        if other_a.hp.current <= 0 {
+                            let msg = format!("{} dies.", other_a.name);
+                            log_message(world, msg, animation);
+                            other_e.relate_from::<AnimationCleanup>(animation);
+                        }
                     }
                 }
                 player.next_turn += 10;
@@ -237,20 +244,12 @@ fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
         world.process();
     }
 
-    for (e, actor, mut draw_pos, mut draw_health) in
-        query!(world, &this, Actor, mut DrawPos, mut DrawHealth, !AnimationTarget(_, this))
+    for (actor, mut draw_pos, mut draw_health) in
+        query!(world, Actor, mut DrawPos, mut DrawHealth, !AnimationTarget(_, this))
     {
         // update draw position
         draw_pos.0 = pos_to_drawpos(actor.pos);
         draw_health.ratio = actor.hp.current as f32 / actor.hp.max as f32;
-
-        // remove dead actors
-        if actor.hp.current <= 0 {
-            let msg = format!("{} died.", actor.name);
-            log_message(world, msg, None);
-
-            e.destroy();
-        }
     }
     world.process();
 

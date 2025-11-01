@@ -3,9 +3,11 @@ use base::Circle;
 use base::FPos;
 use base::Pos;
 use base::Rect;
+use froql::component::CASCADING_DESTRUCT;
 use froql::relation::Relation;
 use froql::world::World;
 
+use crate::animation::AnimationCleanup;
 use crate::animation::AnimationTarget;
 use crate::animation::AnimationTimer;
 use crate::animation::BumpAttackAnimation;
@@ -119,5 +121,10 @@ ecs_types!(
         HPBarAnimation,
         MovementAnimation
     ),
-    Relations(AnimationTarget, MessageInhibitor, MessageOrder[persist])
+    Relations(
+        AnimationTarget,
+        MessageInhibitor,
+        MessageOrder[persist],
+        AnimationCleanup(CASCADING_DESTRUCT)
+    )
 );

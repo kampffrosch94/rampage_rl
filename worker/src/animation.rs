@@ -16,6 +16,12 @@ use crate::{game::types::DrawPos, rand::RandomGenerator};
 /// Relation: Animation Entity -> Affected Entity
 pub enum AnimationTarget {}
 
+/// Relation: Animation Entity -> Affected Entity
+///
+/// If the animation is destroyed the affected entity also is destroyed
+/// (this relation is registered with cascading destroy)
+pub enum AnimationCleanup {}
+
 #[derive(Debug)]
 pub struct AnimationTimer {
     start: f32,

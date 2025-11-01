@@ -154,13 +154,10 @@ fn ui_message_log(c: &mut dyn ContextTrait, world: &mut World) {
     draw_text(c, Label::MessageLogText, text_rect, &[(&text, TextProperty::new())], Z_UI_TEXT);
 }
 
-pub fn log_message(world: &World, msg: String, inhibitor: Option<Entity>) {
+pub fn log_message(world: &World, msg: String, inhibitor: Entity) {
     let e = world.create_deferred();
     e.add(PendingMessage { msg });
-
-    if let Some(inhibitor) = inhibitor {
-        e.relate_from::<MessageInhibitor>(inhibitor);
-    }
+    e.relate_from::<MessageInhibitor>(inhibitor);
 
     if let Some((pred,)) =
         query!(world, &pred, _ PendingMessage(pred), !MessageOrder(pred, _) ).next()
