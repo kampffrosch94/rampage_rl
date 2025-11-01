@@ -19,4 +19,5 @@ pub enum Input {
     Confirm,
     Cancel,
     Inventory,
+    DebugSlowdown,
 }

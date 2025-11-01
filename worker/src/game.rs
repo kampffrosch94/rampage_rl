@@ -41,10 +41,22 @@ pub struct DebugOptions {
     slowdown_factor: i32,
 }
 
+impl Default for DebugOptions {
+    fn default() -> Self {
+        Self { slow_mode: false, slowdown_factor: 20 }
+    }
+}
+
 pub fn highlight_tile(c: &mut dyn ContextTrait, pos: Pos) {
     let rect =
         Rect::new(pos.x as f32 * TILE_SIZE, pos.y as f32 * TILE_SIZE, TILE_SIZE, TILE_SIZE);
     c.draw_rect(rect, Color::YELLOW, Z_DEBUG);
+}
+
+pub fn ensure_singleton<T: Default + 'static>(world: &mut World) {
+    if !world.singleton_has::<T>() {
+        world.singleton_add(T::default());
+    }
 }
 
 pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
@@ -65,9 +77,15 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
 
     let world = s.world.as_mut().unwrap();
 
-    if !world.singleton_has::<GameTime>() {
-        world.singleton_add(GameTime(0.));
-    } else {
+    ensure_singleton::<GameTime>(world);
+    ensure_singleton::<DebugOptions>(world);
+
+    if c.is_pressed(Input::DebugSlowdown) {
+        let mut debug = world.singleton_mut::<DebugOptions>();
+        debug.slow_mode = !debug.slow_mode;
+    }
+
+    {
         let debug = world.singleton::<DebugOptions>();
         let delta =
             if debug.slow_mode { c.delta() / debug.slowdown_factor as f32 } else { c.delta() };
@@ -383,7 +401,6 @@ pub fn create_world() -> World {
     world.singleton_add(CurrentUIState::default());
     world.singleton_add(TurnCount { aut: 0 });
     world.singleton_add(MessageLog::default());
-    world.singleton_add(DebugOptions { slowdown_factor: 20, slow_mode: false });
     place_enemies(&mut world, 12345);
 
     world.singleton_add(RandomGenerator::new(12345));

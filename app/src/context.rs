@@ -185,6 +185,7 @@ impl ContextTrait for Context {
             Input::Confirm => is_key_pressed(KeyCode::Enter) || is_key_pressed(KeyCode::Space),
             Input::Cancel => is_key_pressed(KeyCode::Escape),
             Input::Inventory => is_key_pressed(KeyCode::I),
+            Input::DebugSlowdown => is_key_pressed(KeyCode::F12),
         }
     }
 

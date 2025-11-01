@@ -77,6 +77,7 @@ pub struct DrawHealth {
 /// How much time passed since the start of the game in seconds
 /// Set early in the game loop.
 /// Used for animations
+#[derive(Default)]
 pub struct GameTime(pub f32);
 
 #[derive(Debug, Quicksilver)]
