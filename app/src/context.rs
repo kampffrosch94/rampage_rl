@@ -204,6 +204,10 @@ impl ContextTrait for Context {
         self.camera.shake_offset.y = offset.y;
     }
 
+    fn camera_move_rel(&mut self, offset: FVec, time: f32) {
+        self.camera.move_camera(offset, time);
+    }
+
     fn set_text(
         &mut self,
         key: u64,

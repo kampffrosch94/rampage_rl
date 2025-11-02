@@ -51,6 +51,9 @@ pub trait ContextTrait {
 
     fn camera_set_shake(&mut self, offset: FVec);
 
+    /// moves the camera center over time
+    fn camera_move_rel(&mut self, offset: FVec, time: f32);
+
     fn set_text(&mut self, key: u64, w: f32, h: f32, text: &[(&str, TextProperty)]) -> Rect;
 
     fn draw_text(&mut self, key: u64, x: f32, y: f32, z_level: i32);

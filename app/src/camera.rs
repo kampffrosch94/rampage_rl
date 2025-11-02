@@ -1,3 +1,4 @@
+use base::FVec;
 use derive_more::derive::From;
 use derive_more::derive::*;
 use macroquad::prelude::*;
@@ -109,10 +110,8 @@ impl CameraWrapper {
         self.offset += self.screen_to_world(old) - self.screen_to_world(new);
     }
 
-    #[allow(unused)]
-    pub fn move_camera(&mut self, (x, y): (f32, f32)) {
-        self.offset.x = x;
-        self.offset.y = y;
+    pub fn move_camera(&mut self, FVec { x, y }: FVec, duration: f32) {
+        self.offset_tween = Tweener::linear(self.offset, (x, y).into(), duration);
     }
 
     pub fn screen_to_world(&self, pos: impl Into<Vec2>) -> Vec2f {
@@ -120,7 +119,7 @@ impl CameraWrapper {
         self.camera.screen_to_world(pos).into()
     }
 
-    #[allow(unused)]
+    #[expect(unused)]
     pub fn world_to_screen(&self, pos: impl Into<Vec2>) -> Vec2f {
         let pos = pos.into();
         self.camera.world_to_screen(pos).into()
