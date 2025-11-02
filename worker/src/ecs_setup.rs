@@ -1,13 +1,14 @@
+use crate::quicksilver_glue::EntityWrapper;
 use quicksilver::Quicksilver;
 use std::collections::HashMap;
 
 type TypeName = String;
 
-#[derive(Default, Debug, Quicksilver)]
+#[derive(Debug, Quicksilver)]
 pub struct OriginTarget(pub u32, pub u32);
 /// An Entity ID and a component serialized as a `String`
-#[derive(Default, Debug, Quicksilver)]
-pub struct EntityComponent(pub u32, pub String);
+#[derive(Debug, Quicksilver)]
+pub struct EntityComponent(pub EntityWrapper, pub String);
 
 #[derive(Default, Debug, Quicksilver)]
 pub struct SerializedState {
@@ -51,7 +52,8 @@ macro_rules! generate_save {
         for id in trivial_query_one_component($world, TypeId::of::<RefCell<$ty>>()) {
             let r = $world.get_component_by_entityid::<$ty>(id);
             let s = ::quicksilver::reflections_ref::reflect_ref(&*r).to_json();
-            buffer.push(EntityComponent(id.0, s));
+            let e = $world.bookkeeping.entities.get_from_id(id);
+            buffer.push(EntityComponent(e.into(), s));
         }
         $state
             .components
@@ -83,10 +85,10 @@ macro_rules! generate_load {
     (@rel ($world:expr) $var:ident $payloads:ident $ty:tt) => {};
     (@comp ($world:expr) $var:ident $payloads:ident $ty:tt persist) => {
         if $var == type_name::<$ty>() {
-            for EntityComponent(entity_id, payload) in $payloads {
+            for EntityComponent(crate::quicksilver_glue::EntityWrapper(entity), payload) in $payloads {
                 let val = ::quicksilver::json::from_json::<$ty>(payload);
-                let e = $world.ensure_alive(EntityId(*entity_id));
-                $world.add_component(e, val);
+                $world.bookkeeping.ensure_alive_generation(*entity);
+                $world.add_component(*entity, val);
             }
             continue;
         }

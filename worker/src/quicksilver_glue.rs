@@ -2,7 +2,7 @@ use froql::entity_store::Entity;
 
 #[derive(Debug, Clone, Copy)]
 #[repr(transparent)]
-pub struct EntityWrapper(Entity);
+pub struct EntityWrapper(pub Entity);
 
 impl ::quicksilver::Quicksilver for EntityWrapper {
     const MIRROR: ::quicksilver::Type = ::quicksilver::Type::Struct(&::quicksilver::Struct {
