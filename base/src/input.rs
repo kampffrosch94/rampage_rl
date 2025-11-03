@@ -20,4 +20,5 @@ pub enum Input {
     Cancel,
     Inventory,
     DebugSlowdown,
+    MouseMoveCamera,
 }
