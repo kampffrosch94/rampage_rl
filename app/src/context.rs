@@ -247,6 +247,11 @@ impl ContextTrait for Context {
             ui.separator();
         }
     }
+
+    fn mouse_wheel(&self) -> f32 {
+        let (_x, y) = mouse_wheel();
+        y
+    }
 }
 
 impl Context {

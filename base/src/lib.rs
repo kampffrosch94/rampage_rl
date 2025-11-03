@@ -49,6 +49,8 @@ pub trait ContextTrait {
 
     fn mouse_world(&self) -> FPos;
 
+    fn mouse_wheel(&self) -> f32;
+
     fn camera_set_shake(&mut self, offset: FVec);
 
     /// moves the camera center over time
