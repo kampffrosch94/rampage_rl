@@ -205,7 +205,7 @@ impl ContextTrait for Context {
     }
 
     fn camera_move_rel(&mut self, offset: FVec, time: f32) {
-        self.camera.move_camera(offset, time);
+        self.camera.move_camera_relativ(offset, time);
     }
 
     fn set_text(

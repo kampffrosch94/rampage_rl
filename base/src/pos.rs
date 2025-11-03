@@ -147,3 +147,17 @@ impl From<(f32, f32)> for FPos {
         Self { x: value.0, y: value.1 }
     }
 }
+
+impl From<(i32, i32)> for FVec {
+    fn from(value: (i32, i32)) -> Self {
+        Self { x: value.0 as f32, y: value.1 as f32 }
+    }
+}
+
+impl Mul<f32> for FVec {
+    type Output = Self;
+
+    fn mul(self, rhs: f32) -> Self::Output {
+        Self { x: self.x * rhs, y: self.y * rhs }
+    }
+}

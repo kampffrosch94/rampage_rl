@@ -1,6 +1,7 @@
 use std::collections::HashSet;
 
 use crate::animation::{AnimationCleanup, AnimationTarget};
+use base::FVec;
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
@@ -142,6 +143,7 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
                 if !tm.is_blocked(new_pos) {
                     animation::spawn_move_animation(world, *e, player.pos, new_pos);
                     player.pos = new_pos;
+                    c.camera_move_rel(FVec::from(dir) * TILE_SIZE, 0.25);
                 } else {
                     if let Some(other_e) = tm.get_actor(new_pos) {
                         let other_e = world.view_deferred(other_e);
