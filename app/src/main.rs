@@ -100,17 +100,12 @@ async fn inner_main() {
         }
 
         last_mouse_pos = mouse_position();
-        match mouse_wheel() {
-            (_x, y) => {
-                if y != 0. {
-                    if y > 0. {
-                        ctx.camera.zoom(1);
-                    }
-                    if y < 0. {
-                        ctx.camera.zoom(-1);
-                    }
-                }
-            }
+        let (_x, y) = mouse_wheel();
+        if y > 0. {
+            ctx.camera.zoom(1);
+        }
+        if y < 0. {
+            ctx.camera.zoom(-1);
         }
 
         // set_camera(&Camera2D::from_display_rect(Rect {
