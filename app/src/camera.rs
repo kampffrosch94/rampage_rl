@@ -55,11 +55,10 @@ impl CameraWrapper {
 
     /// do tweening and stuff
     pub fn process(&mut self) {
-        // handle camera
-        let mouse_position = Vec2f::from(mouse_position());
-        let time = get_frame_time();
-
+        // tweening
         if !self.scale_tween.is_finished() {
+            let mouse_position = Vec2f::from(mouse_position());
+            let time = get_frame_time();
             let point = Vec2f::from(self.camera.screen_to_world(mouse_position.into()));
             let new_scale = self.scale_tween.move_by(time);
             let offset = self.offset + self.shake_offset;
@@ -70,16 +69,9 @@ impl CameraWrapper {
             self.scale = new_scale;
         }
 
-        // if self.scale_tween.is_finished() && self.offset_tween.is_finished() {
-        //     self.offset.x = self.offset.x.round();
-        //     self.offset.y = self.offset.y.round();
-        // }
-
         let offset = self.offset + self.shake_offset;
         self.camera = Self::create_camera(self.scale, offset.into());
         self.set();
-        //cw_debug!("Camera scale: {} offset: {:?}", self.scale, self.offset);
-        //cw_debug!("Camera scale_exp: {}", self.scale_exp);
     }
 
     pub fn zoom(&mut self, delta: i32) {
