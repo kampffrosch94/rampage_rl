@@ -2,7 +2,7 @@ use base::FVec;
 use derive_more::derive::From;
 use derive_more::derive::*;
 use macroquad::prelude::*;
-use tween::{Linear, QuadOut, TweenValue, Tweener};
+use tween::{Linear, TweenValue, Tweener};
 
 pub struct CameraWrapper {
     pub scale: f32,
@@ -10,7 +10,6 @@ pub struct CameraWrapper {
     pub offset: Vec2f,
     pub shake_offset: Vec2f,
     pub scale_tween: Tweener<f32, f32, Linear>,
-    pub offset_tween: Tweener<Vec2f, f32, QuadOut>,
     pub camera: Camera2D,
 }
 
@@ -28,20 +27,11 @@ impl CameraWrapper {
         let scale_tween = Tweener::linear(scale, scale, 0.);
 
         let offset = Vec2f { x: -160., y: -40. };
-        let offset_tween = Tweener::quad_out(offset, offset, 0.00);
         let shake_offset = Vec2f { x: 0., y: 0. };
 
         let camera = Self::create_camera(scale, offset.into());
         set_camera(&camera);
-        CameraWrapper {
-            scale,
-            scale_exp,
-            scale_tween,
-            offset,
-            offset_tween,
-            camera,
-            shake_offset,
-        }
+        CameraWrapper { scale, scale_exp, scale_tween, offset, camera, shake_offset }
     }
 
     pub fn create_camera(scale: f32, offset: Vec2) -> Camera2D {
@@ -68,10 +58,6 @@ impl CameraWrapper {
         // handle camera
         let mouse_position = Vec2f::from(mouse_position());
         let time = get_frame_time();
-
-        if !self.offset_tween.is_finished() {
-            self.offset = self.offset_tween.move_by(time);
-        }
 
         if !self.scale_tween.is_finished() {
             let point = Vec2f::from(self.camera.screen_to_world(mouse_position.into()));
@@ -104,15 +90,8 @@ impl CameraWrapper {
         self.scale_tween = Tweener::linear(self.scale, target, 0.25);
     }
 
-    pub fn mouse_delta(&mut self, old: impl Into<Vec2f>, new: impl Into<Vec2f>) {
-        let old = old.into();
-        let new = new.into();
-        self.offset += self.screen_to_world(old) - self.screen_to_world(new);
-    }
-
-    pub fn move_camera_relativ(&mut self, FVec { x, y }: FVec, duration: f32) {
-        let new_offset = self.offset + Vec2f::from((x, y));
-        self.offset_tween = Tweener::quad_out(self.offset, new_offset, duration);
+    pub fn move_camera_relativ(&mut self, FVec { x, y }: FVec) {
+        self.offset = self.offset + Vec2f::from((x, y));
     }
 
     pub fn screen_to_world(&self, pos: impl Into<Vec2>) -> Vec2f {

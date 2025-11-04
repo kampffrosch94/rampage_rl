@@ -53,7 +53,6 @@ async fn inner_main() {
     #[cfg(feature = "staticlink")]
     let mut worker = static_worker::StaticWorker::new();
 
-    let mut last_mouse_pos = mouse_position();
     let ctx = &mut context::Context::new();
 
     #[cfg(not(feature = "staticlink"))]
@@ -93,27 +92,6 @@ async fn inner_main() {
 
         clear_background(BLACK);
 
-        if is_mouse_button_down(MouseButton::Middle)
-            || is_mouse_button_down(MouseButton::Right)
-        {
-            ctx.camera.mouse_delta(last_mouse_pos, mouse_position());
-        }
-
-        last_mouse_pos = mouse_position();
-        let (_x, y) = mouse_wheel();
-        if y > 0. {
-            ctx.camera.zoom(1);
-        }
-        if y < 0. {
-            ctx.camera.zoom(-1);
-        }
-
-        // set_camera(&Camera2D::from_display_rect(Rect {
-        //     x: 0.,
-        //     y: screen_height(),
-        //     w: screen_width(),
-        //     h: -screen_height(),
-        // }));
         ctx.camera.process();
 
         fps_counter.update();

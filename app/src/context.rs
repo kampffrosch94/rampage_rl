@@ -28,6 +28,7 @@ pub struct Context {
 
 pub struct ContextInner {
     pub texter: Texter,
+    #[expect(unused)]
     pub sprite_shader: SpriteShader,
 }
 
@@ -208,8 +209,8 @@ impl ContextTrait for Context {
         self.camera.shake_offset.y = offset.y;
     }
 
-    fn camera_move_rel(&mut self, offset: FVec, time: f32) {
-        self.camera.move_camera_relativ(offset, time);
+    fn camera_move_rel(&mut self, offset: FVec) {
+        self.camera.move_camera_relativ(offset);
     }
 
     fn set_text(
@@ -251,6 +252,10 @@ impl ContextTrait for Context {
     fn mouse_wheel(&self) -> f32 {
         let (_x, y) = mouse_wheel();
         y
+    }
+
+    fn camera_zoom(&mut self, change: i32) {
+        self.camera.zoom(change);
     }
 }
 

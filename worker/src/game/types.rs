@@ -1,6 +1,7 @@
 #![allow(unused)]
 use base::Circle;
 use base::FPos;
+use base::FVec;
 use base::Pos;
 use base::Rect;
 use froql::component::CASCADING_DESTRUCT;
@@ -88,10 +89,16 @@ pub struct TurnCount {
 
 #[repr(C)]
 #[derive(Debug, Quicksilver, Default, Clone, Copy)]
-pub enum CurrentUIState {
+pub enum UIState {
     #[default]
     Normal,
     Inventory,
+}
+
+#[derive(Debug, Quicksilver, Default)]
+pub struct UI {
+    pub state: UIState,
+    pub last_mouse_pos: Option<FPos>,
 }
 
 #[derive(Debug, Quicksilver)]
@@ -112,7 +119,7 @@ ecs_types!(
         TileMap[persist],
         RandomGenerator[persist],
         // ui
-        CurrentUIState[persist],
+        UI[persist],
         MessageLog[persist],
         PendingMessage[persist],
         // animations

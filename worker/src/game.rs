@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 
 use crate::animation::{AnimationCleanup, AnimationTarget};
-use base::FVec;
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
@@ -81,16 +80,46 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     ensure_singleton::<GameTime>(world);
     ensure_singleton::<DebugOptions>(world);
 
-    if c.is_pressed(Input::DebugSlowdown) {
-        let mut debug = world.singleton_mut::<DebugOptions>();
-        debug.slow_mode = !debug.slow_mode;
-    }
+    let state: UIState = world.singleton::<UI>().state;
 
-    {
-        let debug = world.singleton::<DebugOptions>();
-        let delta =
-            if debug.slow_mode { c.delta() / debug.slowdown_factor as f32 } else { c.delta() };
-        world.singleton_mut::<GameTime>().0 += delta;
+    // systematic input
+    match state {
+        UIState::Normal => {
+            if c.mouse_wheel() > 0. {
+                c.camera_zoom(1);
+            }
+            if c.mouse_wheel() < 0. {
+                c.camera_zoom(-1);
+            }
+
+            {
+                let mut ui = world.singleton_mut::<UI>();
+                if c.is_pressed(Input::MouseMoveCamera)
+                    && let Some(last_pos) = ui.last_mouse_pos
+                {
+                    let current = c.mouse_world();
+                    c.camera_move_rel(last_pos - current);
+                }
+
+                ui.last_mouse_pos = Some(c.mouse_world());
+            }
+
+            if c.is_pressed(Input::DebugSlowdown) {
+                let mut debug = world.singleton_mut::<DebugOptions>();
+                debug.slow_mode = !debug.slow_mode;
+            }
+
+            {
+                let debug = world.singleton::<DebugOptions>();
+                let delta = if debug.slow_mode {
+                    c.delta() / debug.slowdown_factor as f32
+                } else {
+                    c.delta()
+                };
+                world.singleton_mut::<GameTime>().0 += delta;
+            }
+        }
+        UIState::Inventory => {}
     }
 
     c.draw_texture("tiles", -228., -950., 5);
@@ -108,7 +137,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     let mut s = world.singleton_mut::<DebugOptions>();
     c.inspect(&mut reflect(&mut *s));
 
-    let mut s = world.singleton_mut::<CurrentUIState>();
+    let mut s = world.singleton_mut::<UI>();
     c.inspect(&mut reflect(&mut *s));
 
     for (mut msg,) in query!(world, mut PendingMessage) {
@@ -143,7 +172,8 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
                 if !tm.is_blocked(new_pos) {
                     animation::spawn_move_animation(world, *e, player.pos, new_pos);
                     player.pos = new_pos;
-                    c.camera_move_rel(FVec::from(dir) * TILE_SIZE, 0.25);
+                    // TODO make animation
+                    // c.camera_move_rel(FVec::from(dir) * TILE_SIZE, 0.25);
                 } else {
                     if let Some(other_e) = tm.get_actor(new_pos) {
                         let other_e = world.view_deferred(other_e);
@@ -176,7 +206,7 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
     }
 
     if c.is_pressed(Input::Inventory) {
-        *world.singleton_mut::<CurrentUIState>() = CurrentUIState::Inventory;
+        world.singleton_mut::<UI>().state = UIState::Inventory;
     }
 
     if c.is_pressed(Input::Confirm) {
@@ -245,16 +275,16 @@ fn player_is_animation_target(world: &World) -> bool {
 }
 
 fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
-    let state: CurrentUIState = *world.singleton();
+    let state: UIState = world.singleton::<UI>().state;
     match state {
-        CurrentUIState::Normal => update_systems_normal(c, world),
-        CurrentUIState::Inventory => update_systems_inventory(c, world),
+        UIState::Normal => update_systems_normal(c, world),
+        UIState::Inventory => update_systems_inventory(c, world),
     };
 }
 
 fn update_systems_inventory(c: &mut dyn ContextTrait, world: &mut World) {
     if c.is_pressed(Input::Cancel) {
-        *world.singleton_mut::<CurrentUIState>() = CurrentUIState::Normal;
+        world.singleton_mut::<UI>().state = UIState::Normal;
     }
 
     ui_inventory(c, world);
@@ -400,7 +430,7 @@ pub fn create_world() -> World {
 
     world.singleton_add(tm);
 
-    world.singleton_add(CurrentUIState::default());
+    world.singleton_add(UI::default());
     world.singleton_add(TurnCount { aut: 0 });
     world.singleton_add(MessageLog::default());
     place_enemies(&mut world, 12345);
@@ -420,7 +450,7 @@ mod test {
     fn test_persist() {
         let mut world = World::new();
         register_components(&mut world);
-        world.singleton_add(CurrentUIState::default());
+        world.singleton_add(UI::default());
 
         let s = save_world(&world);
         println!("------------");

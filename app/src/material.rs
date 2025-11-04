@@ -40,6 +40,7 @@ impl SpriteShader {
     }
 
     /// reset with gl_use_default_material
+    #[expect(unused)]
     pub fn set(&self, texture: &Texture2D) {
         let Self { mat, .. } = self;
         gl_use_material(mat);
