@@ -71,7 +71,6 @@ impl CameraWrapper {
 
         let offset = self.offset + self.shake_offset;
         self.camera = Self::create_camera(self.scale, offset.into());
-        self.set();
     }
 
     pub fn zoom(&mut self, delta: i32) {
@@ -84,6 +83,9 @@ impl CameraWrapper {
 
     pub fn move_camera_relativ(&mut self, FVec { x, y }: FVec) {
         self.offset = self.offset + Vec2f::from((x, y));
+        // need to update the camera, because it may be used to save positions immediately
+        let offset = self.offset + self.shake_offset;
+        self.camera = Self::create_camera(self.scale, offset.into());
     }
 
     pub fn screen_to_world(&self, pos: impl Into<Vec2>) -> Vec2f {

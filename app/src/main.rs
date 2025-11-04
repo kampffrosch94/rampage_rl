@@ -100,7 +100,6 @@ async fn inner_main() {
 
         let w = screen_width();
         let h = screen_height();
-        ctx.camera.set();
         let s = format!("FPS: {fps} DPI: {dpi} Screen: {w} x {h}");
         draw_text(&s, 20.0, -20.0, 30.0, WHITE);
 
