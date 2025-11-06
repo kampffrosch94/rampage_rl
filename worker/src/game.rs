@@ -112,7 +112,8 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
             {
                 let debug = world.singleton::<DebugOptions>();
                 let delta = if debug.slow_mode {
-                    c.delta() / debug.slowdown_factor as f32
+                    let extra_factor = 100.0; // here because of precision issues
+                    (extra_factor * c.delta()) / (extra_factor * debug.slowdown_factor as f32)
                 } else {
                     c.delta()
                 };
