@@ -1,4 +1,4 @@
-use base::FVec;
+use base::{FPos, FVec};
 use derive_more::derive::From;
 use derive_more::derive::*;
 use macroquad::prelude::*;
@@ -88,20 +88,20 @@ impl CameraWrapper {
         self.camera = Self::create_camera(self.scale, offset.into());
     }
 
-    pub fn screen_to_world(&self, pos: impl Into<Vec2>) -> Vec2f {
-        let pos = pos.into();
-        self.camera.screen_to_world(pos).into()
+    pub fn screen_to_world(&self, FPos { x, y }: FPos) -> FPos {
+        let Vec2 { x, y } = self.camera.screen_to_world(Vec2 { x, y });
+        FPos { x, y }
     }
 
     #[expect(unused)]
-    pub fn world_to_screen(&self, pos: impl Into<Vec2>) -> Vec2f {
-        let pos = pos.into();
-        self.camera.world_to_screen(pos).into()
+    pub fn world_to_screen(&self, FPos { x, y }: FPos) -> FPos {
+        let Vec2 { x, y } = self.camera.world_to_screen(Vec2 { x, y });
+        FPos { x, y }
     }
 
-    pub fn mouse_world(&self) -> Vec2 {
-        let pos = mouse_position();
-        self.screen_to_world(pos).into()
+    pub fn mouse_world(&self) -> FPos {
+        let (x, y) = mouse_position();
+        self.screen_to_world(FPos { x, y })
     }
 }
 

@@ -62,7 +62,11 @@ pub trait ContextTrait {
 
     fn draw_text(&mut self, key: u64, x: f32, y: f32, z_level: i32);
 
+    /// Screen rect in screen coordinates
     fn screen_rect(&self) -> Rect;
+
+    /// Screen rect, but translated to world coordinates
+    fn screen_rect_world(&self) -> Rect;
 
     //fn inspect(&mut self, _val: ValueReflection) {}
     fn inspect(&mut self, _val: &mut ValueReflection) {}

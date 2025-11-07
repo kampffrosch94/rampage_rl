@@ -161,3 +161,11 @@ impl Mul<f32> for FVec {
         Self { x: self.x * rhs, y: self.y * rhs }
     }
 }
+
+impl Add<FVec> for FPos {
+    type Output = Self;
+
+    fn add(self, rhs: FVec) -> Self::Output {
+        Self { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}

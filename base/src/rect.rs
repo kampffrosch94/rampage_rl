@@ -19,7 +19,7 @@ impl Rect {
     }
 
     pub fn new_center_wh(FPos { x, y }: FPos, w: f32, h: f32) -> Self {
-        Rect { x: x - w / 2.0, y: x - h / 2.0, w, h }
+        Rect { x: x - w / 2.0, y: y - h / 2.0, w, h }
     }
 
     pub fn take_left(&self, amount: f32) -> Self {

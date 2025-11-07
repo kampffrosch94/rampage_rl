@@ -257,6 +257,13 @@ impl ContextTrait for Context {
     fn camera_zoom(&mut self, change: i32) {
         self.camera.zoom(change);
     }
+
+    fn screen_rect_world(&self) -> base::Rect {
+        let base::Rect { x, y, w, h } = self.screen_rect();
+        let FPos { x, y } = self.camera.screen_to_world(FPos { x, y });
+        let FPos { x: xe, y: ye } = self.camera.screen_to_world(FPos { x: x + w, y: y + h });
+        base::Rect { x: x, y: y, w: xe - x, h: ye - y }
+    }
 }
 
 impl Context {

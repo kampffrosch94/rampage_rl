@@ -12,6 +12,7 @@ use crate::animation::AnimationCleanup;
 use crate::animation::AnimationTarget;
 use crate::animation::AnimationTimer;
 use crate::animation::BumpAttackAnimation;
+use crate::animation::CameraMoveAnimation;
 use crate::animation::CameraShakeAnimation;
 use crate::animation::DecorSpawnAnimation;
 use crate::animation::HPBarAnimation;
@@ -129,6 +130,7 @@ ecs_types!(
         DecorSpawnAnimation,
         HPBarAnimation,
         MovementAnimation,
+        CameraMoveAnimation,
         DebugOptions
     ),
     Relations(

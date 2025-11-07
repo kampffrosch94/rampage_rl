@@ -153,9 +153,8 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     }
 }
 
-fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
-    let movements = [
-        // can't const this since drop glue may fail on hotreload
+fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
+    const MOVEMENTS: [(Input, (i32, i32)); 8] = [
         (Input::MoveW, (-1, 0)),
         (Input::MoveE, (1, 0)),
         (Input::MoveN, (0, -1)),
@@ -167,14 +166,13 @@ fn pc_inputs(c: &mut dyn ContextTrait, world: &mut World) {
     ];
     for (e, mut player) in query!(world, &this, _ Player, mut Actor) {
         let tm = world.singleton::<TileMap>();
-        for (input, dir) in movements {
+        for (input, dir) in MOVEMENTS {
             if c.is_pressed(input) {
                 let new_pos = player.pos + dir;
                 if !tm.is_blocked(new_pos) {
-                    animation::spawn_move_animation(world, *e, player.pos, new_pos);
+                    let anim = animation::spawn_move_animation(world, *e, player.pos, new_pos);
                     player.pos = new_pos;
-                    // TODO make animation
-                    // c.camera_move_rel(FVec::from(dir) * TILE_SIZE, 0.25);
+                    animation::add_camera_move(world, anim, new_pos);
                 } else {
                     if let Some(other_e) = tm.get_actor(new_pos) {
                         let other_e = world.view_deferred(other_e);
@@ -300,7 +298,7 @@ fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
 
         // handle player input
         TileMap::update_actors(world);
-        pc_inputs(c, world);
+        player_inputs(c, world);
         world.process();
 
         // handle AI input after player

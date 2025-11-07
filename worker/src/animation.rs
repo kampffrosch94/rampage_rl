@@ -1,11 +1,11 @@
-use base::{ContextTrait, FPos, FVec, Pos};
+use base::{ContextTrait, FPos, FVec, Pos, Rect};
 use fastnoise_lite::{FastNoiseLite, NoiseType};
 use froql::query;
 use froql::{entity_store::Entity, world::World};
 use simple_easing::{cubic_in_out, roundtrip, sine_in_out};
 
 use crate::game::tile_map::TileMap;
-use crate::game::tiles::{Decor, pos_to_drawpos};
+use crate::game::tiles::{Decor, TILE_DIM, pos_to_drawpos};
 use crate::game::types::DrawHealth;
 use crate::game::types::GameTime;
 
@@ -64,6 +64,13 @@ pub struct DecorSpawnAnimation {
 
 pub struct CameraShakeAnimation {
     pub noise: FastNoiseLite,
+}
+
+/// moves the camera center somewhere else
+pub struct CameraMoveAnimation {
+    /// only gets initialized once the animation starts playing
+    pub from: Option<FPos>,
+    pub to: FPos,
 }
 
 pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
@@ -141,6 +148,23 @@ pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
         }
     }
 
+    // camera move
+    for (mut anim, timer) in query!(world, mut CameraMoveAnimation, AnimationTimer) {
+        if timer.is_active(current_time) {
+            if anim.from.is_none() {
+                anim.from = Some(c.screen_rect_world().center());
+            }
+
+            let lerpiness = timer.normalize(current_time);
+            let from = anim.from.unwrap();
+            let dist = anim.to - from;
+            let current_target = from + dist * lerpiness;
+
+            let delta = current_target - c.screen_rect_world().center();
+            c.camera_move_rel(delta);
+        }
+    }
+
     // remove animations that are done
     for (e, timer) in query!(world, &this, AnimationTimer,) {
         if current_time >= timer.end {
@@ -211,7 +235,7 @@ pub fn spawn_bump_attack_animation(
     return animation_e;
 }
 
-pub fn spawn_move_animation(world: &World, e: Entity, start: Pos, end: Pos) {
+pub fn spawn_move_animation(world: &World, e: Entity, start: Pos, end: Pos) -> Entity {
     assert!(world.has_component::<DrawPos>(e));
 
     let start = pos_to_drawpos(start);
@@ -227,7 +251,8 @@ pub fn spawn_move_animation(world: &World, e: Entity, start: Pos, end: Pos) {
         .create_deferred()
         .add(AnimationTimer { start: start_time, end: start_time + animation_length })
         .add(MovementAnimation { start, end })
-        .relate_to::<AnimationTarget>(e);
+        .relate_to::<AnimationTarget>(e)
+        .entity
 }
 
 pub fn spawn_camera_shake_animation(world: &mut World) {
@@ -243,4 +268,17 @@ pub fn spawn_camera_shake_animation(world: &mut World) {
         .create()
         .add(AnimationTimer { start: start_time, end: start_time + animation_length })
         .add(CameraShakeAnimation { noise });
+}
+
+/// Moves the camera to goal_pos at the timing of the Animation sync_anim
+pub fn add_camera_move(world: &World, sync_anim: Entity, goal_pos: Pos) {
+    let goal = {
+        let p = pos_to_drawpos(goal_pos);
+        Rect::new_center_wh(p, TILE_DIM, TILE_DIM).center()
+    };
+
+    world.defer_closure(move |world| {
+        assert!(world.has_component::<AnimationTimer>(sync_anim));
+        world.view_mut(sync_anim).add(CameraMoveAnimation { from: None, to: goal });
+    });
 }
