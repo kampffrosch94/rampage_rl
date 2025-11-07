@@ -155,7 +155,8 @@ pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
                 anim.from = Some(c.screen_rect_world().center());
             }
 
-            let lerpiness = timer.normalize(current_time);
+            let ease = simple_easing::cubic_out;
+            let lerpiness = ease(timer.normalize(current_time));
             let from = anim.from.unwrap();
             let dist = anim.to - from;
             let current_target = from + dist * lerpiness;
