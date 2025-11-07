@@ -126,7 +126,20 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     c.draw_texture("tiles", -228., -950., 5);
     c.draw_texture("rogues", -600., -950., 5);
     c.draw_texture("monsters", -1100., -950., 5);
-    c.draw_circle(Circle { pos: FPos::new(50., 60.), radius: 30. }, Color::WHITE, 15);
+    // c.draw_circle(Circle { pos: FPos::new(50., 60.), radius: 30. }, Color::WHITE, 15);
+
+    c.draw_circle(
+        Circle { pos: c.screen_rect_world().center(), radius: 5. },
+        Color::YELLOW,
+        15,
+    );
+
+    c.draw_circle(
+        Circle { pos: c.screen_rect().center(), radius: 5. },
+        Color::BLUE,
+        1500,
+    );
+
 
     handle_ui(c, world);
     update_systems(c, world);

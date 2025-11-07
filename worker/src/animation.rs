@@ -22,7 +22,7 @@ pub enum AnimationTarget {}
 /// (this relation is registered with cascading destroy)
 pub enum AnimationCleanup {}
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub struct AnimationTimer {
     start: f32,
     end: f32,
@@ -149,8 +149,15 @@ pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
     }
 
     // camera move
+    // only animate the camera with the latest start time
+    let max_start = query!(world, _ CameraMoveAnimation, AnimationTimer)
+        .filter(|(t,)| t.is_active(current_time))
+        .map(|(t,)| t.start)
+        .max_by(f32::total_cmp)
+        .unwrap_or(0.);
+
     for (mut anim, timer) in query!(world, mut CameraMoveAnimation, AnimationTimer) {
-        if timer.is_active(current_time) {
+        if timer.is_active(current_time) && timer.start == max_start {
             if anim.from.is_none() {
                 anim.from = Some(c.screen_rect_world().center());
             }
@@ -279,7 +286,10 @@ pub fn add_camera_move(world: &World, sync_anim: Entity, goal_pos: Pos) {
     };
 
     world.defer_closure(move |world| {
-        assert!(world.has_component::<AnimationTimer>(sync_anim));
-        world.view_mut(sync_anim).add(CameraMoveAnimation { from: None, to: goal });
+        let mut timer = world.get_component::<AnimationTimer>(sync_anim).clone();
+        const A_LENGTH: f32 = 0.5;
+        timer.end = timer.start + A_LENGTH;
+
+        world.create().add(timer).add(CameraMoveAnimation { from: None, to: goal });
     });
 }
