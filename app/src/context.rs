@@ -260,9 +260,9 @@ impl ContextTrait for Context {
 
     fn screen_rect_world(&self) -> base::Rect {
         let base::Rect { x, y, w, h } = self.screen_rect();
-        let FPos { x, y } = self.camera.screen_to_world(FPos { x, y });
+        let FPos { x: x_new, y: y_new } = self.camera.screen_to_world(FPos { x, y });
         let FPos { x: xe, y: ye } = self.camera.screen_to_world(FPos { x: x + w, y: y + h });
-        base::Rect { x: x, y: y, w: xe - x, h: ye - y }
+        base::Rect { x: x_new, y: y_new, w: xe - x_new, h: ye - y_new }
     }
 }
 
