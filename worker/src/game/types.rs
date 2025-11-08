@@ -94,6 +94,7 @@ pub enum UIState {
     #[default]
     Normal,
     Inventory,
+    Inspect,
 }
 
 #[derive(Debug, Quicksilver, Default)]

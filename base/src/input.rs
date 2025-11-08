@@ -21,4 +21,5 @@ pub enum Input {
     Inventory,
     DebugSlowdown,
     MouseMoveCamera,
+    Inspect,
 }

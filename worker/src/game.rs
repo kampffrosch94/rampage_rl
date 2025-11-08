@@ -120,6 +120,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
                 world.singleton_mut::<GameTime>().0 += delta;
             }
         }
+        UIState::Inspect => {}
         UIState::Inventory => {}
     }
 
@@ -127,19 +128,6 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     c.draw_texture("rogues", -600., -950., 5);
     c.draw_texture("monsters", -1100., -950., 5);
     // c.draw_circle(Circle { pos: FPos::new(50., 60.), radius: 30. }, Color::WHITE, 15);
-
-    c.draw_circle(
-        Circle { pos: c.screen_rect_world().center(), radius: 5. },
-        Color::YELLOW,
-        15,
-    );
-
-    c.draw_circle(
-        Circle { pos: c.screen_rect().center(), radius: 5. },
-        Color::BLUE,
-        1500,
-    );
-
 
     handle_ui(c, world);
     update_systems(c, world);
@@ -221,6 +209,10 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
         world.singleton_mut::<UI>().state = UIState::Inventory;
     }
 
+    if c.is_pressed(Input::Inspect) {
+        world.singleton_mut::<UI>().state = UIState::Inspect;
+    }
+
     if c.is_pressed(Input::Confirm) {
         animation::spawn_camera_shake_animation(world);
 
@@ -291,6 +283,7 @@ fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
     match state {
         UIState::Normal => update_systems_normal(c, world),
         UIState::Inventory => update_systems_inventory(c, world),
+        UIState::Inspect => update_systems_inspect(c, world),
     };
 }
 
@@ -300,6 +293,14 @@ fn update_systems_inventory(c: &mut dyn ContextTrait, world: &mut World) {
     }
 
     ui_inventory(c, world);
+}
+
+fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
+    if c.is_pressed(Input::Cancel) {
+        world.singleton_mut::<UI>().state = UIState::Normal;
+    }
+
+    c.draw_rect(Rect::new(200., 200., 400., 400.), Color::RED, 1500);
 }
 
 fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {

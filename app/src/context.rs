@@ -187,6 +187,7 @@ impl ContextTrait for Context {
             Input::Cancel => is_key_pressed(KeyCode::Escape),
             Input::Inventory => is_key_pressed(KeyCode::I),
             Input::DebugSlowdown => is_key_pressed(KeyCode::F12),
+            Input::Inspect => is_key_pressed(KeyCode::X),
             Input::MouseMoveCamera => {
                 is_mouse_button_down(MouseButton::Middle)
                     || is_mouse_button_down(MouseButton::Right)
