@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 
 use crate::animation::{AnimationCleanup, AnimationTarget};
+use base::pos::IVec;
+#[allow(unused)]
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
@@ -50,7 +52,9 @@ impl Default for DebugOptions {
 pub fn highlight_tile(c: &mut dyn ContextTrait, pos: Pos) {
     let rect =
         Rect::new(pos.x as f32 * TILE_SIZE, pos.y as f32 * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    c.draw_rect(rect, Color::YELLOW, Z_DEBUG);
+    let color = Color::rgba(1., 1., 0., 0.2);
+    c.draw_rect(rect, color, Z_DEBUG);
+    c.draw_rect_lines(rect, 3.0, Color::YELLOW, Z_DEBUG);
 }
 
 pub fn ensure_singleton<T: Default + 'static>(world: &mut World) {
@@ -79,6 +83,8 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
 
     ensure_singleton::<GameTime>(world);
     ensure_singleton::<DebugOptions>(world);
+
+    highlight_tile(c, Pos { x: 5, y: 3 });
 
     let state: UIState = world.singleton::<UI>().state;
 
@@ -154,7 +160,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     }
 }
 
-fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
+fn input_direction(c: &mut dyn ContextTrait) -> Option<IVec> {
     const MOVEMENTS: [(Input, (i32, i32)); 8] = [
         (Input::MoveW, (-1, 0)),
         (Input::MoveE, (1, 0)),
@@ -165,43 +171,51 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
         (Input::MoveSE, (1, 1)),
         (Input::MoveSW, (-1, 1)),
     ];
-    for (e, mut player) in query!(world, &this, _ Player, mut Actor) {
-        let tm = world.singleton::<TileMap>();
-        for (input, dir) in MOVEMENTS {
-            if c.is_pressed(input) {
-                let new_pos = player.pos + dir;
-                if !tm.is_blocked(new_pos) {
-                    let anim = animation::spawn_move_animation(world, *e, player.pos, new_pos);
-                    player.pos = new_pos;
-                    animation::add_camera_move(world, anim, new_pos);
-                } else {
-                    if let Some(other_e) = tm.get_actor(new_pos) {
-                        let other_e = world.view_deferred(other_e);
-                        let mut other_a = other_e.get_mut::<Actor>();
-                        let start_ratio = other_a.hp.ratio();
-                        other_a.hp.current -= 1;
-                        let end_ratio = other_a.hp.ratio();
-                        let animation = animation::spawn_bump_attack_animation(
-                            world,
-                            *e,
-                            *other_e,
-                            player.pos,
-                            new_pos,
-                            HPBarAnimation { start_ratio, end_ratio },
-                        );
-                        let msg = format!("{} attacks {}.", player.name, other_a.name);
-                        log_message(world, msg, animation);
 
-                        if other_a.hp.current <= 0 {
-                            let msg = format!("{} dies.", other_a.name);
-                            log_message(world, msg, animation);
-                            other_e.relate_from::<AnimationCleanup>(animation);
-                        }
+    for (input, (dx, dy)) in MOVEMENTS {
+        if c.is_pressed(input) {
+            return Some(IVec::new(dx, dy));
+        }
+    }
+    None
+}
+
+fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
+    if let Some(dir) = input_direction(c) {
+        for (e, mut player) in query!(world, &this, _ Player, mut Actor) {
+            let tm = world.singleton::<TileMap>();
+            let new_pos = player.pos + dir;
+            if !tm.is_blocked(new_pos) {
+                let anim = animation::spawn_move_animation(world, *e, player.pos, new_pos);
+                player.pos = new_pos;
+                animation::add_camera_move(world, anim, new_pos);
+            } else {
+                if let Some(other_e) = tm.get_actor(new_pos) {
+                    let other_e = world.view_deferred(other_e);
+                    let mut other_a = other_e.get_mut::<Actor>();
+                    let start_ratio = other_a.hp.ratio();
+                    other_a.hp.current -= 1;
+                    let end_ratio = other_a.hp.ratio();
+                    let animation = animation::spawn_bump_attack_animation(
+                        world,
+                        *e,
+                        *other_e,
+                        player.pos,
+                        new_pos,
+                        HPBarAnimation { start_ratio, end_ratio },
+                    );
+                    let msg = format!("{} attacks {}.", player.name, other_a.name);
+                    log_message(world, msg, animation);
+
+                    if other_a.hp.current <= 0 {
+                        let msg = format!("{} dies.", other_a.name);
+                        log_message(world, msg, animation);
+                        other_e.relate_from::<AnimationCleanup>(animation);
                     }
                 }
-                player.next_turn += 10;
-                return;
             }
+            player.next_turn += 10;
+            return;
         }
     }
 
@@ -295,12 +309,35 @@ fn update_systems_inventory(c: &mut dyn ContextTrait, world: &mut World) {
     ui_inventory(c, world);
 }
 
+#[derive(Default)]
+pub struct InspectUIState {
+    cursor_pos: Option<Pos>,
+}
+
 fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
     if c.is_pressed(Input::Cancel) {
         world.singleton_mut::<UI>().state = UIState::Normal;
+        world.singleton_remove::<InspectUIState>();
+        return;
     }
 
-    c.draw_rect(Rect::new(200., 200., 400., 400.), Color::RED, 1500);
+    ensure_singleton::<InspectUIState>(world);
+    let mut state = world.singleton_mut::<InspectUIState>();
+    if state.cursor_pos.is_none()
+        && let Some((p_actor,)) = query!(world, _ Player, Actor).next()
+    {
+        state.cursor_pos = Some(p_actor.pos);
+    }
+
+    if let Some(dir) = input_direction(c)
+        && let Some(ref mut cursor) = state.cursor_pos
+    {
+        *cursor += dir;
+    }
+
+    if let Some(cursor_pos) = state.cursor_pos {
+        highlight_tile(c, cursor_pos);
+    }
 }
 
 fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {

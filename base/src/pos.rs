@@ -5,14 +5,14 @@ use quicksilver::Quicksilver;
 use crate::grids::Grid;
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, Hash, Eq, PartialOrd, Ord, Quicksilver)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Hash, Eq, PartialOrd, Ord, Quicksilver)]
 pub struct Pos {
     pub x: i32,
     pub y: i32,
 }
 
 #[repr(C)]
-#[derive(Debug, Clone, Copy, PartialEq, Hash, Eq, Quicksilver)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Hash, Eq, Quicksilver)]
 pub struct IVec {
     pub x: i32,
     pub y: i32,
@@ -86,6 +86,13 @@ impl AddAssign<(i32, i32)> for Pos {
     fn add_assign(&mut self, rhs: (i32, i32)) {
         self.x += rhs.0;
         self.y += rhs.1;
+    }
+}
+
+impl AddAssign<IVec> for Pos {
+    fn add_assign(&mut self, rhs: IVec) {
+        self.x += rhs.x;
+        self.y += rhs.y;
     }
 }
 
@@ -166,6 +173,20 @@ impl Add<FVec> for FPos {
     type Output = Self;
 
     fn add(self, rhs: FVec) -> Self::Output {
+        Self { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
+impl IVec {
+    pub fn new(x: i32, y: i32) -> Self {
+        Self { x, y }
+    }
+}
+
+impl Add<IVec> for Pos {
+    type Output = Self;
+
+    fn add(self, rhs: IVec) -> Self::Output {
         Self { x: self.x + rhs.x, y: self.y + rhs.y }
     }
 }

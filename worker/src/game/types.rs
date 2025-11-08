@@ -21,6 +21,7 @@ use crate::ecs_setup::EntityComponent;
 use crate::ecs_setup::OriginTarget;
 use crate::ecs_setup::SerializedState;
 use crate::game::DebugOptions;
+use crate::game::InspectUIState;
 use crate::game::ui::MessageInhibitor;
 use crate::game::ui::MessageLog;
 use crate::game::ui::MessageOrder;
@@ -132,7 +133,8 @@ ecs_types!(
         HPBarAnimation,
         MovementAnimation,
         CameraMoveAnimation,
-        DebugOptions
+        DebugOptions,
+        InspectUIState
     ),
     Relations(
         AnimationTarget,
