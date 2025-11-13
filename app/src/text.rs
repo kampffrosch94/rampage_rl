@@ -155,8 +155,9 @@ impl TextObject {
         self.buffer.set_rich_text(
             font_system,
             text.iter().map(|(s, a)| (*s, to_attr(a))),
-            Attrs::new(),
+            &Attrs::new(),
             Shaping::Advanced,
+            None
         );
         self.buffer.set_redraw(true);
 
