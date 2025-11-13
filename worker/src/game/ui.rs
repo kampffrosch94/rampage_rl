@@ -86,13 +86,13 @@ Pulse: {pulse}"
 // TODO think about making this the context API instead of separating creation and display
 pub fn draw_text(
     c: &mut dyn ContextTrait,
-    label: Label,
+    _label: Label,
     rect: Rect,
     text: &[(&str, TextProperty)],
     z_level: i32,
 ) {
-    c.set_text(label as _, rect.w, rect.h, text);
-    c.draw_text(label as _, rect.x, rect.y, z_level);
+    let label = c.set_text(rect.w, rect.h, text);
+    c.draw_text(label.handle, rect.x, rect.y, z_level);
 }
 
 pub fn ui_inventory(c: &mut dyn ContextTrait, _world: &mut World) {

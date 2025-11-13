@@ -3,18 +3,26 @@ use cosmic_text::{
     fontdb::{self, Database},
 };
 
-use std::{collections::HashMap, sync::Arc};
+use std::{
+    collections::HashMap,
+    hash::{DefaultHasher, Hash},
+    sync::Arc,
+};
 
-use base::text::{TextFamily, TextProperty};
+use base::{
+    text::{Label, TextFamily, TextProperty},
+    util::F32Helper,
+};
 use macroquad::prelude::Texture2D;
 use macroquad::prelude::WHITE;
 use macroquad::prelude::draw_texture;
+use std::hash::Hasher;
 
 /// Handles text rendering and caching.
 pub struct Texter {
     font_system: FontSystem,
     swash_cache: SwashCache,
-    cache: HashMap<u64, TextObject>,
+    cache: HashMap<TextCacheKey, TextObject>,
 }
 
 impl Texter {
@@ -39,24 +47,62 @@ impl Texter {
     }
 
     /// Set text for a key.
-    pub fn set_text(
-        &mut self,
-        key: u64,
-        w: f32,
-        h: f32,
-        text: &[(&str, TextProperty)],
-    ) -> base::Rect {
-        let to = self.cache.entry(key).or_insert_with(|| {
+    pub fn set_text(&mut self, w: f32, h: f32, text: &[(&str, TextProperty)]) -> Label {
+        let cache_key = TextCacheKey::new(text, w, h);
+        let to = self.cache.entry(cache_key).or_insert_with(|| {
             let buffer = Buffer::new(&mut self.font_system, Metrics::new(33., 40.));
-            TextObject::new(buffer)
+            let mut to = TextObject::new(buffer);
+            to.set_text(&mut self.font_system, w, h, text);
+            to
         });
-        to.set_text(&mut self.font_system, w, h, text)
+
+        let rect = base::Rect::new_wh(to.width, to.height);
+        Label { handle: cache_key.to_handle(), rect }
     }
 
     /// Draws a text previously set with set_text
-    pub fn draw_text(&mut self, key: u64, x: f32, y: f32) -> Option<base::Rect> {
-        let to = self.cache.get_mut(&key)?;
+    pub fn draw_text(&mut self, handle: u128, x: f32, y: f32) -> Option<base::Rect> {
+        let to = self.cache.get_mut(&TextCacheKey::from_handle(handle))?;
         Some(to.draw(&mut self.font_system, &mut self.swash_cache, x, y))
+    }
+
+    pub fn collect_garbage(&mut self) {
+        self.cache.retain(|_key, to| {
+            to.last_drawn += 1;
+            to.last_drawn <= 30
+        });
+    }
+}
+
+/// we use this so that we have to allocate strings all the time
+#[derive(Clone, Copy, Debug, Hash, PartialEq, Eq)]
+pub struct TextCacheKey {
+    hash_code: u64,
+    total_length: usize,
+}
+
+impl TextCacheKey {
+    pub fn new(text: &[(&str, TextProperty)], w: f32, h: f32) -> Self {
+        let mut hasher = DefaultHasher::new();
+        text.hash(&mut hasher);
+        F32Helper(w).hash(&mut hasher);
+        F32Helper(h).hash(&mut hasher);
+        let hash_code = hasher.finish();
+        let total_length = text.iter().map(|(s, _)| s.len()).sum();
+
+        Self { hash_code, total_length }
+    }
+
+    pub fn to_handle(&self) -> u128 {
+        let Self { hash_code, total_length } = self;
+        let high = (*hash_code as u128) << 64;
+        let low = *total_length as u128;
+        high | low
+    }
+
+    pub fn from_handle(handle: u128) -> Self {
+        let (hash_code, total_length) = ((handle >> 64) as u64, handle as u64 as usize);
+        Self { hash_code, total_length }
     }
 }
 
@@ -86,51 +132,43 @@ pub fn to_attr(prop: &TextProperty) -> Attrs<'static> {
 pub struct TextObject {
     buffer: Buffer,
     texture: Option<Texture2D>,
-    last_text: Vec<(String, TextProperty)>,
     width: f32,
     height: f32,
+    /// used for garbage collection
+    last_drawn: u32,
 }
 
 impl TextObject {
     fn new(buffer: Buffer) -> Self {
-        Self { buffer, texture: None, last_text: Vec::new(), width: 0., height: 0. }
+        Self { buffer, texture: None, width: 0., height: 0., last_drawn: 0 }
     }
 
+    // TODO roll into new()
     fn set_text(
         &mut self,
         font_system: &mut FontSystem,
         w: f32,
         h: f32,
         text: &[(&str, TextProperty)],
-    ) -> base::Rect {
-        if text.len() != self.last_text.len()
-            || text
-                .iter()
-                .zip(self.last_text.iter())
-                // current != last
-                .any(|((s, a), (ls, la))| s != ls || a != la)
-        {
-            self.last_text = text.iter().map(|(s, a)| (s.to_string(), a.clone())).collect();
-            self.buffer.set_size(font_system, Some(w), Some(h));
-            self.buffer.set_rich_text(
-                font_system,
-                text.iter().map(|(s, a)| (*s, to_attr(a))),
-                Attrs::new(),
-                Shaping::Advanced,
-            );
-            self.buffer.set_redraw(true);
+    ) {
+        self.buffer.set_size(font_system, Some(w), Some(h));
+        self.buffer.set_rich_text(
+            font_system,
+            text.iter().map(|(s, a)| (*s, to_attr(a))),
+            Attrs::new(),
+            Shaping::Advanced,
+        );
+        self.buffer.set_redraw(true);
 
-            let mut height = 0.;
-            let mut width = 0.0;
+        let mut height = 0.;
+        let mut width = 0.0;
 
-            for run in self.buffer.layout_runs() {
-                width = run.line_w.max(width);
-                height += run.line_height;
-            }
-            self.height = height;
-            self.width = width;
+        for run in self.buffer.layout_runs() {
+            width = run.line_w.max(width);
+            height += run.line_height;
         }
-        base::Rect::new_wh(self.width, self.height)
+        self.height = height;
+        self.width = width;
     }
 
     fn draw(
@@ -189,7 +227,21 @@ impl TextObject {
         }
 
         draw_texture(self.texture.as_ref().unwrap(), x, y, WHITE);
+        self.last_drawn = 0;
 
         base::Rect { x, y, w: self.width, h: self.height }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn handle_back_and_forth() {
+        let key = TextCacheKey { hash_code: 124414, total_length: u32::MAX as _ };
+        let handle = key.to_handle();
+        let new_key = TextCacheKey::from_handle(handle);
+        assert_eq!(key, new_key);
     }
 }

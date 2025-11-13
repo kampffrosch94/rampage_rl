@@ -17,6 +17,7 @@ pub use pos::{FPos, FVec, Pos};
 pub use quicksilver;
 use quicksilver::reflections::ValueReflection;
 pub use rect::Rect;
+use text::Label;
 pub use text::TextProperty;
 use util::F32Helper;
 
@@ -61,9 +62,9 @@ pub trait ContextTrait {
     /// moves the camera center over time
     fn camera_move_rel(&mut self, offset: FVec);
 
-    fn set_text(&mut self, key: u64, w: f32, h: f32, text: &[(&str, TextProperty)]) -> Rect;
+    fn set_text(&mut self, w: f32, h: f32, text: &[(&str, TextProperty)]) -> Label;
 
-    fn draw_text(&mut self, key: u64, x: f32, y: f32, z_level: i32);
+    fn draw_text(&mut self, handle: u128, x: f32, y: f32, z_level: i32);
 
     /// Screen rect in screen coordinates
     fn screen_rect(&self) -> Rect;

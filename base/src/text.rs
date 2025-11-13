@@ -1,6 +1,6 @@
 use std::hash::{Hash, Hasher};
 
-use crate::util::F32Helper;
+use crate::{Rect, util::F32Helper};
 
 #[derive(Debug, PartialEq, Clone, Copy, Hash)]
 pub enum TextFamily {
@@ -70,4 +70,10 @@ impl TextProperty {
         self.color_opt = Some(color);
         self
     }
+}
+
+#[derive(Debug, Clone, Copy)]
+pub struct Label {
+    pub handle: u128,
+    pub rect: Rect,
 }

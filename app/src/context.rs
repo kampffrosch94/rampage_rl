@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use base::*;
+use base::{text::Label, *};
 
 use macroquad::prelude::*;
 #[cfg(feature = "hotreload")]
@@ -214,19 +214,13 @@ impl ContextTrait for Context {
         self.camera.move_camera_relativ(offset);
     }
 
-    fn set_text(
-        &mut self,
-        key: u64,
-        w: f32,
-        h: f32,
-        text: &[(&str, TextProperty)],
-    ) -> base::Rect {
-        self.inner.texter.set_text(key, w, h, text)
+    fn set_text(&mut self, w: f32, h: f32, text: &[(&str, TextProperty)]) -> Label {
+        self.inner.texter.set_text(w, h, text)
     }
 
-    fn draw_text(&mut self, key: u64, x: f32, y: f32, z_level: i32) {
+    fn draw_text(&mut self, handle: u128, x: f32, y: f32, z_level: i32) {
         let command = move |inner: &mut ContextInner| {
-            if inner.texter.draw_text(key, x, y).is_none() {
+            if inner.texter.draw_text(handle, x, y).is_none() {
                 let rect = macroquad::prelude::Rect::new(x, y, 300., 300.);
                 draw_rectangle(rect.x, rect.y, rect.w, rect.h, PINK);
             }
@@ -302,6 +296,7 @@ impl Context {
             }
             (draw.command)(&mut self.inner);
         }
+        self.inner.texter.collect_garbage();
     }
 }
 
