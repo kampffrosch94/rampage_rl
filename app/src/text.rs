@@ -10,6 +10,7 @@ use macroquad::prelude::Texture2D;
 use macroquad::prelude::WHITE;
 use macroquad::prelude::draw_texture;
 
+/// Handles text rendering and caching.
 pub struct Texter {
     font_system: FontSystem,
     swash_cache: SwashCache,
@@ -37,6 +38,7 @@ impl Texter {
         Texter { font_system, swash_cache, cache: HashMap::new() }
     }
 
+    /// Set text for a key.
     pub fn set_text(
         &mut self,
         key: u64,
@@ -48,16 +50,17 @@ impl Texter {
             let buffer = Buffer::new(&mut self.font_system, Metrics::new(33., 40.));
             TextObject::new(buffer)
         });
-        // entry.0.set_metrics(&mut self font_system, metrics);
         to.set_text(&mut self.font_system, w, h, text)
     }
 
+    /// Draws a text previously set with set_text
     pub fn draw_text(&mut self, key: u64, x: f32, y: f32) -> Option<base::Rect> {
         let to = self.cache.get_mut(&key)?;
         Some(to.draw(&mut self.font_system, &mut self.swash_cache, x, y))
     }
 }
 
+/// turns the game TextProperty into the cosmic text equivalent
 pub fn to_attr(prop: &TextProperty) -> Attrs<'static> {
     let mut attr = Attrs::new();
     if let Some(c) = prop.color_opt {
@@ -79,6 +82,7 @@ pub fn to_attr(prop: &TextProperty) -> Attrs<'static> {
     })
 }
 
+/// A helper object for rendering and re-rendering a text on changes.
 pub struct TextObject {
     buffer: Buffer,
     texture: Option<Texture2D>,
