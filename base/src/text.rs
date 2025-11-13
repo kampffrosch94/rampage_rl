@@ -66,6 +66,12 @@ impl TextProperty {
         self
     }
 
+    pub fn metrics_float(mut self, font_size: f32, line_height: f32) -> Self {
+        self.metrics.font_size = font_size;
+        self.metrics.line_height = line_height;
+        self
+    }
+
     pub fn color(mut self, color: crate::Color) -> Self {
         self.color_opt = Some(color);
         self
