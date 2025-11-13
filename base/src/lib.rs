@@ -1,4 +1,5 @@
 use std::ffi::c_void;
+use std::hash::Hash;
 
 pub mod circle;
 pub mod grids;
@@ -8,6 +9,7 @@ pub mod rational;
 pub mod rect;
 pub mod shadowcasting;
 pub mod text;
+pub mod util;
 
 pub use circle::Circle;
 pub use input::Input;
@@ -16,6 +18,7 @@ pub use quicksilver;
 use quicksilver::reflections::ValueReflection;
 pub use rect::Rect;
 pub use text::TextProperty;
+use util::F32Helper;
 
 pub trait ContextTrait {
     /// time since program start
@@ -89,7 +92,7 @@ impl PersistWrapper {
 }
 
 /// rgba values from 0.0 to 1.0
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy)]
 pub struct Color {
     pub r: f32,
     pub g: f32,
@@ -120,3 +123,26 @@ impl Color {
         Color { r: self.r, g: self.g, b: self.b, a }
     }
 }
+
+impl Hash for Color {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        let Self { r, g, b, a } = self;
+        F32Helper(*r).hash(state);
+        F32Helper(*g).hash(state);
+        F32Helper(*b).hash(state);
+        F32Helper(*a).hash(state);
+    }
+}
+
+impl PartialEq for Color {
+    fn eq(&self, other: &Self) -> bool {
+        let Self { r, g, b, a } = self;
+        let Self { r: or, g: og, b: ob, a: oa } = other;
+        F32Helper::eq(r, or)
+            && F32Helper::eq(g, og)
+            && F32Helper::eq(b, ob)
+            && F32Helper::eq(a, oa)
+    }
+}
+
+impl Eq for Color {}

@@ -1,13 +1,35 @@
-#[derive(Debug, PartialEq, Clone, Copy)]
+use std::hash::{Hash, Hasher};
+
+use crate::util::F32Helper;
+
+#[derive(Debug, PartialEq, Clone, Copy, Hash)]
 pub enum TextFamily {
     BloodCyrillic,
     NotoSans,
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 pub struct TextMetrics {
     pub font_size: f32,
     pub line_height: f32,
+}
+
+impl PartialEq for TextMetrics {
+    fn eq(&self, other: &Self) -> bool {
+        let Self { font_size, line_height } = self;
+        let Self { font_size: o_size, line_height: o_height } = other;
+        F32Helper::eq(font_size, o_size) && F32Helper::eq(line_height, o_height)
+    }
+}
+
+impl Eq for TextMetrics {}
+
+impl Hash for TextMetrics {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        let Self { font_size, line_height } = self;
+        F32Helper(*font_size).hash(state);
+        F32Helper(*line_height).hash(state);
+    }
 }
 
 impl TextMetrics {
@@ -17,7 +39,7 @@ impl TextMetrics {
     }
 }
 
-#[derive(Debug, PartialEq, Clone, Copy)]
+#[derive(Debug, PartialEq, Clone, Copy, Hash)]
 pub struct TextProperty {
     pub color_opt: Option<crate::Color>,
     pub family: TextFamily,
