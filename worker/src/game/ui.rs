@@ -7,16 +7,6 @@ use quicksilver::Quicksilver;
 
 use super::{Z_UI_BG, Z_UI_TEXT};
 
-#[repr(C)]
-#[derive(Clone, Copy, Debug)]
-pub enum Label {
-    SideMenuHeading,
-    PlayerStats,
-    InventoryHeading,
-    InventoryText,
-    MessageLogText,
-}
-
 #[derive(Default, Debug, Quicksilver)]
 pub struct MessageLog {
     messages: Vec<String>,
@@ -50,7 +40,6 @@ fn side_menu(c: &mut dyn ContextTrait, world: &mut World) {
 
     draw_text(
         c,
-        Label::SideMenuHeading,
         text_rect.cut_top(60.),
         &[(
             "STATS:",
@@ -73,26 +62,19 @@ Pulse: {pulse}"
         );
         // TODO this overrides the text in case of multiple players,
         // because there is only a single label ID
-        draw_text(
-            c,
-            Label::PlayerStats,
-            text_rect.cut_top(100.),
-            &[(&text, TextProperty::new())],
-            Z_UI_TEXT,
-        );
+        draw_text(c, text_rect.cut_top(100.), &[(&text, TextProperty::new())], Z_UI_TEXT);
     }
 }
 
 // TODO think about making this the context API instead of separating creation and display
 pub fn draw_text(
     c: &mut dyn ContextTrait,
-    _label: Label,
     rect: Rect,
     text: &[(&str, TextProperty)],
     z_level: i32,
 ) {
-    let label = c.set_text(rect.w, rect.h, text);
-    c.draw_text(label.handle, rect.x, rect.y, z_level);
+    let label = c.set_text(rect.dimensions(), text);
+    c.draw_text(label.handle, rect.origin(), z_level);
 }
 
 pub fn ui_inventory(c: &mut dyn ContextTrait, _world: &mut World) {
@@ -103,7 +85,6 @@ pub fn ui_inventory(c: &mut dyn ContextTrait, _world: &mut World) {
     let mut text_rect = inv_rect.skip_all(30.);
     draw_text(
         c,
-        Label::InventoryHeading,
         text_rect.cut_top(90.),
         &[(
             "INVENTORY",
@@ -116,7 +97,6 @@ pub fn ui_inventory(c: &mut dyn ContextTrait, _world: &mut World) {
     );
     draw_text(
         c,
-        Label::InventoryText,
         text_rect.cut_top(150.),
         &[("Here is where I'd put my Inventory Menu.\nIf I had one >:(", TextProperty::new())],
         Z_UI_TEXT,
@@ -151,7 +131,7 @@ fn ui_message_log(c: &mut dyn ContextTrait, world: &mut World) {
     let start = (mlog.messages.len().saturating_sub(6)).max(0);
     let text = mlog.messages[start..].join("\n");
 
-    draw_text(c, Label::MessageLogText, text_rect, &[(&text, TextProperty::new())], Z_UI_TEXT);
+    draw_text(c, text_rect, &[(&text, TextProperty::new())], Z_UI_TEXT);
 }
 
 pub fn log_message(world: &World, msg: String, inhibitor: Entity) {

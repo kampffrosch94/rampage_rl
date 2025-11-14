@@ -1,4 +1,4 @@
-use crate::FPos;
+use crate::{FPos, FVec};
 
 /// x and y are in the top left
 #[derive(Debug, Clone, Copy)]
@@ -18,8 +18,17 @@ impl Rect {
         Rect { x: 0.0, y: 0.0, w, h }
     }
 
+    pub fn new_dim(FVec { x: w, y: h }: FVec) -> Self {
+        Rect { x: 0.0, y: 0.0, w, h }
+    }
+
     pub fn new_center_wh(FPos { x, y }: FPos, w: f32, h: f32) -> Self {
         Rect { x: x - w / 2.0, y: y - h / 2.0, w, h }
+    }
+
+    pub fn translate(&self, FVec { x: dx, y: dy }: FVec) -> Self {
+        let Rect { x, y, w, h } = self;
+        Rect { x: x + dx, y: y + dy, w: *w, h: *h }
     }
 
     pub fn take_left(&self, amount: f32) -> Self {
@@ -137,5 +146,13 @@ impl Rect {
 
     pub fn move_by_pos(&self, pos: FPos) -> Rect {
         self.move_by(pos.x, pos.y)
+    }
+
+    pub fn origin(&self) -> FPos {
+        FPos { x: self.x, y: self.y }
+    }
+
+    pub fn dimensions(&self) -> FVec {
+        FVec { x: self.w, y: self.h }
     }
 }

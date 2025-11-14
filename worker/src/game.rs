@@ -145,15 +145,14 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
         let rect = Rect::new(1200., 500., 600., 500.);
 
         let label = c.set_text(
-            rect.w,
-            rect.h,
+            rect.dimensions(),
             &[(
                 &text,
                 TextProperty::new()
                     .metrics_float(40. + 20. * time.sin(), 40. + 20. * time.sin()),
             )],
         );
-        c.draw_text(label.handle, rect.x, rect.y, 5001);
+        c.draw_text(label.handle, rect.origin(), 5001);
         c.draw_rect(label.rect.move_by(rect.x, rect.y), Color::VIOLET, 5000);
     }
 

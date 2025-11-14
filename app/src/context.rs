@@ -214,11 +214,11 @@ impl ContextTrait for Context {
         self.camera.move_camera_relativ(offset);
     }
 
-    fn set_text(&mut self, w: f32, h: f32, text: &[(&str, TextProperty)]) -> Label {
+    fn set_text(&mut self, FVec { x: w, y: h }: FVec, text: &[(&str, TextProperty)]) -> Label {
         self.inner.texter.set_text(w, h, text)
     }
 
-    fn draw_text(&mut self, handle: u128, x: f32, y: f32, z_level: i32) {
+    fn draw_text(&mut self, handle: u128, FPos { x, y }: FPos, z_level: i32) {
         let command = move |inner: &mut ContextInner| {
             if inner.texter.draw_text(handle, x, y).is_none() {
                 let rect = macroquad::prelude::Rect::new(x, y, 300., 300.);

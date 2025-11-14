@@ -157,17 +157,17 @@ impl TextObject {
             text.iter().map(|(s, a)| (*s, to_attr(a))),
             &Attrs::new(),
             Shaping::Advanced,
-            None
+            None,
         );
         self.buffer.set_redraw(true);
 
-        let mut height = 0.;
         let mut width = 0.0;
-
+        let mut height = 0.;
         for run in self.buffer.layout_runs() {
             width = run.line_w.max(width);
             height += run.line_height;
         }
+
         self.height = height;
         self.width = width;
     }
