@@ -214,7 +214,7 @@ impl ContextTrait for Context {
         self.camera.move_camera_relativ(offset);
     }
 
-    fn set_text(&mut self, FVec { x: w, y: h }: FVec, text: &[(&str, TextProperty)]) -> Label {
+    fn text(&mut self, FVec { x: w, y: h }: FVec, text: &[(&str, TextProperty)]) -> Label {
         self.inner.texter.set_text(w, h, text)
     }
 

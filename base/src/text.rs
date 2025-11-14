@@ -1,6 +1,6 @@
 use std::hash::{Hash, Hasher};
 
-use crate::{Rect, util::F32Helper};
+use crate::{ContextTrait, FPos, FVec, Rect, util::F32Helper};
 
 #[derive(Debug, PartialEq, Clone, Copy, Hash)]
 pub enum TextFamily {
@@ -55,18 +55,25 @@ impl TextProperty {
         }
     }
 
+    pub fn new_size(font_size: f32) -> Self {
+        TextProperty {
+            color_opt: None,
+            family: TextFamily::NotoSans,
+            metrics: TextMetrics::DEFAULT,
+        }
+        .size(font_size)
+    }
+
     pub fn family(mut self, family: TextFamily) -> Self {
         self.family = family;
         self
     }
 
-    pub fn metrics(mut self, font_size: u32, line_height: u32) -> Self {
-        self.metrics.font_size = font_size as _;
-        self.metrics.line_height = line_height as _;
-        self
+    pub fn size(self, font_size: f32) -> Self {
+        self.metrics(font_size, font_size * 1.2)
     }
 
-    pub fn metrics_float(mut self, font_size: f32, line_height: f32) -> Self {
+    pub fn metrics(mut self, font_size: f32, line_height: f32) -> Self {
         self.metrics.font_size = font_size;
         self.metrics.line_height = line_height;
         self
@@ -82,4 +89,33 @@ impl TextProperty {
 pub struct Label {
     pub handle: u128,
     pub rect: Rect,
+}
+
+impl Label {
+    pub fn draw(&self, c: &mut dyn ContextTrait, pos: FPos, z_level: i32) {
+        c.draw_text(self.handle, pos, z_level);
+    }
+}
+
+pub trait Labelize {
+    fn labelize(&self, c: &mut dyn ContextTrait, dimensions: FVec) -> Label {
+        self.labelize_prop(c, dimensions, TextProperty::new())
+    }
+    fn labelize_prop(
+        &self,
+        c: &mut dyn ContextTrait,
+        dimensions: FVec,
+        prop: TextProperty,
+    ) -> Label;
+}
+
+impl<'a> Labelize for &'a str {
+    fn labelize_prop(
+        &self,
+        c: &mut dyn ContextTrait,
+        dimensions: FVec,
+        prop: TextProperty,
+    ) -> Label {
+        c.text(dimensions, &[(self, prop)])
+    }
 }

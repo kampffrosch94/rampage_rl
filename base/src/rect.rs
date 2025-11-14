@@ -1,4 +1,4 @@
-use crate::{FPos, FVec};
+use crate::{Color, ContextTrait, FPos, FVec};
 
 /// x and y are in the top left
 #[derive(Debug, Clone, Copy)]
@@ -20,6 +20,12 @@ impl Rect {
 
     pub fn new_dim(FVec { x: w, y: h }: FVec) -> Self {
         Rect { x: 0.0, y: 0.0, w, h }
+    }
+
+    pub fn with_dim(mut self, FVec { x: w, y: h }: FVec) -> Self {
+        self.w = w;
+        self.h = h;
+        self
     }
 
     pub fn new_center_wh(FPos { x, y }: FPos, w: f32, h: f32) -> Self {
@@ -152,7 +158,22 @@ impl Rect {
         FPos { x: self.x, y: self.y }
     }
 
-    pub fn dimensions(&self) -> FVec {
+    /// dimensions: width & height
+    pub fn dim(&self) -> FVec {
         FVec { x: self.w, y: self.h }
+    }
+
+    pub fn draw(self, c: &mut dyn ContextTrait, color: Color, z_level: i32) {
+        c.draw_rect(self, color, z_level);
+    }
+
+    pub fn draw_lines(
+        self,
+        c: &mut dyn ContextTrait,
+        thickness: f32,
+        color: Color,
+        z_level: i32,
+    ) {
+        c.draw_rect_lines(self, thickness, color, z_level);
     }
 }

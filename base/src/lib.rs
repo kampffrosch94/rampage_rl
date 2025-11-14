@@ -62,7 +62,7 @@ pub trait ContextTrait {
     /// moves the camera center over time
     fn camera_move_rel(&mut self, offset: FVec);
 
-    fn set_text(&mut self, dimensions: FVec, text: &[(&str, TextProperty)]) -> Label;
+    fn text(&mut self, dimensions: FVec, text: &[(&str, TextProperty)]) -> Label;
 
     fn draw_text(&mut self, handle: u128, origin: FPos, z_level: i32);
 

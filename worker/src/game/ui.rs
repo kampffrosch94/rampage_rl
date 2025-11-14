@@ -46,7 +46,7 @@ fn side_menu(c: &mut dyn ContextTrait, world: &mut World) {
             TextProperty::new()
                 .family(TextFamily::BloodCyrillic)
                 .color(Color::RED)
-                .metrics(50, 40),
+                .metrics(50., 40.),
         )],
         Z_UI_TEXT,
     );
@@ -73,7 +73,7 @@ pub fn draw_text(
     text: &[(&str, TextProperty)],
     z_level: i32,
 ) {
-    let label = c.set_text(rect.dimensions(), text);
+    let label = c.text(rect.dim(), text);
     c.draw_text(label.handle, rect.origin(), z_level);
 }
 
@@ -91,7 +91,7 @@ pub fn ui_inventory(c: &mut dyn ContextTrait, _world: &mut World) {
             TextProperty::new()
                 .family(TextFamily::BloodCyrillic)
                 .color(Color::RED)
-                .metrics(50, 40),
+                .metrics(50., 40.),
         )],
         Z_UI_TEXT,
     );

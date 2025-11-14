@@ -3,6 +3,7 @@ use std::collections::HashSet;
 use crate::animation::{AnimationCleanup, AnimationTarget};
 use base::TextProperty;
 use base::pos::IVec;
+use base::text::Labelize;
 #[allow(unused)]
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
 use creature::CreatureSprite;
@@ -136,24 +137,45 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     c.draw_texture("monsters", -1100., -950., 5);
     // c.draw_circle(Circle { pos: FPos::new(50., 60.), radius: 30. }, Color::WHITE, 15);
 
+    // {
+    //     let time = world.singleton::<GameTime>().0;
+    //     let text = format!(
+    //         "I can't dance. I can't talk. The only thing about me is the way that I walk."
+    //     );
+
+    //     let rect = Rect::new(1200., 500., 600., 500.);
+
+    //     let label = c.set_text(
+    //         rect.dimensions(),
+    //         &[(
+    //             &text,
+    //             TextProperty::new()
+    //                 .metrics_float(40. + 20. * time.sin(), 40. + 20. * time.sin()),
+    //         )],
+    //     );
+    //     c.draw_text(label.handle, rect.origin(), 5001);
+    //     c.draw_rect(label.rect.move_by(rect.x, rect.y), Color::VIOLET, 5000);
+    // }
+
     {
-        let time = world.singleton::<GameTime>().0;
-        let text = format!(
-            "I can't dance. I can't talk. The only thing about me is the way that I walk."
+        let mut rect = Rect::new(1200., 500., 600., 500.);
+        let label = "Text.\nText.\nText.\nText.\nText.".labelize_prop(
+            c,
+            rect.dim(),
+            TextProperty::new_size(40.),
         );
+        label.draw(c, rect.origin(), 5001);
+        rect.with_dim(label.rect.dim()).draw(c, Color::VIOLET, 5000);
 
-        let rect = Rect::new(1200., 500., 600., 500.);
+        rect.cut_left(150.);
 
-        let label = c.set_text(
-            rect.dimensions(),
-            &[(
-                &text,
-                TextProperty::new()
-                    .metrics_float(40. + 20. * time.sin(), 40. + 20. * time.sin()),
-            )],
-        );
-        c.draw_text(label.handle, rect.origin(), 5001);
-        c.draw_rect(label.rect.move_by(rect.x, rect.y), Color::VIOLET, 5000);
+        for _ in 0..5 {
+            let label = "Text".labelize_prop(c, rect.dim(), TextProperty::new_size(40.));
+            label.draw(c, rect.origin(), 5001);
+            rect.with_dim(label.rect.dim()).draw(c, Color::VIOLET, 5000);
+
+            rect.cut_top(label.rect.h);
+        }
     }
 
     handle_ui(c, world);
