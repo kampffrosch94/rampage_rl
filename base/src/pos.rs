@@ -32,6 +32,12 @@ pub struct FVec {
     pub y: f32,
 }
 
+impl FVec {
+    pub fn new(x: f32, y: f32) -> Self {
+        Self { x, y }
+    }
+}
+
 impl Pos {
     pub fn new(x: i32, y: i32) -> Self {
         Self { x, y }

@@ -63,8 +63,9 @@ pub trait ContextTrait {
 
     fn camera_set_shake(&mut self, offset: FVec);
 
-    /// moves the camera center over time
     fn camera_move_rel(&mut self, offset: FVec);
+
+    fn camera_world_to_screen(&mut self, pos: FPos) -> FPos;
 
     fn text(&mut self, dimensions: FVec, text: &[(&str, TextProperty)]) -> Label;
 

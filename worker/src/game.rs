@@ -2,8 +2,10 @@ use std::collections::HashSet;
 
 use crate::animation::{AnimationCleanup, AnimationTarget};
 use base::pos::IVec;
+use base::text::Labelize;
 #[allow(unused)]
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
+use base::{FVec, TextProperty};
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};
@@ -346,16 +348,25 @@ fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
         highlight_tile(c, cursor_pos);
     }
 
-
     // put avy label on entities in fov
     // avy jump to marked entities if the corresponding key is pressed
     let mut choice = 0;
     let pressed = c.avy_is_key_pressed();
-    if let Some((fov,)) = query!(world, Fov, _ Player).next()
-    {
-        for (actor, draw_pos) in query!(world, Actor, DrawPos) { 
+    if let Some((fov,)) = query!(world, Fov, _ Player).next() {
+        for (actor, draw_pos) in query!(world, Actor, DrawPos) {
             if fov.0.contains(&actor.pos) {
                 let text = c.avy_label(choice);
+                // TODO define z level
+                let label = text.labelize_prop(
+                    c,
+                    FVec::new(50., 50.),
+                    TextProperty::new().color(Color::YELLOW),
+                );
+                let mut dp_world = draw_pos.0 + FVec::new(0.1, 0.7) * TILE_SIZE;
+                // TODO use correct math
+                dp_world.y = dp_world.y.min(dp_world.y + TILE_SIZE - label.rect.h);
+                let draw_pos = c.camera_world_to_screen(dp_world);
+                label.draw(c, draw_pos, 1050);
                 // TODO: render label at entity draw pos
                 if Some(choice) == pressed {
                     state.cursor_pos = Some(actor.pos);
@@ -364,7 +375,6 @@ fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
             }
         }
     }
-
 }
 
 fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
