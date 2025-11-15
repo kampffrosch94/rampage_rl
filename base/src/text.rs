@@ -92,8 +92,10 @@ pub struct Label {
 }
 
 impl Label {
-    pub fn draw(&self, c: &mut dyn ContextTrait, pos: FPos, z_level: i32) {
+    pub fn draw(mut self, c: &mut dyn ContextTrait, pos: FPos, z_level: i32) -> Self {
         c.draw_text(self.handle, pos, z_level);
+        self.rect = self.rect.move_by_pos(pos);
+        self
     }
 }
 
@@ -101,6 +103,11 @@ pub trait Labelize {
     fn labelize(&self, c: &mut dyn ContextTrait, dimensions: FVec) -> Label {
         self.labelize_prop(c, dimensions, TextProperty::new())
     }
+
+    fn labelize_size(&self, c: &mut dyn ContextTrait, dimensions: FVec, size: f32) -> Label {
+        self.labelize_prop(c, dimensions, TextProperty::new_size(size))
+    }
+
     fn labelize_prop(
         &self,
         c: &mut dyn ContextTrait,

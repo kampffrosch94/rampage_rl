@@ -163,8 +163,9 @@ impl Rect {
         FVec { x: self.w, y: self.h }
     }
 
-    pub fn draw(self, c: &mut dyn ContextTrait, color: Color, z_level: i32) {
+    pub fn draw(self, c: &mut dyn ContextTrait, color: Color, z_level: i32) -> Self {
         c.draw_rect(self, color, z_level);
+        self
     }
 
     pub fn draw_lines(
