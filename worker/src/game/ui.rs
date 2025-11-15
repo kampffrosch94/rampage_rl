@@ -1,10 +1,15 @@
 use crate::game::Actor;
 use crate::game::Player;
+use crate::game::types::UI;
+use crate::game::types::UIState;
+use base::text::Labelize;
 use base::{Color, ContextTrait, Rect, TextProperty, text::TextFamily};
 use froql::entity_store::Entity;
 use froql::{query, world::World};
 use quicksilver::Quicksilver;
 
+use super::InspectUIState;
+use super::ensure_singleton;
 use super::{Z_UI_BG, Z_UI_TEXT};
 
 #[derive(Default, Debug, Quicksilver)]
@@ -33,14 +38,14 @@ pub fn handle_ui(c: &mut dyn ContextTrait, world: &mut World) {
 }
 
 fn side_menu(c: &mut dyn ContextTrait, world: &mut World) {
-    let ui_rect = c.screen_rect().take_right(300.);
-    c.draw_rect(ui_rect, Color::BLACK, Z_UI_BG);
-    c.draw_rect_lines(ui_rect, 5.0, Color::GRAY, Z_UI_BG);
-    let mut text_rect = ui_rect.skip_all(15.).skip_top(5.);
+    let side_panel_rect = c.screen_rect().take_right(300.);
+    c.draw_rect(side_panel_rect, Color::BLACK, Z_UI_BG);
+    c.draw_rect_lines(side_panel_rect, 5.0, Color::GRAY, Z_UI_BG);
+    let mut ui_rect = side_panel_rect.skip_all(15.).skip_top(5.);
 
     draw_text(
         c,
-        text_rect.cut_top(60.),
+        ui_rect.cut_top(60.),
         &[(
             "STATS:",
             TextProperty::new()
@@ -50,7 +55,6 @@ fn side_menu(c: &mut dyn ContextTrait, world: &mut World) {
         )],
         Z_UI_TEXT,
     );
-    text_rect.cut_left(10.);
 
     for (player, actor) in query!(world, Player, Actor) {
         let current = actor.hp.current;
@@ -62,7 +66,36 @@ Pulse: {pulse}"
         );
         // TODO this overrides the text in case of multiple players,
         // because there is only a single label ID
-        draw_text(c, text_rect.cut_top(100.), &[(&text, TextProperty::new())], Z_UI_TEXT);
+        draw_text(
+            c,
+            ui_rect.cut_top(100.).skip_left(10.),
+            &[(&text, TextProperty::new())],
+            Z_UI_TEXT,
+        );
+    }
+
+    let state: UIState = world.singleton::<UI>().state;
+    match state {
+        UIState::Normal => {}
+        UIState::Inventory => {}
+        UIState::Inspect => side_menu_inspect(c, world, &mut ui_rect),
+    };
+}
+
+fn side_menu_inspect(c: &mut dyn ContextTrait, world: &mut World, ui_rect: &mut Rect) {
+    ensure_singleton::<InspectUIState>(world);
+    let state = world.singleton::<InspectUIState>();
+    if let Some(cursor) = state.cursor_pos {
+        // handle actors at cursor position
+        for (actor, player) in query!(world, Actor, Player?).filter(|(a, _)| a.pos == cursor) {
+            if player.is_some() {
+                let label = "This is you.".labelize(c, ui_rect.dim());
+                label.draw(c, ui_rect.cut_top(label.rect.h).origin(), Z_UI_TEXT);
+            } else {
+                let label = "This is NOT you.".labelize(c, ui_rect.dim());
+                label.draw(c, ui_rect.cut_top(label.rect.h).origin(), Z_UI_TEXT);
+            }
+        }
     }
 }
 
