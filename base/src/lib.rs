@@ -1,4 +1,5 @@
 use std::ffi::c_void;
+use std::fmt::Debug;
 use std::hash::Hash;
 
 pub mod circle;
@@ -79,8 +80,13 @@ pub trait ContextTrait {
     /// Screen rect, but translated to world coordinates
     fn screen_rect_world(&self) -> Rect;
 
-    //fn inspect(&mut self, _val: ValueReflection) {}
     fn inspect(&mut self, _val: &mut ValueReflection) {}
+
+    fn inspect_str(&mut self, _s: &str) {}
+
+    fn inspect_dbg(&mut self, val: &dyn Debug) {
+        self.inspect_str(&format!("{val:#?}"));
+    }
 }
 
 /// Wrapper for state that is persisted between reloads

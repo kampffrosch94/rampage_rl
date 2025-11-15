@@ -24,6 +24,9 @@ pub struct Context {
     pub egui_ctx: Option<&'static mut egui::Ui>,
     #[cfg(feature = "hotreload")]
     pub egui_drawn: bool,
+    #[cfg(feature = "hotreload")]
+    /// used for Window IDs and the like
+    pub egui_id: u32,
 }
 
 pub struct ContextInner {
@@ -245,6 +248,18 @@ impl ContextTrait for Context {
         }
     }
 
+    #[cfg(feature = "hotreload")]
+    fn inspect_str(&mut self, s: &str) {
+        self.egui_drawn = true;
+        if let Some(ref mut ui) = self.egui_ctx {
+            let id = egui::Id::new(self.egui_id);
+            self.egui_id += 1;
+            egui::Window::new("Adhoc Debug").id(id).show(ui.ctx(), |ui| {
+                ui.label(s);
+            });
+        }
+    }
+
     fn mouse_wheel(&self) -> f32 {
         let (_x, y) = mouse_wheel();
         y
@@ -315,6 +330,8 @@ impl Context {
             egui_ctx: None,
             #[cfg(feature = "hotreload")]
             egui_drawn: false,
+            #[cfg(feature = "hotreload")]
+            egui_id: 0,
         }
     }
 
@@ -338,7 +355,12 @@ impl Context {
             }
             (draw.command)(&mut self.inner);
         }
+
         self.inner.texter.collect_garbage();
+        #[cfg(feature = "hotreload")]
+        {
+            self.egui_id = 0;
+        }
     }
 }
 
