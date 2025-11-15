@@ -36,8 +36,9 @@ pub const Z_TILES: i32 = 0;
 pub const Z_HP_BAR: i32 = 9;
 pub const Z_SPRITE: i32 = 10;
 pub const Z_DEBUG: i32 = 999;
-pub const Z_UI_BG: i32 = 1000;
-pub const Z_UI_TEXT: i32 = 1100;
+pub const Z_AVY_LABEL: i32 = 1000;
+pub const Z_UI_BG: i32 = 2000;
+pub const Z_UI_TEXT: i32 = 2100;
 
 #[derive(Quicksilver)]
 pub struct DebugOptions {
@@ -376,8 +377,7 @@ fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
             let mut draw_pos = draw_pos.rect(TILE_SIZE).bl().to_screen(c);
             draw_pos.x += 3.0;
             draw_pos.y -= label.rect.h + 3.0;
-            // TODO define z level
-            label.draw(c, draw_pos, 1050);
+            label.draw(c, draw_pos, Z_AVY_LABEL);
         }
     }
 }
