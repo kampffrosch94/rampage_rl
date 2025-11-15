@@ -1,9 +1,9 @@
 use std::collections::HashSet;
 
 use crate::animation::{AnimationCleanup, AnimationTarget};
+use base::pos::IVec;
 #[allow(unused)]
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
-use base::pos::IVec;
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};
@@ -39,13 +39,14 @@ pub const Z_UI_TEXT: i32 = 1100;
 
 #[derive(Quicksilver)]
 pub struct DebugOptions {
+    show_debug: bool,
     slow_mode: bool,
     slowdown_factor: i32,
 }
 
 impl Default for DebugOptions {
     fn default() -> Self {
-        Self { slow_mode: false, slowdown_factor: 20 }
+        Self { slow_mode: false, slowdown_factor: 20, show_debug: true }
     }
 }
 
@@ -84,8 +85,6 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     ensure_singleton::<GameTime>(world);
     ensure_singleton::<DebugOptions>(world);
 
-    highlight_tile(c, Pos { x: 5, y: 3 });
-
     let state: UIState = world.singleton::<UI>().state;
 
     // systematic input
@@ -114,6 +113,10 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
                 let mut debug = world.singleton_mut::<DebugOptions>();
                 debug.slow_mode = !debug.slow_mode;
             }
+            if c.is_pressed(Input::DebugToggle) {
+                let mut debug = world.singleton_mut::<DebugOptions>();
+                debug.show_debug = !debug.show_debug;
+            }
 
             {
                 let debug = world.singleton::<DebugOptions>();
@@ -140,23 +143,24 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     animation::handle_animations(c, world);
     draw_systems(c, world);
 
-    highlight_tile(c, Pos::new(1, 1));
-
     let mut s = world.singleton_mut::<DebugOptions>();
-    c.inspect(&mut reflect(&mut *s));
+    if s.show_debug {
+        c.inspect(&mut reflect(&mut *s));
 
-    let mut s = world.singleton_mut::<UI>();
-    c.inspect(&mut reflect(&mut *s));
+        let mut s = world.singleton_mut::<UI>();
+        c.inspect(&mut reflect(&mut *s));
 
-    for (mut msg,) in query!(world, mut PendingMessage) {
-        c.inspect(&mut reflect(&mut *msg));
-    }
+        for (mut msg,) in query!(world, mut PendingMessage) {
+            c.inspect(&mut reflect(&mut *msg));
+        }
 
-    let mut actors = query!(world, &this, _ Actor).map(|(e,)| e.entity).collect::<Vec<_>>();
-    actors.sort_by_key(|e| e.id.0);
-    for e in actors {
-        let mut actor = world.get_component_mut::<Actor>(e);
-        c.inspect(&mut reflect(&mut *actor));
+        let mut actors =
+            query!(world, &this, _ Actor).map(|(e,)| e.entity).collect::<Vec<_>>();
+        actors.sort_by_key(|e| e.id.0);
+        for e in actors {
+            let mut actor = world.get_component_mut::<Actor>(e);
+            c.inspect(&mut reflect(&mut *actor));
+        }
     }
 }
 

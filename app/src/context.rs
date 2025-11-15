@@ -171,7 +171,7 @@ impl ContextTrait for Context {
             Input::MouseLeft => is_mouse_button_pressed(MouseButton::Left),
             Input::MouseMiddle => is_mouse_button_pressed(MouseButton::Middle),
             Input::MouseRight => is_mouse_button_pressed(MouseButton::Right),
-            Input::RestartGame => is_key_pressed(KeyCode::F1),
+            Input::RestartGame => is_key_pressed(KeyCode::F2),
             Input::Save => is_key_pressed(KeyCode::F5),
             Input::Load => is_key_pressed(KeyCode::F9),
             Input::MoveSW => is_key_pressed(KeyCode::Kp1),
@@ -192,6 +192,7 @@ impl ContextTrait for Context {
                 is_mouse_button_down(MouseButton::Middle)
                     || is_mouse_button_down(MouseButton::Right)
             }
+            Input::DebugToggle => is_key_pressed(KeyCode::F1),
         }
     }
 
@@ -259,7 +260,40 @@ impl ContextTrait for Context {
         let FPos { x: xe, y: ye } = self.camera.screen_to_world(FPos { x: x + w, y: y + h });
         base::Rect { x: x_new, y: y_new, w: xe - x_new, h: ye - y_new }
     }
+
+    fn avy_label(&self, choice: u32) -> &'static str {
+        if let Some((label, _key)) = AVY_KEYS.get(choice as usize) {
+            label
+        } else {
+            println!("Missing avy label for choice {choice}");
+            "todo:avy"
+        }
+    }
+
+    fn avy_is_key_pressed(&self) -> Option<usize> {
+        for (i, (_label, key)) in AVY_KEYS.iter().enumerate() {
+            if is_key_pressed(*key) {
+                return Some(i);
+            }
+        }
+        None
+    }
 }
+
+const AVY_KEYS: [(&str, KeyCode); 12] = [
+    ("a", KeyCode::A),
+    ("s", KeyCode::S),
+    ("d", KeyCode::D),
+    ("f", KeyCode::F),
+    ("q", KeyCode::Q),
+    ("w", KeyCode::W),
+    ("e", KeyCode::E),
+    ("r", KeyCode::R),
+    ("y", KeyCode::Y),
+    ("x", KeyCode::X),
+    ("c", KeyCode::C),
+    ("v", KeyCode::V),
+];
 
 impl Context {
     pub fn new() -> Self {
