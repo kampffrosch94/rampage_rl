@@ -362,6 +362,7 @@ fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
             }
         }
 
+        // TODO factor out into avy nav function
         positions.sort_by_key(|(pos, _dpos)| (player_pos.distance(*pos), pos.x, pos.y));
         for (choice, (pos, draw_pos)) in positions.drain(..).enumerate() {
             let choice = choice as u32;
