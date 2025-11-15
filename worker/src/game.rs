@@ -1,10 +1,9 @@
 use std::collections::HashSet;
 
 use crate::animation::{AnimationCleanup, AnimationTarget};
-use base::pos::IVec;
-use base::text::Labelize;
 #[allow(unused)]
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
+use base::pos::IVec;
 use creature::CreatureSprite;
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};

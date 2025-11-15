@@ -126,3 +126,14 @@ impl<'a> Labelize for &'a str {
         c.text(dimensions, &[(self, prop)])
     }
 }
+
+impl<'a> Labelize for String {
+    fn labelize_prop(
+        &self,
+        c: &mut dyn ContextTrait,
+        dimensions: FVec,
+        prop: TextProperty,
+    ) -> Label {
+        c.text(dimensions, &[(&self, prop)])
+    }
+}
