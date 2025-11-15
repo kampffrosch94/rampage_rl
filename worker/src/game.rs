@@ -350,29 +350,34 @@ fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
 
     // put avy label on entities in fov
     // avy jump to marked entities if the corresponding key is pressed
-    let mut choice = 0;
-    let pressed = c.avy_is_key_pressed();
-    if let Some((fov,)) = query!(world, Fov, _ Player).next() {
+    if let Some((fov, player_actor)) = query!(world, Fov, _ Player, Actor).next() {
+        let player_pos = player_actor.pos;
+        let mut positions = Vec::new();
+        let pressed = c.avy_is_key_pressed();
+
         for (actor, draw_pos) in query!(world, Actor, DrawPos) {
             if fov.0.contains(&actor.pos) {
-                let text = c.avy_label(choice);
-                // TODO define z level
-                let label = text.labelize_prop(
-                    c,
-                    FVec::new(50., 50.),
-                    TextProperty::new().color(Color::YELLOW),
-                );
-                let mut dp_world = draw_pos.0 + FVec::new(0.1, 0.7) * TILE_SIZE;
-                // TODO use correct math
-                dp_world.y = dp_world.y.min(dp_world.y + TILE_SIZE - label.rect.h);
-                let draw_pos = c.camera_world_to_screen(dp_world);
-                label.draw(c, draw_pos, 1050);
-                // TODO: render label at entity draw pos
-                if Some(choice) == pressed {
-                    state.cursor_pos = Some(actor.pos);
-                }
-                choice += 1;
+                positions.push((actor.pos, draw_pos.0));
             }
+        }
+
+        positions.sort_by_key(|(pos, _dpos)| (player_pos.distance(*pos), pos.x, pos.y));
+        for (choice, (pos, draw_pos)) in positions.drain(..).enumerate() {
+            let choice = choice as u32;
+            if Some(choice) == pressed {
+                state.cursor_pos = Some(pos);
+            }
+            let text = c.avy_label(choice);
+            let label = text.labelize_prop(
+                c,
+                FVec::new(50., 50.),
+                TextProperty::new().color(Color::YELLOW),
+            );
+            let mut draw_pos = draw_pos.rect(TILE_SIZE).bl().to_screen(c);
+            draw_pos.x += 3.0;
+            draw_pos.y -= label.rect.h + 3.0;
+            // TODO define z level
+            label.draw(c, draw_pos, 1050);
         }
     }
 }

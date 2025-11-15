@@ -22,6 +22,12 @@ impl Rect {
         Rect { x: 0.0, y: 0.0, w, h }
     }
 
+    pub fn new_spanned(top_left: FPos, bottom_right: FPos) -> Self {
+        let FPos { x, y } = top_left;
+        let FPos { x: rx, y: by } = bottom_right;
+        Rect { x, y, w: rx - x, h: by - y }
+    }
+
     pub fn with_dim(mut self, FVec { x: w, y: h }: FVec) -> Self {
         self.w = w;
         self.h = h;
@@ -155,7 +161,27 @@ impl Rect {
     }
 
     pub fn origin(&self) -> FPos {
+        self.tl()
+    }
+
+    /// Top Left
+    pub fn tl(&self) -> FPos {
         FPos { x: self.x, y: self.y }
+    }
+
+    /// Top Right
+    pub fn tr(&self) -> FPos {
+        FPos { x: self.x + self.w, y: self.y }
+    }
+
+    /// Bottom Left
+    pub fn bl(&self) -> FPos {
+        FPos { x: self.x, y: self.y + self.h }
+    }
+
+    /// Bottom right
+    pub fn br(&self) -> FPos {
+        FPos { x: self.x + self.w, y: self.y + self.h }
     }
 
     /// dimensions: width & height
@@ -176,5 +202,12 @@ impl Rect {
         z_level: i32,
     ) {
         c.draw_rect_lines(self, thickness, color, z_level);
+    }
+
+    /// the same rect, but with screen coordinates
+    pub fn to_screen(self, c: &mut dyn ContextTrait) -> Rect {
+        let tl = c.camera_world_to_screen(self.tl());
+        let br = c.camera_world_to_screen(self.br());
+        Rect::new_spanned(tl, br)
     }
 }

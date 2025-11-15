@@ -105,7 +105,7 @@ pub fn generate_map(seed: u64) -> TileMap {
     for (room_a,) in query!(world, Room) {
         let room_b = query!(world, Room)
             .map(|(r,)| r)
-            .max_by_key(|r| r.pos().manhattan_distance(room_a.pos()))
+            .max_by_key(|r| r.pos().distance_manhattan(room_a.pos()))
             .unwrap();
         tm.up_stairs = room_a.pos();
         tm.down_stairs = room_b.pos();

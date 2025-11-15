@@ -57,14 +57,14 @@ pub fn astar_orth_dig(tm: &TileMap, start: Pos, goal: Pos) -> Option<Vec<Pos>> {
             if new_cost < cost[next] {
                 cost[next] = new_cost;
                 came_from[next] = Some(current);
-                let heuristic_cost = new_cost + next.manhattan_distance(goal);
+                let heuristic_cost = new_cost + next.distance_manhattan(goal);
                 frontier.push(PosAndCost { cost: heuristic_cost, position: next });
             }
         }
     }
 
     let mut pos = came_from[goal]?; // return None if no path reaches goal
-    let mut r = Vec::with_capacity(start.manhattan_distance(goal) as usize);
+    let mut r = Vec::with_capacity(start.distance_manhattan(goal) as usize);
     r.push(goal);
 
     while let Some(next) = came_from[pos] {

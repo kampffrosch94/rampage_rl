@@ -2,7 +2,7 @@ use std::ops::{Add, AddAssign, Mul, Sub};
 
 use quicksilver::Quicksilver;
 
-use crate::grids::Grid;
+use crate::{ContextTrait, Rect, grids::Grid};
 
 #[repr(C)]
 #[derive(Debug, Default, Clone, Copy, PartialEq, Hash, Eq, PartialOrd, Ord, Quicksilver)]
@@ -69,8 +69,14 @@ impl Pos {
             .filter(move |pos| 0 <= pos.x && pos.x < w && 0 <= pos.y && pos.y < h)
     }
 
-    pub fn manhattan_distance(&self, other: Pos) -> i32 {
+    pub fn distance_manhattan(&self, other: Pos) -> i32 {
         (self.x - other.x).abs() + (self.y - other.y).abs()
+    }
+
+    pub fn distance(&self, other: Pos) -> i32 {
+        let dx = (self.x - other.x).abs();
+        let dy = (self.y - other.y).abs();
+        i32::min(dx, dy)
     }
 }
 
@@ -131,6 +137,15 @@ impl FPos {
 
     pub fn distance(self, rhs: Self) -> f32 {
         (self - rhs).length()
+    }
+
+    pub fn rect(self, size: f32) -> Rect {
+        Rect::new(self.x, self.y, size, size)
+    }
+
+    /// the same position but converted from world to screen coordinates
+    pub fn to_screen(self, c: &mut dyn ContextTrait) -> FPos {
+        c.camera_world_to_screen(self)
     }
 }
 
