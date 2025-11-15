@@ -362,8 +362,6 @@ fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
         }
 
         positions.sort_by_key(|(pos, _dpos)| (player_pos.distance(*pos), pos.x, pos.y));
-        // c.inspect_dbg(&player_pos);
-        c.inspect_dbg(&positions);
         for (choice, (pos, draw_pos)) in positions.drain(..).enumerate() {
             let choice = choice as u32;
             if Some(choice) == pressed {

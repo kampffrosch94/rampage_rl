@@ -76,7 +76,7 @@ impl Pos {
     pub fn distance(&self, other: Pos) -> i32 {
         let dx = (self.x - other.x).abs();
         let dy = (self.y - other.y).abs();
-        i32::min(dx, dy)
+        i32::max(dx, dy)
     }
 }
 
