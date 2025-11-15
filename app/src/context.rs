@@ -282,6 +282,10 @@ impl ContextTrait for Context {
     fn camera_world_to_screen(&mut self, pos: FPos) -> FPos {
         self.camera.world_to_screen(pos)
     }
+
+    fn camera_screen_to_world(&mut self, pos: FPos) -> FPos {
+        self.camera.screen_to_world(pos)
+    }
 }
 
 const AVY_KEYS: [(&str, KeyCode); 12] = [

@@ -67,6 +67,8 @@ pub trait ContextTrait {
 
     fn camera_world_to_screen(&mut self, pos: FPos) -> FPos;
 
+    fn camera_screen_to_world(&mut self, pos: FPos) -> FPos;
+
     fn text(&mut self, dimensions: FVec, text: &[(&str, TextProperty)]) -> Label;
 
     fn draw_text(&mut self, handle: u128, origin: FPos, z_level: i32);

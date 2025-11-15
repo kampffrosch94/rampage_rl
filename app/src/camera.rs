@@ -93,7 +93,6 @@ impl CameraWrapper {
         FPos { x, y }
     }
 
-    #[expect(unused)]
     pub fn world_to_screen(&self, FPos { x, y }: FPos) -> FPos {
         let Vec2 { x, y } = self.camera.world_to_screen(Vec2 { x, y });
         FPos { x, y }
