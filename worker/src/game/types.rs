@@ -104,6 +104,7 @@ pub struct UI {
     pub last_mouse_pos: Option<FPos>,
 }
 
+/// Set of Positions within the sight of an actor.
 #[derive(Debug, Quicksilver)]
 pub struct Fov(pub HashSet<Pos>);
 

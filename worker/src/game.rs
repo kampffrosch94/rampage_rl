@@ -325,6 +325,7 @@ fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
         return;
     }
 
+    // init state with cursor pointing at player character if necessary
     ensure_singleton::<InspectUIState>(world);
     let mut state = world.singleton_mut::<InspectUIState>();
     if state.cursor_pos.is_none()
@@ -333,15 +334,37 @@ fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
         state.cursor_pos = Some(p_actor.pos);
     }
 
+    // move cursor via normal character movement inputs
     if let Some(dir) = input_direction(c)
         && let Some(ref mut cursor) = state.cursor_pos
     {
         *cursor += dir;
     }
 
+    // highlight whatever the cursor is on
     if let Some(cursor_pos) = state.cursor_pos {
         highlight_tile(c, cursor_pos);
     }
+
+
+    // put avy label on entities in fov
+    // avy jump to marked entities if the corresponding key is pressed
+    let mut choice = 0;
+    let pressed = c.avy_is_key_pressed();
+    if let Some((fov,)) = query!(world, Fov, _ Player).next()
+    {
+        for (actor, draw_pos) in query!(world, Actor, DrawPos) { 
+            if fov.0.contains(&actor.pos) {
+                let text = c.avy_label(choice);
+                // TODO: render label at entity draw pos
+                if Some(choice) == pressed {
+                    state.cursor_pos = Some(actor.pos);
+                }
+                choice += 1;
+            }
+        }
+    }
+
 }
 
 fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {

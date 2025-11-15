@@ -270,10 +270,10 @@ impl ContextTrait for Context {
         }
     }
 
-    fn avy_is_key_pressed(&self) -> Option<usize> {
+    fn avy_is_key_pressed(&self) -> Option<u32> {
         for (i, (_label, key)) in AVY_KEYS.iter().enumerate() {
             if is_key_pressed(*key) {
-                return Some(i);
+                return Some(i as u32);
             }
         }
         None

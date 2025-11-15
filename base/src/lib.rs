@@ -51,7 +51,7 @@ pub trait ContextTrait {
 
     fn avy_label(&self, choice: u32) -> &'static str;
 
-    fn avy_is_key_pressed(&self) -> Option<usize>;
+    fn avy_is_key_pressed(&self) -> Option<u32>;
 
     fn mouse_screen(&self) -> FPos;
 
