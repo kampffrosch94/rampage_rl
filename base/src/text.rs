@@ -47,7 +47,7 @@ pub struct TextProperty {
 }
 
 impl TextProperty {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         TextProperty {
             color_opt: None,
             family: TextFamily::NotoSans,
@@ -55,7 +55,7 @@ impl TextProperty {
         }
     }
 
-    pub fn new_size(font_size: f32) -> Self {
+    pub const fn new_size(font_size: f32) -> Self {
         TextProperty {
             color_opt: None,
             family: TextFamily::NotoSans,
@@ -64,22 +64,22 @@ impl TextProperty {
         .size(font_size)
     }
 
-    pub fn family(mut self, family: TextFamily) -> Self {
+    pub const fn family(mut self, family: TextFamily) -> Self {
         self.family = family;
         self
     }
 
-    pub fn size(self, font_size: f32) -> Self {
+    pub const fn size(self, font_size: f32) -> Self {
         self.metrics(font_size, font_size * 1.2)
     }
 
-    pub fn metrics(mut self, font_size: f32, line_height: f32) -> Self {
+    pub const fn metrics(mut self, font_size: f32, line_height: f32) -> Self {
         self.metrics.font_size = font_size;
         self.metrics.line_height = line_height;
         self
     }
 
-    pub fn color(mut self, color: crate::Color) -> Self {
+    pub const fn color(mut self, color: crate::Color) -> Self {
         self.color_opt = Some(color);
         self
     }
