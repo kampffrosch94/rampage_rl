@@ -78,6 +78,22 @@ impl Pos {
         let dy = (self.y - other.y).abs();
         i32::max(dx, dy)
     }
+
+    pub fn to_fpos(&self, factor: f32) -> FPos {
+        FPos { x: self.x as f32 * factor, y: self.y as f32 * factor }
+    }
+
+    /// Uses the algorithm from: https://www.redblobgames.com/grids/line-drawing/
+    pub fn line(&self, target: Pos) -> Vec<Pos> {
+        let mut result = Vec::new();
+        let n = self.distance(target);
+        for step in 0..=n {
+            let t = if n == 0 { 0. } else { step as f32 / n as f32 };
+            let FPos { x: fx, y: fy } = self.to_fpos(1.0).lerp(target.to_fpos(1.0), t);
+            result.push(Pos { x: fx.round() as i32, y: fy.round() as i32 });
+        }
+        result
+    }
 }
 
 impl From<(i32, i32)> for Pos {
