@@ -1,4 +1,3 @@
-use crate::game::Z_TILES;
 use base::{ContextTrait, FPos, Pos, Rect};
 use quicksilver::Quicksilver;
 
@@ -17,10 +16,11 @@ pub enum DrawTile {
     GrayFloor,
     DownStairs,
     UpStairs,
+    Rock,
 }
 
 impl DrawTile {
-    pub fn draw(&self, c: &mut dyn ContextTrait, x: f32, y: f32) {
+    pub fn draw(&self, c: &mut dyn ContextTrait, FPos { x, y }: FPos, z: i32) {
         let src = match self {
             DrawTile::Empty => (0, 2),
             DrawTile::SkullWallTop => (0, 5),
@@ -28,11 +28,12 @@ impl DrawTile {
             DrawTile::GrayFloor => (0, 6),
             DrawTile::DownStairs => (7, 16),
             DrawTile::UpStairs => (8, 16),
+            DrawTile::Rock => (1, 18),
         };
 
         let src = extruded_source(src);
         let target = Rect::new(x, y, TILE_DIM * TILE_SCALE, TILE_DIM * TILE_SCALE);
-        c.draw_texture_part_scaled("tiles", src, target, Z_TILES);
+        c.draw_texture_part_scaled("tiles", src, target, z);
     }
 }
 
@@ -78,7 +79,7 @@ pub enum Decor {
 }
 
 impl Decor {
-    pub fn draw(&self, c: &mut dyn ContextTrait, x: f32, y: f32) {
+    pub fn draw(&self, c: &mut dyn ContextTrait, FPos { x, y }: FPos, z: i32) {
         let src = match self {
             Decor::BloodRed1 => (0, 22),
             Decor::BloodRed2 => (1, 22),
@@ -86,7 +87,7 @@ impl Decor {
 
         let src = extruded_source(src);
         let target = Rect::new(x, y, TILE_DIM * TILE_SCALE, TILE_DIM * TILE_SCALE);
-        c.draw_texture_part_scaled("tiles", src, target, Z_TILES);
+        c.draw_texture_part_scaled("tiles", src, target, z);
     }
 }
 

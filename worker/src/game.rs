@@ -365,6 +365,9 @@ fn update_systems_ability(c: &mut dyn ContextTrait, world: &mut World) {
         let color = Color::rgba(1.0, 0.2, 0.3, 0.4);
         c.draw_rect_lines(rect, 3.0, Color::YELLOW, Z_CURSOR);
 
+        let p = cursor_pos.to_fpos(TILE_SIZE);
+        DrawTile::Rock.draw(c, p, Z_CURSOR);
+
         if let Some((p_actor,)) = query!(world, _ Player, Actor).next() {
             let line = p_actor.pos.bresenham(cursor_pos);
             let mut blocked = false;
@@ -379,7 +382,7 @@ fn update_systems_ability(c: &mut dyn ContextTrait, world: &mut World) {
         }
     }
 
-    // TODO here
+    // TODO here: use ability
 }
 
 fn update_systems_inventory(c: &mut dyn ContextTrait, world: &mut World) {
@@ -510,8 +513,6 @@ pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
     // draw tile map
     {
         let tm = world.singleton::<TileMap>();
-        let x_base = 0.;
-        let y_base = 0.;
         let env = Environment::Catacomb;
 
         for (pos, lt) in tm.tiles.iter_coords() {
@@ -523,25 +524,19 @@ pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
             pos_below.y += 1;
             let below = (&tm).tiles.get_opt(pos_below).unwrap_or(&LogicTile::Empty);
             let draw_tile = generate_draw_tile(*lt, env, *below);
-            let x = x_base + pos.x as f32 * TILE_SIZE;
-            let y = y_base + pos.y as f32 * TILE_SIZE;
-            draw_tile.draw(c, x, y);
+            draw_tile.draw(c, pos.to_fpos(TILE_SIZE), Z_TILES);
         }
 
         // up and down stairs
         {
             let pos = tm.up_stairs;
-            let x = x_base + pos.x as f32 * TILE_SIZE;
-            let y = y_base + pos.y as f32 * TILE_SIZE;
             if fov.0.contains(&pos) {
-                DrawTile::UpStairs.draw(c, x, y);
+                DrawTile::UpStairs.draw(c, pos.to_fpos(TILE_SIZE), Z_TILES);
             }
 
             let pos = tm.down_stairs;
-            let x = x_base + pos.x as f32 * TILE_SIZE;
-            let y = y_base + pos.y as f32 * TILE_SIZE;
             if fov.0.contains(&pos) {
-                DrawTile::DownStairs.draw(c, x, y);
+                DrawTile::DownStairs.draw(c, pos.to_fpos(TILE_SIZE), Z_TILES);
             }
         }
 
@@ -550,9 +545,7 @@ pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
                 continue;
             }
 
-            let x = x_base + pos.x as f32 * TILE_SIZE;
-            let y = y_base + pos.y as f32 * TILE_SIZE;
-            decor.draw(c, x, y);
+            decor.draw(c, pos.to_fpos(TILE_SIZE), Z_TILES);
         }
     };
 
