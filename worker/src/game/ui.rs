@@ -83,7 +83,8 @@ fn side_menu_inspect(c: &mut dyn ContextTrait, world: &mut World, ui_rect: &mut 
         );
         // handle actors at cursor position
         let mut something_notable = false;
-        for (actor, player) in query!(world, Actor, Player?).filter(|(a, _)| a.pos == cursor) {
+        for (_actor, player) in query!(world, Actor, Player?).filter(|(a, _)| a.pos == cursor)
+        {
             something_notable = true;
             if player.is_some() {
                 let label = "This is you.".labelize(c, ui_rect.dim());
