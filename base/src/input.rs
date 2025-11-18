@@ -23,4 +23,9 @@ pub enum Input {
     DebugToggle,
     MouseMoveCamera,
     Inspect,
+    Ability1,
+    Ability2,
+    Ability3,
+    Ability4,
+    Ability5,
 }

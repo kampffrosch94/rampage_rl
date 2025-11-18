@@ -196,6 +196,11 @@ impl ContextTrait for Context {
                     || is_mouse_button_down(MouseButton::Right)
             }
             Input::DebugToggle => is_key_pressed(KeyCode::F1),
+            Input::Ability1 => is_key_pressed(KeyCode::Key1),
+            Input::Ability2 => is_key_pressed(KeyCode::Key2),
+            Input::Ability3 => is_key_pressed(KeyCode::Key3),
+            Input::Ability4 => is_key_pressed(KeyCode::Key4),
+            Input::Ability5 => is_key_pressed(KeyCode::Key5),
         }
     }
 

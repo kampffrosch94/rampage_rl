@@ -64,8 +64,7 @@ fn side_menu(c: &mut dyn ContextTrait, world: &mut World) {
 
     let state: UIState = world.singleton::<UI>().state;
     match state {
-        UIState::Normal => {}
-        UIState::Inventory => {}
+        UIState::Normal | UIState::Ability | UIState::Inventory => {}
         UIState::Inspect => side_menu_inspect(c, world, &mut ui_rect),
     };
 }

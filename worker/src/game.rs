@@ -35,6 +35,8 @@ use crate::{
 pub const Z_TILES: i32 = 0;
 pub const Z_HP_BAR: i32 = 9;
 pub const Z_SPRITE: i32 = 10;
+pub const Z_CURSOR: i32 = 100;
+#[allow(unused)]
 pub const Z_DEBUG: i32 = 999;
 pub const Z_AVY_LABEL: i32 = 1000;
 pub const Z_MESSAGE_BG: i32 = 2000;
@@ -57,18 +59,21 @@ impl Default for DebugOptions {
     }
 }
 
-pub fn highlight_tile(c: &mut dyn ContextTrait, pos: Pos) {
-    let rect =
-        Rect::new(pos.x as f32 * TILE_SIZE, pos.y as f32 * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-    let color = Color::rgba(1., 1., 0., 0.2);
-    c.draw_rect(rect, color, Z_DEBUG);
-    c.draw_rect_lines(rect, 3.0, Color::YELLOW, Z_DEBUG);
-}
-
 pub fn ensure_singleton<T: Default + 'static>(world: &mut World) {
     if !world.singleton_has::<T>() {
         world.singleton_add(T::default());
     }
+}
+
+pub fn ability_key_pressed(c: &mut dyn ContextTrait) -> Option<usize> {
+    let inputs =
+        [Input::Ability1, Input::Ability2, Input::Ability3, Input::Ability4, Input::Ability5];
+    for (nr, key) in inputs.into_iter().enumerate() {
+        if c.is_pressed(key) {
+            return Some(nr + 1);
+        }
+    }
+    None
 }
 
 pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
@@ -136,8 +141,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
                 world.singleton_mut::<GameTime>().0 += delta;
             }
         }
-        UIState::Inspect => {}
-        UIState::Inventory => {}
+        UIState::Inventory | UIState::Ability | UIState::Inspect => {}
     }
 
     c.draw_texture("tiles", -228., -950., 5);
@@ -230,12 +234,20 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
         }
     }
 
+    if let Some(nr) = ability_key_pressed(c) {
+        println!("Ability pressed: {nr}");
+        world.singleton_mut::<UI>().state = UIState::Ability;
+        return;
+    }
+
     if c.is_pressed(Input::Inventory) {
         world.singleton_mut::<UI>().state = UIState::Inventory;
+        return;
     }
 
     if c.is_pressed(Input::Inspect) {
         world.singleton_mut::<UI>().state = UIState::Inspect;
+        return;
     }
 
     if c.is_pressed(Input::Confirm) {
@@ -309,7 +321,65 @@ fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
         UIState::Normal => update_systems_normal(c, world),
         UIState::Inventory => update_systems_inventory(c, world),
         UIState::Inspect => update_systems_inspect(c, world),
+        UIState::Ability => update_systems_ability(c, world),
     };
+}
+
+#[derive(Default, Quicksilver)]
+pub struct AbilityUIState {
+    cursor_pos: Option<Pos>,
+}
+
+fn update_systems_ability(c: &mut dyn ContextTrait, world: &mut World) {
+    if c.is_pressed(Input::Cancel) {
+        world.singleton_mut::<UI>().state = UIState::Normal;
+        world.singleton_remove::<AbilityUIState>();
+        return;
+    }
+
+    ensure_singleton::<AbilityUIState>(world);
+    let mut state = world.singleton_mut::<AbilityUIState>();
+
+    if state.cursor_pos.is_none()
+        && let Some((p_actor,)) = query!(world, _ Player, Actor).next()
+    {
+        state.cursor_pos = Some(p_actor.pos);
+    }
+
+    // move cursor via normal character movement inputs
+    if let Some(dir) = input_direction(c)
+        && let Some(ref mut cursor) = state.cursor_pos
+    {
+        *cursor += dir;
+    }
+
+    // highlight whatever the cursor is on
+    let tm = world.singleton::<TileMap>();
+    if let Some(cursor_pos) = state.cursor_pos {
+        let rect = Rect::new(
+            cursor_pos.x as f32 * TILE_SIZE,
+            cursor_pos.y as f32 * TILE_SIZE,
+            TILE_SIZE,
+            TILE_SIZE,
+        );
+        let color = Color::rgba(1.0, 0.2, 0.3, 0.4);
+        c.draw_rect_lines(rect, 3.0, Color::YELLOW, Z_CURSOR);
+
+        if let Some((p_actor,)) = query!(world, _ Player, Actor).next() {
+            let line = p_actor.pos.bresenham(cursor_pos);
+            let mut blocked = false;
+            for pos in line.into_iter().skip(1) {
+                if !blocked {
+                    c.draw_rect(pos.to_fpos(TILE_SIZE).rect(TILE_SIZE), color, Z_CURSOR);
+                }
+                if tm.is_blocked(pos) {
+                    blocked = true;
+                }
+            }
+        }
+    }
+
+    // TODO here
 }
 
 fn update_systems_inventory(c: &mut dyn ContextTrait, world: &mut World) {
@@ -320,7 +390,7 @@ fn update_systems_inventory(c: &mut dyn ContextTrait, world: &mut World) {
     ui_inventory(c, world);
 }
 
-#[derive(Default)]
+#[derive(Default, Quicksilver)]
 pub struct InspectUIState {
     cursor_pos: Option<Pos>,
 }
@@ -350,7 +420,15 @@ fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
 
     // highlight whatever the cursor is on
     if let Some(cursor_pos) = state.cursor_pos {
-        highlight_tile(c, cursor_pos);
+        let rect = Rect::new(
+            cursor_pos.x as f32 * TILE_SIZE,
+            cursor_pos.y as f32 * TILE_SIZE,
+            TILE_SIZE,
+            TILE_SIZE,
+        );
+        let color = Color::rgba(1., 1., 0., 0.2);
+        c.draw_rect(rect, color, Z_CURSOR);
+        c.draw_rect_lines(rect, 3.0, Color::YELLOW, Z_CURSOR);
     }
 
     // put avy label on entities in fov

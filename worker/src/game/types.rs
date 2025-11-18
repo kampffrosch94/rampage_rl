@@ -20,6 +20,7 @@ use crate::animation::MovementAnimation;
 use crate::ecs_setup::EntityComponent;
 use crate::ecs_setup::OriginTarget;
 use crate::ecs_setup::SerializedState;
+use crate::game::AbilityUIState;
 use crate::game::DebugOptions;
 use crate::game::InspectUIState;
 use crate::game::ui::MessageInhibitor;
@@ -96,6 +97,7 @@ pub enum UIState {
     Normal,
     Inventory,
     Inspect,
+    Ability,
 }
 
 #[derive(Debug, Quicksilver, Default)]
@@ -134,8 +136,9 @@ ecs_types!(
         HPBarAnimation,
         MovementAnimation,
         CameraMoveAnimation,
-        DebugOptions,
-        InspectUIState
+        DebugOptions[persist],
+        InspectUIState[persist],
+        AbilityUIState[persist]
     ),
     Relations(
         AnimationTarget,

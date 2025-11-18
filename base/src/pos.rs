@@ -89,10 +89,62 @@ impl Pos {
         let n = self.distance(target);
         for step in 0..=n {
             let t = if n == 0 { 0. } else { step as f32 / n as f32 };
-            let FPos { x: fx, y: fy } = self.to_fpos(1.0).lerp(target.to_fpos(1.0), t);
+            let FPos { x: mut fx, y: mut fy } = self.to_fpos(1.0).lerp(target.to_fpos(1.0), t);
+            fx += f32::EPSILON;
+            fy += f32::EPSILON;
             result.push(Pos { x: fx.round() as i32, y: fy.round() as i32 });
         }
         result
+    }
+
+    /// From: https://www.roguebasin.com/index.php/Bresenham%27s_Line_Algorithm#Rust
+    pub fn bresenham(&self, b: Pos) -> Vec<Pos> {
+        let mut points = Vec::new();
+        let mut x1 = self.x;
+        let mut y1 = self.y;
+        let mut x2 = b.x;
+        let mut y2 = b.y;
+        let is_steep = (y2 - y1).abs() > (x2 - x1).abs();
+        if is_steep {
+            std::mem::swap(&mut x1, &mut y1);
+            std::mem::swap(&mut x2, &mut y2);
+        }
+        let mut reversed = false;
+        if x1 > x2 {
+            std::mem::swap(&mut x1, &mut x2);
+            std::mem::swap(&mut y1, &mut y2);
+            reversed = true;
+        }
+        let dx = x2 - x1;
+        let dy = (y2 - y1).abs();
+        let mut err = dx / 2;
+        let mut y = y1;
+        let ystep: i32;
+        if y1 < y2 {
+            ystep = 1;
+        } else {
+            ystep = -1;
+        }
+        for x in x1..(x2 + 1) {
+            if is_steep {
+                points.push(Pos { x: y, y: x });
+            } else {
+                points.push(Pos { x: x, y: y });
+            }
+            err -= dy;
+            if err < 0 {
+                y += ystep;
+                err += dx;
+            }
+        }
+
+        if reversed {
+            for i in 0..(points.len() / 2) {
+                let end = points.len() - 1;
+                points.swap(i, end - i);
+            }
+        }
+        points
     }
 }
 
