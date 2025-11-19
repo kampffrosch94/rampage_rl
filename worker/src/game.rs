@@ -341,9 +341,16 @@ fn update_systems_ability(c: &mut dyn ContextTrait, world: &mut World) {
     let mut state = world.singleton_mut::<AbilityUIState>();
 
     if state.cursor_pos.is_none()
-        && let Some((p_actor,)) = query!(world, _ Player, Actor).next()
+        && let Some((p_actor, fov)) = query!(world, _ Player, Actor, Fov).next()
     {
-        state.cursor_pos = Some(p_actor.pos);
+        let mut positions = Vec::new();
+        for (actor, _draw_pos) in query!(world, Actor, DrawPos, !Player) {
+            if fov.0.contains(&actor.pos) {
+                positions.push(actor.pos);
+            }
+        }
+        positions.sort_by_key(|pos| (p_actor.pos.distance(*pos), pos.x, pos.y));
+        state.cursor_pos = positions.first().copied();
     }
 
     // move cursor via normal character movement inputs
@@ -368,7 +375,7 @@ fn update_systems_ability(c: &mut dyn ContextTrait, world: &mut World) {
         let p = cursor_pos.to_fpos(TILE_SIZE);
         DrawTile::Rock.draw(c, p, Z_CURSOR);
 
-        if let Some((p_actor,)) = query!(world, _ Player, Actor).next() {
+        if let Some((fov, p_actor)) = query!(world, Fov, _ Player, Actor).next() {
             let line = p_actor.pos.bresenham(cursor_pos);
             let mut blocked = false;
             for pos in line.into_iter().skip(1) {
@@ -378,6 +385,21 @@ fn update_systems_ability(c: &mut dyn ContextTrait, world: &mut World) {
                 if tm.is_blocked(pos) {
                     blocked = true;
                 }
+            }
+
+            let mut positions = Vec::new();
+            for (actor, _draw_pos) in query!(world, Actor, DrawPos, !Player) {
+                // TODO check if draw_pos is visible
+                let line = p_actor.pos.bresenham(actor.pos);
+                let blocked =
+                    line.iter().skip(1).take(line.len() - 2).any(|pos| tm.is_blocked(*pos));
+                if fov.0.contains(&actor.pos) && !blocked {
+                    positions.push(actor.pos);
+                }
+            }
+            positions.sort_by_key(|pos| (p_actor.pos.distance(*pos), pos.x, pos.y));
+            if let Some(pos) = avy_navigation(c, &positions) {
+                state.cursor_pos = Some(pos);
             }
         }
     }
@@ -439,33 +461,40 @@ fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
     if let Some((fov, player_actor)) = query!(world, Fov, _ Player, Actor).next() {
         let player_pos = player_actor.pos;
         let mut positions = Vec::new();
-        let pressed = c.avy_is_key_pressed();
 
-        for (actor, draw_pos) in query!(world, Actor, DrawPos) {
+        for (actor, _draw_pos) in query!(world, Actor, DrawPos) {
+            // TODO check if draw_pos is visible
             if fov.0.contains(&actor.pos) {
-                positions.push((actor.pos, draw_pos.0));
+                positions.push(actor.pos);
             }
         }
-
-        // TODO factor out into avy nav function
-        positions.sort_by_key(|(pos, _dpos)| (player_pos.distance(*pos), pos.x, pos.y));
-        for (choice, (pos, draw_pos)) in positions.drain(..).enumerate() {
-            let choice = choice as u32;
-            if Some(choice) == pressed {
-                state.cursor_pos = Some(pos);
-            }
-            let text = c.avy_label(choice);
-            let label = text.labelize_prop(
-                c,
-                FVec::new(50., 50.),
-                TextProperty::new().color(Color::YELLOW),
-            );
-            let mut draw_pos = draw_pos.rect(TILE_SIZE).bl().to_screen(c);
-            draw_pos.x += 3.0;
-            draw_pos.y -= label.rect.h + 3.0;
-            label.draw(c, draw_pos, Z_AVY_LABEL);
+        positions.sort_by_key(|pos| (player_pos.distance(*pos), pos.x, pos.y));
+        if let Some(pos) = avy_navigation(c, &positions) {
+            state.cursor_pos = Some(pos);
         }
     }
+}
+
+fn avy_navigation(c: &mut dyn ContextTrait, positions: &[Pos]) -> Option<Pos> {
+    let mut r = None;
+    let pressed = c.avy_is_key_pressed();
+    for (choice, pos) in positions.iter().enumerate() {
+        let choice = choice as u32;
+        let text = c.avy_label(choice);
+        let label = text.labelize_prop(
+            c,
+            FVec::new(50., 50.),
+            TextProperty::new().color(Color::YELLOW),
+        );
+        let mut draw_pos = pos.to_fpos(TILE_SIZE).rect(TILE_SIZE).bl().to_screen(c);
+        draw_pos.x += 3.0;
+        draw_pos.y -= label.rect.h + 3.0;
+        label.draw(c, draw_pos, Z_AVY_LABEL);
+        if Some(choice) == pressed {
+            r = Some(*pos);
+        }
+    }
+    r
 }
 
 fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
