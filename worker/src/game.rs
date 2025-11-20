@@ -223,18 +223,18 @@ fn direction_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action
     None
 }
 
-fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
-    let action = direction_input(c, world).or_else(|| ability_input(c, world));
-    // TODO make general handler for inner action
+fn handle_action(world: &World, action: Action) {
     match action {
-        Some(Action { actor, kind: ActionKind::Move { from, to } }) => {
+        Action { actor, kind: ActionKind::Move { from, to } } => {
             let anim = animation::spawn_move_animation(world, actor, from, to);
             world.get_component_mut::<Actor>(actor).pos = to;
-            animation::add_camera_move(world, anim, to);
+            if world.has_component::<Player>(actor) {
+                animation::add_camera_move(world, anim, to);
+            }
             let mut actor_a = world.get_component_mut::<Actor>(actor);
             actor_a.next_turn += 10;
         }
-        Some(Action { actor, kind: ActionKind::BumpAttack { target } }) => {
+        Action { actor, kind: ActionKind::BumpAttack { target } } => {
             assert_ne!(actor, target);
             let mut actor_a = world.get_component_mut::<Actor>(actor);
             let mut target_a = world.get_component_mut::<Actor>(target);
@@ -259,13 +259,20 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
             }
             actor_a.next_turn += 10;
         }
-        Some(Action {
+        Action {
             actor,
             kind: ActionKind::UseAbility(Ability::RockThrow { path, target }),
-        }) => todo!(),
-        None => {}
-    }
-    if action.is_some() {
+        } => {
+            todo!()
+        }
+    };
+}
+
+fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
+    let action = direction_input(c, world).or_else(|| ability_input(c, world));
+    // TODO make general handler for inner action
+    if let Some(action) = action {
+        handle_action(world, action);
         world.process();
         return;
     }
@@ -286,6 +293,7 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
         return;
     }
 
+    // TODO this is temporary and needs to get rolled into an ability
     if c.is_pressed(Input::Confirm) {
         animation::spawn_camera_shake_animation(world);
 
@@ -304,7 +312,7 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
     }
 }
 
-fn ai_turn(_c: &mut dyn ContextTrait, world: &mut World, npc: Entity) {
+fn ai_turn(world: &mut World, npc: Entity) {
     // set up pathfinding dijsktra map
     let start = world.get_component::<Actor>(npc).pos;
     let tm = world.singleton::<TileMap>();
@@ -328,10 +336,8 @@ fn ai_turn(_c: &mut dyn ContextTrait, world: &mut World, npc: Entity) {
         && let Some(next) = path[1..].first()
         && !tm.is_blocked(*next)
     {
-        let mut actor = world.get_component_mut::<Actor>(npc);
-        animation::spawn_move_animation(world, npc, actor.pos, *next);
-        actor.pos = *next;
-        actor.next_turn += 10;
+        let action = Action { actor: npc, kind: ActionKind::Move { from: start, to: *next } };
+        handle_action(world, action);
     } else {
         // TODO add attacking player
         let mut actor = world.get_component_mut::<Actor>(npc);
@@ -574,7 +580,7 @@ fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
         let mut next = next_turn_actor(world);
         while !world.has_component::<Player>(next) {
             TileMap::update_actors(world);
-            ai_turn(c, world, next);
+            ai_turn(world, next);
             next = next_turn_actor(world);
         }
         world.process();
