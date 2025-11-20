@@ -101,7 +101,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
 
     // systematic input
     match state {
-        UIState::Normal => {
+        UIState::Normal | UIState::Ability | UIState::Inspect => {
             if c.mouse_wheel() > 0. {
                 c.camera_zoom(1);
             }
@@ -141,7 +141,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
                 world.singleton_mut::<GameTime>().0 += delta;
             }
         }
-        UIState::Inventory | UIState::Ability | UIState::Inspect => {}
+        UIState::Inventory => {}
     }
 
     c.draw_texture("tiles", -228., -950., 5);
@@ -195,43 +195,79 @@ fn input_direction(c: &mut dyn ContextTrait) -> Option<IVec> {
     None
 }
 
-fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
+fn direction_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> {
+    if !matches!(world.singleton::<UI>().state, UIState::Normal) {
+        return None;
+    }
+
     if let Some(dir) = input_direction(c) {
-        for (e, mut player) in query!(world, &this, _ Player, mut Actor) {
+        for (e, player) in query!(world, &this, _ Player, mut Actor) {
             let tm = world.singleton::<TileMap>();
             let new_pos = player.pos + dir;
             if !tm.is_blocked(new_pos) {
-                let anim = animation::spawn_move_animation(world, *e, player.pos, new_pos);
-                player.pos = new_pos;
-                animation::add_camera_move(world, anim, new_pos);
+                return Some(Action {
+                    actor: *e,
+                    kind: ActionKind::Move { from: player.pos, to: new_pos },
+                });
             } else {
                 if let Some(other_e) = tm.get_actor(new_pos) {
-                    let other_e = world.view_deferred(other_e);
-                    let mut other_a = other_e.get_mut::<Actor>();
-                    let start_ratio = other_a.hp.ratio();
-                    other_a.hp.current -= 1;
-                    let end_ratio = other_a.hp.ratio();
-                    let animation = animation::spawn_bump_attack_animation(
-                        world,
-                        *e,
-                        *other_e,
-                        player.pos,
-                        new_pos,
-                        HPBarAnimation { start_ratio, end_ratio },
-                    );
-                    let msg = format!("{} attacks {}.", player.name, other_a.name);
-                    log_message(world, msg, animation);
-
-                    if other_a.hp.current <= 0 {
-                        let msg = format!("{} dies.", other_a.name);
-                        log_message(world, msg, animation);
-                        other_e.relate_from::<AnimationCleanup>(animation);
-                    }
+                    return Some(Action {
+                        actor: *e,
+                        kind: ActionKind::BumpAttack { target: other_e },
+                    });
                 }
             }
-            player.next_turn += 10;
-            return;
         }
+    }
+
+    None
+}
+
+fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
+    let action = direction_input(c, world).or_else(|| ability_input(c, world));
+    // TODO make general handler for inner action
+    match action {
+        Some(Action { actor, kind: ActionKind::Move { from, to } }) => {
+            let anim = animation::spawn_move_animation(world, actor, from, to);
+            world.get_component_mut::<Actor>(actor).pos = to;
+            animation::add_camera_move(world, anim, to);
+            let mut actor_a = world.get_component_mut::<Actor>(actor);
+            actor_a.next_turn += 10;
+        }
+        Some(Action { actor, kind: ActionKind::BumpAttack { target } }) => {
+            assert_ne!(actor, target);
+            let mut actor_a = world.get_component_mut::<Actor>(actor);
+            let mut target_a = world.get_component_mut::<Actor>(target);
+            let start_ratio = target_a.hp.ratio();
+            target_a.hp.current -= 1;
+            let end_ratio = target_a.hp.ratio();
+            let animation = animation::spawn_bump_attack_animation(
+                world,
+                actor,
+                target,
+                actor_a.pos,
+                target_a.pos,
+                HPBarAnimation { start_ratio, end_ratio },
+            );
+            let msg = format!("{} attacks {}.", actor_a.name, target_a.name);
+            log_message(world, msg, animation);
+
+            if target_a.hp.current <= 0 {
+                let msg = format!("{} dies.", target_a.name);
+                log_message(world, msg, animation);
+                world.view_deferred(target).relate_from::<AnimationCleanup>(animation);
+            }
+            actor_a.next_turn += 10;
+        }
+        Some(Action {
+            actor,
+            kind: ActionKind::UseAbility(Ability::RockThrow { path, target }),
+        }) => todo!(),
+        None => {}
+    }
+    if action.is_some() {
+        world.process();
+        return;
     }
 
     if let Some(nr) = ability_key_pressed(c) {
@@ -321,7 +357,7 @@ fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
         UIState::Normal => update_systems_normal(c, world),
         UIState::Inventory => update_systems_inventory(c, world),
         UIState::Inspect => update_systems_inspect(c, world),
-        UIState::Ability => update_systems_ability(c, world),
+        UIState::Ability => {}
     };
 }
 
@@ -330,11 +366,16 @@ pub struct AbilityUIState {
     cursor_pos: Option<Pos>,
 }
 
-fn update_systems_ability(c: &mut dyn ContextTrait, world: &mut World) {
+// TODO: make this part of the player loop I think
+fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> {
+    if !matches!(world.singleton::<UI>().state, UIState::Ability) {
+        return None;
+    }
+
     if c.is_pressed(Input::Cancel) {
         world.singleton_mut::<UI>().state = UIState::Normal;
         world.singleton_remove::<AbilityUIState>();
-        return;
+        return None;
     }
 
     ensure_singleton::<AbilityUIState>(world);
@@ -404,7 +445,27 @@ fn update_systems_ability(c: &mut dyn ContextTrait, world: &mut World) {
         }
     }
 
-    // TODO here: use ability
+    // TODO here: return ability
+    None
+}
+
+/// Anything an actor may do
+#[derive(Debug)]
+pub struct Action {
+    pub actor: Entity,
+    pub kind: ActionKind,
+}
+
+#[derive(Debug)]
+pub enum ActionKind {
+    Move { from: Pos, to: Pos },
+    BumpAttack { target: Entity },
+    UseAbility(Ability),
+}
+
+#[derive(Debug)]
+pub enum Ability {
+    RockThrow { path: Vec<Pos>, target: Entity },
 }
 
 fn update_systems_inventory(c: &mut dyn ContextTrait, world: &mut World) {
