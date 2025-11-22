@@ -4,8 +4,9 @@ use froql::query;
 use froql::{entity_store::Entity, world::World};
 use simple_easing::{cubic_in_out, roundtrip, sine_in_out};
 
+use crate::game::Z_PROJECTILE;
 use crate::game::tile_map::TileMap;
-use crate::game::tiles::{Decor, TILE_DIM, pos_to_drawpos};
+use crate::game::tiles::{Decor, DrawTile, TILE_DIM, TILE_SIZE, pos_to_drawpos};
 use crate::game::types::DrawHealth;
 use crate::game::types::GameTime;
 
@@ -66,6 +67,11 @@ pub struct CameraShakeAnimation {
     pub noise: FastNoiseLite,
 }
 
+pub struct ProjectilePathAnimation {
+    pub sprite: DrawTile,
+    pub path: Vec<Pos>,
+}
+
 /// moves the camera center somewhere else
 pub struct CameraMoveAnimation {
     /// only gets initialized once the animation starts playing
@@ -90,7 +96,7 @@ pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
         }
     }
 
-    // handle bump attack
+    // bump attack animation
     for (timer, anim, mut draw_pos) in query!(
         world,
         AnimationTimer,
@@ -103,6 +109,26 @@ pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
             let lerpiness =
                 cubic_in_out(roundtrip(timer.normalize(current_time))) * PART_FORWARD;
             draw_pos.0 = anim.start.lerp(anim.end, lerpiness);
+        }
+    }
+
+    // projectile animation
+    for (timer, anim) in query!(world, AnimationTimer, ProjectilePathAnimation,) {
+        if timer.is_active(current_time) {
+            let highest_index = anim.path.len() - 1;
+            let current = timer.normalize(current_time) * highest_index as f32;
+            let index = current.floor() as usize;
+            let next = (index + 1).min(highest_index);
+            let a = anim.path.get(index).map(|it| it.to_fpos(TILE_SIZE));
+            let b = anim.path.get(next).map(|it| it.to_fpos(TILE_SIZE));
+            match (a, b) {
+                (Some(a), Some(b)) => {
+                    let lerpiness = current.fract();
+                    let dpos = a.lerp(b, lerpiness);
+                    anim.sprite.draw(c, dpos, Z_PROJECTILE);
+                }
+                _ => {}
+            }
         }
     }
 
@@ -292,4 +318,36 @@ pub fn add_camera_move(world: &World, sync_anim: Entity, goal_pos: Pos) {
 
         world.create().add(timer).add(CameraMoveAnimation { from: None, to: goal });
     });
+}
+
+pub fn spawn_projectile_animation(
+    world: &World,
+    projectile_sprite: DrawTile,
+    path: Vec<Pos>,
+    hp_bar_animation: HPBarAnimation,
+    target: Entity,
+) {
+    let animation_length = 0.07;
+    let current_time = world.singleton::<GameTime>().0;
+    let start_time = query!(world, AnimationTimer, AnimationTarget(this, *target))
+        .map(|(timer,)| timer.end)
+        .fold(current_time, f32::max);
+
+    world
+        .create_deferred()
+        .add(AnimationTimer { start: start_time, end: start_time + animation_length })
+        .add(ProjectilePathAnimation { path, sprite: projectile_sprite })
+        .relate_to::<AnimationTarget>(target);
+
+    // hp bar
+    let hp_anim_length = 0.1;
+    world
+        .create_deferred()
+        .add(AnimationTimer {
+            // hp bar animation starts after the hit
+            start: start_time + animation_length,
+            end: start_time + animation_length + hp_anim_length,
+        })
+        .add(hp_bar_animation)
+        .relate_to::<AnimationTarget>(target);
 }

@@ -17,6 +17,7 @@ use crate::animation::CameraShakeAnimation;
 use crate::animation::DecorSpawnAnimation;
 use crate::animation::HPBarAnimation;
 use crate::animation::MovementAnimation;
+use crate::animation::ProjectilePathAnimation;
 use crate::ecs_setup::EntityComponent;
 use crate::ecs_setup::OriginTarget;
 use crate::ecs_setup::SerializedState;
@@ -128,6 +129,9 @@ ecs_types!(
         UI[persist],
         MessageLog[persist],
         PendingMessage[persist],
+        DebugOptions[persist],
+        InspectUIState[persist],
+        AbilityUIState[persist],
         // animations
         AnimationTimer,
         BumpAttackAnimation,
@@ -136,9 +140,7 @@ ecs_types!(
         HPBarAnimation,
         MovementAnimation,
         CameraMoveAnimation,
-        DebugOptions[persist],
-        InspectUIState[persist],
-        AbilityUIState[persist]
+        ProjectilePathAnimation
     ),
     Relations(
         AnimationTarget,

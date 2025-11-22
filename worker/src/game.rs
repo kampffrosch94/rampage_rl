@@ -35,6 +35,7 @@ use crate::{
 pub const Z_TILES: i32 = 0;
 pub const Z_HP_BAR: i32 = 9;
 pub const Z_SPRITE: i32 = 10;
+pub const Z_PROJECTILE: i32 = 15;
 pub const Z_CURSOR: i32 = 100;
 #[allow(unused)]
 pub const Z_DEBUG: i32 = 999;
@@ -263,7 +264,16 @@ fn handle_action(world: &World, action: Action) {
             actor,
             kind: ActionKind::UseAbility(Ability::RockThrow { path, target }),
         } => {
-            todo!()
+            let start_ratio = 1.;
+            let end_ratio = 1.;
+            // TODO hurt target, maybe push it back
+            animation::spawn_projectile_animation(
+                world,
+                DrawTile::Rock,
+                path,
+                HPBarAnimation { start_ratio, end_ratio },
+                target,
+            );
         }
     };
 }
@@ -360,10 +370,9 @@ fn player_is_animation_target(world: &World) -> bool {
 fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
     let state: UIState = world.singleton::<UI>().state;
     match state {
-        UIState::Normal => update_systems_normal(c, world),
+        UIState::Normal | UIState::Ability => update_systems_normal(c, world),
         UIState::Inventory => update_systems_inventory(c, world),
         UIState::Inspect => update_systems_inspect(c, world),
-        UIState::Ability => {}
     };
 }
 
@@ -372,15 +381,18 @@ pub struct AbilityUIState {
     cursor_pos: Option<Pos>,
 }
 
-// TODO: make this part of the player loop I think
 fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> {
     if !matches!(world.singleton::<UI>().state, UIState::Ability) {
         return None;
     }
 
-    if c.is_pressed(Input::Cancel) {
+    fn exit_ability_state(world: &mut World) {
         world.singleton_mut::<UI>().state = UIState::Normal;
         world.singleton_remove::<AbilityUIState>();
+    }
+
+    if c.is_pressed(Input::Cancel) {
+        exit_ability_state(world);
         return None;
     }
 
@@ -419,18 +431,19 @@ fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> 
         let color = Color::rgba(1.0, 0.2, 0.3, 0.4);
         c.draw_rect_lines(rect, 3.0, Color::YELLOW, Z_CURSOR);
 
-        let p = cursor_pos.to_fpos(TILE_SIZE);
-        DrawTile::Rock.draw(c, p, Z_CURSOR);
-
-        if let Some((fov, p_actor)) = query!(world, Fov, _ Player, Actor).next() {
-            let line = p_actor.pos.bresenham(cursor_pos);
+        if let Some((player, fov, p_actor)) = query!(world, &this, Fov, _ Player, Actor).next()
+        {
+            let line: Vec<Pos> =
+                p_actor.pos.bresenham(cursor_pos).into_iter().skip(1).collect();
             let mut blocked = false;
-            for pos in line.into_iter().skip(1) {
+            let mut blocker = None;
+            for pos in &line {
                 if !blocked {
                     c.draw_rect(pos.to_fpos(TILE_SIZE).rect(TILE_SIZE), color, Z_CURSOR);
                 }
-                if tm.is_blocked(pos) {
+                if tm.is_blocked(*pos) {
                     blocked = true;
+                    blocker = tm.get_actor(*pos);
                 }
             }
 
@@ -448,10 +461,19 @@ fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> 
             if let Some(pos) = avy_navigation(c, &positions) {
                 state.cursor_pos = Some(pos);
             }
+
+            if c.is_pressed(Input::Confirm)
+                && let Some(target) = blocker
+            {
+                world.defer_closure(|world| exit_ability_state(world));
+                return Some(Action {
+                    actor: *player,
+                    kind: ActionKind::UseAbility(Ability::RockThrow { path: line, target }),
+                });
+            }
         }
     }
 
-    // TODO here: return ability
     None
 }
 
