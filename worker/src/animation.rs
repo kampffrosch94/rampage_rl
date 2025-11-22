@@ -289,7 +289,7 @@ pub fn spawn_move_animation(world: &World, e: Entity, start: Pos, end: Pos) -> E
         .entity
 }
 
-pub fn spawn_camera_shake_animation(world: &mut World) {
+pub fn spawn_camera_shake_animation(world: &mut World) -> Entity {
     let animation_length = 0.07;
     let current_time = world.singleton::<GameTime>().0;
     let start_time = current_time;
@@ -301,7 +301,8 @@ pub fn spawn_camera_shake_animation(world: &mut World) {
     world
         .create()
         .add(AnimationTimer { start: start_time, end: start_time + animation_length })
-        .add(CameraShakeAnimation { noise });
+        .add(CameraShakeAnimation { noise })
+        .entity
 }
 
 /// Moves the camera to goal_pos at the timing of the Animation sync_anim

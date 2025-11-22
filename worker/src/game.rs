@@ -307,7 +307,7 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
 
     // TODO this is temporary and needs to get rolled into an ability
     if c.is_pressed(Input::Test) {
-        animation::spawn_camera_shake_animation(world);
+        let animation = animation::spawn_camera_shake_animation(world);
 
         // find enemies around player and damage them
         let (player_actor,) = query!(world, _ Player, mut Actor).next().unwrap();
@@ -317,6 +317,7 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
             if let Some(neighbor_e) = tm.get_actor(pos) {
                 let mut neighbor_actor = world.get_component_mut::<Actor>(neighbor_e);
                 neighbor_actor.hp.current -= 1;
+                handle_death(world, neighbor_e, &neighbor_actor, animation);
             }
         }
 
