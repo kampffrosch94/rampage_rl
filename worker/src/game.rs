@@ -22,7 +22,6 @@ use types::*;
 use ui::{MessageLog, handle_ui, log_message, ui_inventory};
 pub mod mapgen;
 pub mod ui;
-use crate::animation::HPBarAnimation;
 use crate::game::ui::PendingMessage;
 use crate::{
     animation::{self},
@@ -224,6 +223,14 @@ fn direction_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action
     None
 }
 
+fn handle_death(world: &World, target: Entity, target_a: &Actor, animation: Entity) {
+    if target_a.hp.current <= 0 {
+        let msg = format!("{} dies.", target_a.name);
+        log_message(world, msg, animation);
+        world.view_deferred(target).relate_from::<AnimationCleanup>(animation);
+    }
+}
+
 fn handle_action(world: &World, action: Action) {
     match action {
         Action { actor, kind: ActionKind::Move { from, to } } => {
@@ -239,41 +246,36 @@ fn handle_action(world: &World, action: Action) {
             assert_ne!(actor, target);
             let mut actor_a = world.get_component_mut::<Actor>(actor);
             let mut target_a = world.get_component_mut::<Actor>(target);
-            let start_ratio = target_a.hp.ratio();
-            target_a.hp.current -= 1;
-            let end_ratio = target_a.hp.ratio();
+            let hp_bar_change = target_a.hp.dmg(1);
             let animation = animation::spawn_bump_attack_animation(
                 world,
                 actor,
                 target,
                 actor_a.pos,
                 target_a.pos,
-                HPBarAnimation { start_ratio, end_ratio },
+                hp_bar_change,
             );
             let msg = format!("{} attacks {}.", actor_a.name, target_a.name);
             log_message(world, msg, animation);
 
-            if target_a.hp.current <= 0 {
-                let msg = format!("{} dies.", target_a.name);
-                log_message(world, msg, animation);
-                world.view_deferred(target).relate_from::<AnimationCleanup>(animation);
-            }
+            handle_death(world, target, &target_a, animation);
+
             actor_a.next_turn += 10;
         }
         Action {
-            actor,
+            actor: _,
             kind: ActionKind::UseAbility(Ability::RockThrow { path, target }),
         } => {
-            let start_ratio = 1.;
-            let end_ratio = 1.;
-            // TODO hurt target, maybe push it back
-            animation::spawn_projectile_animation(
+            let mut target_a = world.get_component_mut::<Actor>(target);
+            let hp_bar_change = target_a.hp.dmg(2);
+            let animation = animation::spawn_projectile_animation(
                 world,
                 DrawTile::Rock,
                 path,
-                HPBarAnimation { start_ratio, end_ratio },
+                hp_bar_change,
                 target,
             );
+            handle_death(world, target, &target_a, animation);
         }
     };
 }
@@ -409,7 +411,16 @@ fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> 
             }
         }
         positions.sort_by_key(|pos| (p_actor.pos.distance(*pos), pos.x, pos.y));
-        state.cursor_pos = positions.first().copied();
+        let tm = world.singleton::<TileMap>();
+        state.cursor_pos = positions
+            .into_iter()
+            .filter(|pos| {
+                let line = p_actor.pos.bresenham(*pos);
+                let blocked =
+                    line.iter().skip(1).take(line.len() - 2).any(|pos| tm.is_blocked(*pos));
+                !blocked
+            })
+            .next();
     }
 
     // move cursor via normal character movement inputs
@@ -433,17 +444,19 @@ fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> 
 
         if let Some((player, fov, p_actor)) = query!(world, &this, Fov, _ Player, Actor).next()
         {
-            let line: Vec<Pos> =
-                p_actor.pos.bresenham(cursor_pos).into_iter().skip(1).collect();
+            let line: Vec<Pos> = p_actor.pos.bresenham(cursor_pos);
             let mut blocked = false;
             let mut blocker = None;
-            for pos in &line {
+            for pos in line.iter().skip(1) {
                 if !blocked {
                     c.draw_rect(pos.to_fpos(TILE_SIZE).rect(TILE_SIZE), color, Z_CURSOR);
                 }
                 if tm.is_blocked(*pos) {
+                    // only save actor as blocker if its the first thing blocking the path
+                    if !blocked {
+                        blocker = tm.get_actor(*pos);
+                    }
                     blocked = true;
-                    blocker = tm.get_actor(*pos);
                 }
             }
 
@@ -465,7 +478,7 @@ fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> 
             if c.is_pressed(Input::Confirm)
                 && let Some(target) = blocker
             {
-                world.defer_closure(|world| exit_ability_state(world));
+                world.defer_closure(exit_ability_state);
                 return Some(Action {
                     actor: *player,
                     kind: ActionKind::UseAbility(Ability::RockThrow { path: line, target }),

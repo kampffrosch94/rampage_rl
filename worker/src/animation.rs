@@ -326,7 +326,7 @@ pub fn spawn_projectile_animation(
     path: Vec<Pos>,
     hp_bar_animation: HPBarAnimation,
     target: Entity,
-) {
+) -> Entity {
     let animation_length = 0.07;
     let current_time = world.singleton::<GameTime>().0;
     let start_time = query!(world, AnimationTimer, AnimationTarget(this, *target))
@@ -341,7 +341,7 @@ pub fn spawn_projectile_animation(
 
     // hp bar
     let hp_anim_length = 0.1;
-    world
+    let anim = world
         .create_deferred()
         .add(AnimationTimer {
             // hp bar animation starts after the hit
@@ -349,5 +349,8 @@ pub fn spawn_projectile_animation(
             end: start_time + animation_length + hp_anim_length,
         })
         .add(hp_bar_animation)
-        .relate_to::<AnimationTarget>(target);
+        .relate_to::<AnimationTarget>(target)
+        .entity;
+    // return the animation that finishes later
+    anim
 }

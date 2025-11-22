@@ -59,6 +59,13 @@ impl HP {
     pub fn ratio(&self) -> f32 {
         self.current as f32 / self.max as f32
     }
+
+    pub fn dmg(&mut self, amount: i32) -> HPBarAnimation {
+        let start_ratio = self.ratio();
+        self.current -= amount;
+        let end_ratio = self.ratio();
+        HPBarAnimation { start_ratio, end_ratio }
+    }
 }
 
 #[derive(Debug, Quicksilver)]
