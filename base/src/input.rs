@@ -28,4 +28,5 @@ pub enum Input {
     Ability3,
     Ability4,
     Ability5,
+    Test,
 }

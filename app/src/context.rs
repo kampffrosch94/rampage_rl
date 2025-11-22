@@ -205,6 +205,7 @@ impl ContextTrait for Context {
             Input::Ability3 => is_key_pressed(KeyCode::Key3),
             Input::Ability4 => is_key_pressed(KeyCode::Key4),
             Input::Ability5 => is_key_pressed(KeyCode::Key5),
+            Input::Test => is_key_pressed(KeyCode::Period),
         }
     }
 

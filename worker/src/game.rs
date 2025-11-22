@@ -306,7 +306,7 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
     }
 
     // TODO this is temporary and needs to get rolled into an ability
-    if c.is_pressed(Input::Confirm) {
+    if c.is_pressed(Input::Test) {
         animation::spawn_camera_shake_animation(world);
 
         // find enemies around player and damage them
