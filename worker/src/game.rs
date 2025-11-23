@@ -26,7 +26,7 @@ pub mod ui;
 use crate::game::ui::PendingMessage;
 use crate::{
     animation::{self},
-    dijstra::{dijkstra, dijkstra_path},
+    dijkstra::{dijkstra, dijkstra_path},
     game::DrawHealth,
     persistent::PersistentState,
     rand::RandomGenerator,

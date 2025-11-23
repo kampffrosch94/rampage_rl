@@ -33,6 +33,11 @@ mod static_worker;
 #[unsafe(no_mangle)]
 pub unsafe extern "C" fn __cxa_thread_atexit_impl() {}
 
+#[cfg(feature = "profile")]
+#[global_allocator]
+static ALLOC: base::tracy::alloc::GlobalAllocator = base::tracy::alloc::GlobalAllocator::new();
+
+
 fn window_conf() -> Conf {
     Conf {
         window_title: "RampageRL".to_owned(),
@@ -88,7 +93,7 @@ async fn inner_main() {
     let mut egui_drawn_before = false;
 
     loop {
-        base::frame!("Prep");
+        base::zone!("Main loop");
         #[cfg(feature = "hotreload")]
         egui_inspector::reset_id();
 
@@ -105,8 +110,6 @@ async fn inner_main() {
         let s = format!("FPS: {fps} DPI: {dpi} Screen: {w} x {h}");
         draw_text(&s, 20.0, -20.0, 30.0, WHITE);
 
-        base::frame!("Game logic");
-
         if egui_drawn_before {
             #[cfg(feature = "hotreload")]
             egui.ui(|_, egui_ctx| {
@@ -122,8 +125,6 @@ async fn inner_main() {
         } else {
             worker.update(ctx);
         }
-
-        base::frame!("Drawing");
 
         ctx.process().await;
 

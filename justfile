@@ -45,4 +45,5 @@ run-flamegraph:
     CARGO_PROFILE_RELEASE_DEBUG=true cargo flamegraph --no-default-features -f staticlink
 
 tracy:
-    TRACY_DPI_SCALE=1.5 tracy
+    #TRACY_DPI_SCALE=1.5 tracy
+    TRACY_DPI_SCALE=1.5 nix run github:MonaMayrhofer/nixpkgs/tracy-upgrade#tracy

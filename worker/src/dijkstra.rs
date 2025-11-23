@@ -1,9 +1,9 @@
-use base::{Pos, grids::Grid};
+use base::{Pos, grids::Grid, zone};
 
 /// spreads out values, starting from the seeds
 /// the seed positions are supposed to be set to a > 0 value before using this function
-#[allow(unused)]
 pub fn dijkstra<F: Fn(Pos) -> i32>(grid: &mut Grid<i32>, seed: &[Pos], cost: F) {
+    zone!();
     let mut next: Vec<Pos> = seed.iter().flat_map(|pos| pos.neighbors(grid)).collect();
     next.extend(seed.iter()); // sometimes its necessary to recompute seeds too
 
@@ -33,8 +33,8 @@ pub fn dijkstra<F: Fn(Pos) -> i32>(grid: &mut Grid<i32>, seed: &[Pos], cost: F) 
 }
 
 /// returns path that follows increasing values until it reaches a local maximium
-#[allow(unused)]
 pub fn dijkstra_path(grid: &Grid<i32>, start: Pos) -> Vec<Pos> {
+    zone!();
     let mut path = Vec::new();
     if start.x < 0 || start.y <= 0 || start.x >= grid.width || start.y >= grid.height {
         return path;

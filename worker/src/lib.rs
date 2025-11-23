@@ -6,7 +6,7 @@ use base::{ContextTrait, PersistWrapper};
 pub use game::update_inner;
 pub use persistent::PersistentState;
 mod animation;
-mod dijstra;
+mod dijkstra;
 mod ecs_setup;
 mod game;
 mod persistent;
