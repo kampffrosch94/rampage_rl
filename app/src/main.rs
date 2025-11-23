@@ -13,6 +13,7 @@ mod fps_counter;
 mod material;
 mod text;
 
+
 #[cfg(all(feature = "staticlink", feature = "hotreload"))]
 compile_error!("features hotreload and staticlink can't be enabled at the same time");
 
@@ -83,12 +84,17 @@ async fn inner_main() {
 
     #[cfg(feature = "hotreload")]
     let mut egui = egui_macroquad::Egui::new();
-
+    #[allow(unused_mut)]
     let mut egui_drawn_before = false;
 
     loop {
+        #[cfg(feature = "profile")]
+        tracy::frame!("Prep");
         #[cfg(feature = "hotreload")]
         egui_inspector::reset_id();
+
+
+
 
         clear_background(BLACK);
 
@@ -102,6 +108,9 @@ async fn inner_main() {
         let h = screen_height();
         let s = format!("FPS: {fps} DPI: {dpi} Screen: {w} x {h}");
         draw_text(&s, 20.0, -20.0, 30.0, WHITE);
+
+        #[cfg(feature = "profile")]
+        tracy::frame!("Game logic");
 
         if egui_drawn_before {
             #[cfg(feature = "hotreload")]
@@ -119,6 +128,9 @@ async fn inner_main() {
             worker.update(ctx);
         }
 
+        #[cfg(feature = "profile")]
+        tracy::frame!("Drawing");
+
         ctx.process().await;
 
         gl_use_default_material();
@@ -133,5 +145,8 @@ async fn inner_main() {
         }
 
         next_frame().await;
+
+        #[cfg(feature = "profile")]
+        tracy::frame!();
     }
 }

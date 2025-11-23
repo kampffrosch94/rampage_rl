@@ -59,7 +59,7 @@
             libGL
 
             # extra tooling
-            tracy # profiler, call with ~Tracy~
+            tracy-wayland # profiler, call with ~just tracy~
             ldtk # level editor
             jq # extract stuff from json
             cargo-flamegraph # more profiling :)

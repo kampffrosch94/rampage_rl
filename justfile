@@ -24,9 +24,11 @@ run-lldb:
 run-static:
     cargo run -F staticlink --no-default-features
 
+run-tracy:
+    CARGO_PROFILE_RELEASE_DEBUG=true cargo run -F profile --no-default-features --release
+
 web-build:
     cargo build --target wasm32-unknown-unknown --release -F staticlink --no-default-features
-
 
 web-serve:
     @just web-build
@@ -39,5 +41,8 @@ web-server:
     python -m http.server 8000
 
 
-profile:
-    cargo flamegraph --no-default-features -f staticlink
+run-flamegraph:
+    CARGO_PROFILE_RELEASE_DEBUG=true cargo flamegraph --no-default-features -f staticlink
+
+tracy:
+    TRACY_DPI_SCALE=1.5 tracy

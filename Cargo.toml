@@ -14,3 +14,4 @@ opt-level = 3
 froql = { version = "0.1.0", git = "https://github.com/kampffrosch94/froql.git" }
 #quicksilver = { path = "../quicksilver/quicksilver", version = "0.1.0"}
 quicksilver = { git = "https://github.com/kampffrosch94/quicksilver.git", version = "0.1.0"}
+tracy = { package = "tracy_full", version = "=1.12.0", features = ["enable"] }

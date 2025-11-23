@@ -675,7 +675,7 @@ fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
 }
 
 pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
-    let (fov,) = query!(world, Fov, _ Player).next().unwrap();
+    let Some((fov,)) = query!(world, Fov, _ Player).next() else { return };
 
     // draw tile map
     {
