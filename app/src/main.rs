@@ -1,3 +1,5 @@
+#[macro_use]
+mod util;
 use fps_counter::FPSCounter;
 #[cfg(not(feature = "staticlink"))]
 use hotreload::WorkerReloader;
@@ -13,7 +15,6 @@ mod fps_counter;
 mod material;
 mod text;
 
-
 #[cfg(all(feature = "staticlink", feature = "hotreload"))]
 compile_error!("features hotreload and staticlink can't be enabled at the same time");
 
@@ -21,7 +22,6 @@ compile_error!("features hotreload and staticlink can't be enabled at the same t
 mod hotreload;
 #[cfg(feature = "staticlink")]
 mod static_worker;
-mod util;
 
 /// this makes it possible to unload shared libraries even if they use
 /// thread local storage with destructors
@@ -92,9 +92,6 @@ async fn inner_main() {
         tracy::frame!("Prep");
         #[cfg(feature = "hotreload")]
         egui_inspector::reset_id();
-
-
-
 
         clear_background(BLACK);
 
