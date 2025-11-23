@@ -55,7 +55,6 @@ dependencies = [
  "macroquad",
  "notify",
  "quicksilver",
- "tracy_full",
  "tween",
  "worker",
 ]
@@ -71,6 +70,7 @@ name = "base"
 version = "0.1.0"
 dependencies = [
  "quicksilver",
+ "tracy_full",
 ]
 
 [[package]]

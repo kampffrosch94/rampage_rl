@@ -2,6 +2,11 @@ use std::ffi::c_void;
 use std::fmt::Debug;
 use std::hash::Hash;
 
+#[cfg(feature = "profile")]
+pub use tracy;
+
+#[macro_use]
+pub mod profile_util;
 pub mod circle;
 pub mod grids;
 pub mod input;

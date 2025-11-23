@@ -88,8 +88,7 @@ async fn inner_main() {
     let mut egui_drawn_before = false;
 
     loop {
-        #[cfg(feature = "profile")]
-        tracy::frame!("Prep");
+        base::frame!("Prep");
         #[cfg(feature = "hotreload")]
         egui_inspector::reset_id();
 
@@ -106,8 +105,7 @@ async fn inner_main() {
         let s = format!("FPS: {fps} DPI: {dpi} Screen: {w} x {h}");
         draw_text(&s, 20.0, -20.0, 30.0, WHITE);
 
-        #[cfg(feature = "profile")]
-        tracy::frame!("Game logic");
+        base::frame!("Game logic");
 
         if egui_drawn_before {
             #[cfg(feature = "hotreload")]
@@ -125,8 +123,7 @@ async fn inner_main() {
             worker.update(ctx);
         }
 
-        #[cfg(feature = "profile")]
-        tracy::frame!("Drawing");
+        base::frame!("Drawing");
 
         ctx.process().await;
 
@@ -143,7 +140,6 @@ async fn inner_main() {
 
         next_frame().await;
 
-        #[cfg(feature = "profile")]
-        tracy::frame!();
+        base::frame!();
     }
 }

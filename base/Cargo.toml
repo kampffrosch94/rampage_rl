@@ -4,5 +4,9 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-#nanoserde.workspace = true
 quicksilver.workspace = true
+
+tracy = { workspace = true, optional = true }
+
+[features]
+profile = ["dep:tracy"]
