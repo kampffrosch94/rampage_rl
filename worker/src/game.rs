@@ -263,7 +263,7 @@ fn handle_action(world: &World, action: Action) {
             actor_a.next_turn += 10;
         }
         Action {
-            actor: _,
+            actor,
             kind: ActionKind::UseAbility(Ability::RockThrow { path, target }),
         } => {
             let mut target_a = world.get_component_mut::<Actor>(target);
@@ -275,6 +275,12 @@ fn handle_action(world: &World, action: Action) {
                 hp_bar_change,
                 target,
             );
+
+            let mut actor_a = world.get_component_mut::<Actor>(actor);
+            let msg = format!("{} throws a huge rock at {}.", actor_a.name, target_a.name);
+            log_message(world, msg, animation);
+            actor_a.next_turn += 10;
+
             handle_death(world, target, &target_a, animation);
         }
     };
@@ -325,6 +331,7 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
     }
 }
 
+// TODO return action instead of handling it directly
 fn ai_turn(world: &mut World, npc: Entity) {
     // set up pathfinding dijsktra map
     let start = world.get_component::<Actor>(npc).pos;
@@ -333,10 +340,18 @@ fn ai_turn(world: &mut World, npc: Entity) {
         let mut grid = Grid::new(tm.tiles.width, tm.tiles.height, 0);
         let mut seeds = Vec::new();
         for (player,) in query!(world, Actor, _ Player) {
-            grid[player.pos] = 25;
+            grid[player.pos] = 500;
             seeds.push(player.pos);
         }
-        let cost_function = |pos| if tm.is_blocked(pos) && pos != start { 999999 } else { 1 };
+        let cost_function = |pos| {
+            if tm.is_wall(pos) && pos != start {
+                i32::MAX
+            } else if tm.get_actor(pos).is_some() {
+                25
+            } else {
+                1
+            }
+        };
         dijkstra(&mut grid, &seeds, cost_function);
         grid
     };
@@ -351,8 +366,17 @@ fn ai_turn(world: &mut World, npc: Entity) {
     {
         let action = Action { actor: npc, kind: ActionKind::Move { from: start, to: *next } };
         handle_action(world, action);
+    } else if path.len() > 1
+        && let Some(next) = path[1..].first()
+        && let Some(target) = tm.actors.get(next)
+        && world.has_component::<Player>(*target)
+    {
+        // attack player if the player is the thing blocking movement
+        let action = Action { actor: npc, kind: ActionKind::BumpAttack { target: *target } };
+        handle_action(world, action);
     } else {
-        // TODO add attacking player
+        // just stand in place
+        // TODO add wait action
         let mut actor = world.get_component_mut::<Actor>(npc);
         actor.next_turn += 10;
     }
@@ -699,7 +723,7 @@ pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
             let rect = Rect::new(
                 x + TILE_SIZE * 0.1,
                 y + TILE_SIZE,
-                TILE_SIZE * 0.8 * draw_health.ratio,
+                TILE_SIZE * 0.8 * draw_health.ratio.max(0.),
                 5.,
             );
             c.draw_rect(rect, Color::GREEN, Z_HP_BAR);

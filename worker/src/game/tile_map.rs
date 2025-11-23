@@ -55,12 +55,19 @@ impl TileMap {
     }
 
     pub fn is_blocked(&self, pos: Pos) -> bool {
-        self.actors.contains_key(&pos)
-            || self.tiles.get_opt(pos).map(|tile| *tile == LogicTile::Wall).unwrap_or(false)
+        self.actors.contains_key(&pos) || self.is_wall(pos)
+    }
+
+    pub fn is_wall(&self, pos: Pos) -> bool {
+        self.tiles.get_opt(pos).map(|tile| *tile == LogicTile::Wall).unwrap_or(false)
+    }
+
+    pub fn get_actor(&self, pos: Pos) -> Option<Entity> {
+        self.actors.get(&pos).copied()
     }
 
     pub fn blocks_vision(&self, pos: Pos) -> bool {
-        self.tiles.get_opt(pos).map(|tile| *tile == LogicTile::Wall).unwrap_or(false)
+        self.is_wall(pos)
     }
 
     /// Updates the cache of where actors are in the tilemap.
@@ -71,10 +78,6 @@ impl TileMap {
         for (e, actor) in query!(world, &this, Actor) {
             tm.actors.insert(actor.pos, *e);
         }
-    }
-
-    pub fn get_actor(&self, pos: Pos) -> Option<Entity> {
-        self.actors.get(&pos).copied()
     }
 }
 

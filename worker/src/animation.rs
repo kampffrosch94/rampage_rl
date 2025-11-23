@@ -328,7 +328,7 @@ pub fn spawn_projectile_animation(
     hp_bar_animation: HPBarAnimation,
     target: Entity,
 ) -> Entity {
-    let animation_length = 0.02 * path.len() as f32;
+    let animation_length = 0.02 * path.len().min(5) as f32;
     let current_time = world.singleton::<GameTime>().0;
     let start_time = query!(world, AnimationTimer, AnimationTarget(this, *target))
         .map(|(timer,)| timer.end)
