@@ -246,7 +246,7 @@ fn handle_action(world: &World, action: Action) {
             assert_ne!(actor, target);
             let mut actor_a = world.get_component_mut::<Actor>(actor);
             let mut target_a = world.get_component_mut::<Actor>(target);
-            let hp_bar_change = target_a.hp.dmg(1);
+            let hp_bar_change = target_a.hp.dmg(3);
             let animation = animation::spawn_bump_attack_animation(
                 world,
                 actor,
@@ -333,6 +333,17 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
 
 // TODO return action instead of handling it directly
 fn ai_turn(world: &mut World, npc: Entity) {
+    {
+        let mut actor = world.get_component_mut::<Actor>(npc);
+        if actor.hp.current <= 0 {
+            // dead actors wait for further handling
+            // might be better to handle it with a death marker component or something
+            // that could then exclude actors from the turn order
+            actor.next_turn += 100;
+            return;
+        }
+    }
+
     // set up pathfinding dijsktra map
     let start = world.get_component::<Actor>(npc).pos;
     let tm = world.singleton::<TileMap>();
