@@ -640,7 +640,10 @@ fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
     if !player_is_animation_target(world) {
         // sanity check
         let next = next_turn_actor(world);
-        assert!(world.has_component::<Player>(next));
+        assert!(
+            world.has_component::<Player>(next),
+            "It needs to be the players turn to enter here."
+        );
 
         // handle player input
         TileMap::update_actors(world);
