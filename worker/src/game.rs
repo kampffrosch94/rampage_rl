@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 
+use base::zone;
 use crate::animation::{AnimationCleanup, AnimationTarget};
 use base::pos::IVec;
 use base::text::Labelize;
@@ -77,6 +78,7 @@ pub fn ability_key_pressed(c: &mut dyn ContextTrait) -> Option<usize> {
 }
 
 pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
+    zone!();
     if c.is_pressed(Input::RestartGame) {
         println!("Restarting game.");
         s.restart();
@@ -156,6 +158,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
 
     let mut s = world.singleton_mut::<DebugOptions>();
     if s.show_debug {
+        zone!("show debug");
         c.inspect(&mut reflect(&mut *s));
 
         let mut s = world.singleton_mut::<UI>();
@@ -176,6 +179,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
 }
 
 fn input_direction(c: &mut dyn ContextTrait) -> Option<IVec> {
+    zone!();
     const MOVEMENTS: [(Input, (i32, i32)); 8] = [
         (Input::MoveW, (-1, 0)),
         (Input::MoveE, (1, 0)),
@@ -196,6 +200,7 @@ fn input_direction(c: &mut dyn ContextTrait) -> Option<IVec> {
 }
 
 fn direction_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> {
+    zone!();
     if !matches!(world.singleton::<UI>().state, UIState::Normal) {
         return None;
     }
@@ -224,6 +229,7 @@ fn direction_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action
 }
 
 fn handle_death(world: &World, target: Entity, target_a: &Actor, animation: Entity) {
+    zone!();
     if target_a.hp.current <= 0 {
         let msg = format!("{} dies.", target_a.name);
         log_message(world, msg, animation);
@@ -232,6 +238,7 @@ fn handle_death(world: &World, target: Entity, target_a: &Actor, animation: Enti
 }
 
 fn handle_action(world: &World, action: Action) {
+    zone!();
     match action {
         Action { actor, kind: ActionKind::Move { from, to } } => {
             let anim = animation::spawn_move_animation(world, actor, from, to);
@@ -287,6 +294,7 @@ fn handle_action(world: &World, action: Action) {
 }
 
 fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
+    zone!();
     let action = direction_input(c, world).or_else(|| ability_input(c, world));
     // TODO make general handler for inner action
     if let Some(action) = action {
@@ -333,6 +341,7 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
 
 // TODO return action instead of handling it directly
 fn ai_turn(world: &mut World, npc: Entity) {
+    zone!();
     {
         let mut actor = world.get_component_mut::<Actor>(npc);
         if actor.hp.current <= 0 {
@@ -394,6 +403,7 @@ fn ai_turn(world: &mut World, npc: Entity) {
 }
 
 fn next_turn_actor(world: &World) -> Entity {
+    zone!();
     query!(world, &this, Actor)
         .min_by_key(|(e, a)| (a.next_turn, e.id.0))
         .map(|(e, _a)| e.entity)
@@ -402,10 +412,12 @@ fn next_turn_actor(world: &World) -> Entity {
 
 /// returns true if there is some animation targeting the player
 fn player_is_animation_target(world: &World) -> bool {
+    zone!();
     query!(world, Player, AnimationTarget(_, this)).next().is_some()
 }
 
 fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
+    zone!();
     let state: UIState = world.singleton::<UI>().state;
     match state {
         UIState::Normal | UIState::Ability => update_systems_normal(c, world),
@@ -420,6 +432,7 @@ pub struct AbilityUIState {
 }
 
 fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> {
+    zone!();
     if !matches!(world.singleton::<UI>().state, UIState::Ability) {
         return None;
     }
@@ -546,6 +559,7 @@ pub enum Ability {
 }
 
 fn update_systems_inventory(c: &mut dyn ContextTrait, world: &mut World) {
+    zone!();
     if c.is_pressed(Input::Cancel) {
         world.singleton_mut::<UI>().state = UIState::Normal;
     }
@@ -559,6 +573,7 @@ pub struct InspectUIState {
 }
 
 fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
+    zone!();
     if c.is_pressed(Input::Cancel) {
         world.singleton_mut::<UI>().state = UIState::Normal;
         world.singleton_remove::<InspectUIState>();
@@ -614,6 +629,7 @@ fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
 }
 
 fn avy_navigation(c: &mut dyn ContextTrait, positions: &[Pos]) -> Option<Pos> {
+    zone!();
     let mut r = None;
     let pressed = c.avy_is_key_pressed();
     for (choice, pos) in positions.iter().enumerate() {
@@ -636,6 +652,7 @@ fn avy_navigation(c: &mut dyn ContextTrait, positions: &[Pos]) -> Option<Pos> {
 }
 
 fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
+    zone!();
     TileMap::update_actors(world);
     if !player_is_animation_target(world) {
         // sanity check
@@ -678,6 +695,7 @@ fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
 }
 
 pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
+    zone!();
     let Some((fov,)) = query!(world, Fov, _ Player).next() else { return };
 
     // draw tile map
@@ -746,6 +764,7 @@ pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
 }
 
 pub fn create_world() -> World {
+    zone!();
     let mut world = World::new();
     register_components(&mut world);
 
