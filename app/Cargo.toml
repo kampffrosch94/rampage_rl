@@ -17,6 +17,7 @@ quicksilver.workspace = true
 worker = {path = "../worker", optional = true}
 egui = {version = "0.31", optional = true}
 egui-miniquad = {version = "0.16", optional = true}
+swash = "0.2.6"
 
 [features]
 default = ["hotreload"]

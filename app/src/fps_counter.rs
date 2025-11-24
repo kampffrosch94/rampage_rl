@@ -6,6 +6,7 @@ pub struct FPSCounter {
     frametimes: VecDeque<f32>,
 }
 
+#[expect(unused)]
 impl FPSCounter {
     pub fn new() -> Self {
         Self { frametimes: Default::default() }

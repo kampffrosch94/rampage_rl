@@ -55,6 +55,7 @@ dependencies = [
  "macroquad",
  "notify",
  "quicksilver",
+ "swash",
  "tween",
  "worker",
 ]

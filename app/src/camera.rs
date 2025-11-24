@@ -1,4 +1,4 @@
-use base::{FPos, FVec};
+use base::{FPos, FVec, zone};
 use derive_more::derive::From;
 use derive_more::derive::*;
 use macroquad::prelude::*;
@@ -21,6 +21,7 @@ impl Default for CameraWrapper {
 
 impl CameraWrapper {
     pub fn new() -> Self {
+        zone!();
         let scale_exp = 1; // 2 is actually zero zoom
         let base2: f32 = 2.;
         let scale = base2.powf(scale_exp as f32);
@@ -35,6 +36,7 @@ impl CameraWrapper {
     }
 
     pub fn create_camera(scale: f32, offset: Vec2) -> Camera2D {
+        zone!();
         let scale = scale / screen_dpi_scale();
         Camera2D {
             zoom: vec2(scale / screen_width(), scale / screen_height()),
@@ -55,6 +57,7 @@ impl CameraWrapper {
 
     /// do tweening and stuff
     pub fn process(&mut self) {
+        zone!();
         // tweening
         if !self.scale_tween.is_finished() {
             let mouse_position = Vec2f::from(mouse_position());
@@ -74,6 +77,7 @@ impl CameraWrapper {
     }
 
     pub fn zoom(&mut self, delta: i32) {
+        zone!();
         self.scale_exp += delta;
         let base2: f32 = 2.;
         self.scale_exp = self.scale_exp.clamp(0, 5); // TODO set min to 1 before release?
@@ -82,6 +86,7 @@ impl CameraWrapper {
     }
 
     pub fn move_camera_relativ(&mut self, FVec { x, y }: FVec) {
+        zone!();
         self.offset = self.offset + Vec2f::from((x, y));
         // need to update the camera, because it may be used to save positions immediately
         let offset = self.offset + self.shake_offset;
@@ -89,22 +94,26 @@ impl CameraWrapper {
     }
 
     pub fn screen_to_world(&self, FPos { x, y }: FPos) -> FPos {
+        zone!();
         let Vec2 { x, y } = self.camera.screen_to_world(Vec2 { x, y });
         FPos { x, y }
     }
 
     pub fn world_to_screen(&self, FPos { x, y }: FPos) -> FPos {
+        zone!();
         let Vec2 { x, y } = self.camera.world_to_screen(Vec2 { x, y });
         FPos { x, y }
     }
 
     pub fn mouse_world(&self) -> FPos {
+        zone!();
         let (x, y) = mouse_position();
         self.screen_to_world(FPos { x, y })
     }
 }
 
 pub fn screen_camera() -> Camera2D {
+    zone!();
     CameraWrapper::create_camera(2.0, vec2(0., 0.))
 }
 

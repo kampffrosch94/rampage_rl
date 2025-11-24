@@ -1,6 +1,5 @@
 #[macro_use]
 mod util;
-use fps_counter::FPSCounter;
 #[cfg(not(feature = "staticlink"))]
 use hotreload::WorkerReloader;
 use macroquad::prelude::*;
@@ -84,59 +83,50 @@ async fn inner_main() {
 
     println!("Assets loaded.");
 
-    let mut fps_counter = FPSCounter::new();
-
     #[cfg(feature = "hotreload")]
     let mut egui = egui_macroquad::Egui::new();
     #[allow(unused_mut)]
     let mut egui_drawn_before = false;
 
     loop {
-        base::zone!("Main loop");
-        #[cfg(feature = "hotreload")]
-        egui_inspector::reset_id();
-
-        clear_background(BLACK);
-
-        ctx.camera.process();
-
-        fps_counter.update();
-        let fps = fps_counter.get_fps();
-        let dpi = screen_dpi_scale();
-
-        let w = screen_width();
-        let h = screen_height();
-        let s = format!("FPS: {fps} DPI: {dpi} Screen: {w} x {h}");
-        draw_text(&s, 20.0, -20.0, 30.0, WHITE);
-
-        if egui_drawn_before {
+        {
+            base::zone!("Main loop");
             #[cfg(feature = "hotreload")]
-            egui.ui(|_, egui_ctx| {
-                egui_ctx.set_pixels_per_point(1.5);
-                egui::SidePanel::left("my_left_panel").show(egui_ctx, |ui| {
-                    egui::ScrollArea::vertical().show(ui, |ui| {
-                        ctx.egui_ctx = Some(unsafe { std::mem::transmute(ui) });
-                        worker.update(ctx);
-                        ctx.egui_ctx = None;
+            egui_inspector::reset_id();
+
+            clear_background(BLACK);
+
+            ctx.camera.process();
+
+            if egui_drawn_before {
+                #[cfg(feature = "hotreload")]
+                egui.ui(|_, egui_ctx| {
+                    egui_ctx.set_pixels_per_point(1.5);
+                    egui::SidePanel::left("my_left_panel").show(egui_ctx, |ui| {
+                        egui::ScrollArea::vertical().show(ui, |ui| {
+                            ctx.egui_ctx = Some(unsafe { std::mem::transmute(ui) });
+                            worker.update(ctx);
+                            ctx.egui_ctx = None;
+                        });
                     });
                 });
-            });
-        } else {
-            worker.update(ctx);
-        }
-
-        ctx.process().await;
-
-        gl_use_default_material();
-
-        #[cfg(feature = "hotreload")]
-        {
-            if egui_drawn_before {
-                egui.draw();
+            } else {
+                worker.update(ctx);
             }
-            egui_drawn_before = ctx.egui_drawn;
-            ctx.egui_drawn = false;
-        }
+
+            ctx.process().await;
+
+            gl_use_default_material();
+
+            #[cfg(feature = "hotreload")]
+            {
+                if egui_drawn_before {
+                    egui.draw();
+                }
+                egui_drawn_before = ctx.egui_drawn;
+                ctx.egui_drawn = false;
+            }
+        } // extra scope for tracy zone
 
         next_frame().await;
 

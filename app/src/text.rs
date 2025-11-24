@@ -74,7 +74,7 @@ impl Texter {
         zone!();
         self.cache.retain(|_key, to| {
             to.last_drawn += 1;
-            to.last_drawn <= 30
+            to.last_drawn <= 900
         });
     }
 }
@@ -198,7 +198,7 @@ impl TextObject {
             let h = (self.height + 10.0).ceil() as usize;
             let v = vec![0; 4 * w * h];
 
-            let mut image =
+            let mut macro_image =
                 macroquad::prelude::Image { bytes: v, width: w as _, height: h as _ };
 
             for run in self.buffer.layout_runs() {
@@ -211,25 +211,45 @@ impl TextObject {
                         Some(some) => some,
                         None => DEFAULT_COLOR,
                     };
+                    let (r, g, b, _a) = glyph_color.as_rgba_tuple();
 
-                    swash_cache.with_pixels(
-                        font_system,
-                        physical_glyph.cache_key,
-                        glyph_color,
-                        |x, y, color| {
-                            zone!("pixel");
-                            let (r, g, b, a) = color.as_rgba_tuple();
-                            let color = macroquad::prelude::Color::from_rgba(r, g, b, a);
-                            let x = (physical_glyph.x + x) as u32;
-                            let y = (run.line_y as i32 + physical_glyph.y + y) as u32;
-                            if x < image.width as _ && y < image.height as _ {
-                                image.set_pixel(x, y, color);
+                    let image = {
+                        zone!("swash_cache");
+                        swash_cache
+                            .get_image(font_system, physical_glyph.cache_key)
+                            .as_ref()
+                            .expect("Can't create swash image")
+                    };
+                    let x = image.placement.left;
+                    let y = -image.placement.top;
+                    use swash::scale::image::Content;
+                    match image.content {
+                        Content::Mask => {
+                            zone!("image.content drawing");
+                            let mut i = 0;
+                            for off_y in 0..image.placement.height as i32 {
+                                for off_x in 0..image.placement.width as i32 {
+                                    let x = (physical_glyph.x + x + off_x) as u32;
+                                    let y = (run.line_y as i32 + physical_glyph.y + y + off_y)
+                                        as u32;
+                                    let alpha = image.data[i];
+                                    let color =
+                                        macroquad::prelude::Color::from_rgba(r, g, b, alpha);
+                                    if x < macro_image.width as _
+                                        && y < macro_image.height as _
+                                    {
+                                        macro_image.set_pixel(x, y, color);
+                                    }
+                                    i += 1;
+                                }
                             }
-                        },
-                    );
+                        }
+                        _ => unimplemented!("Other image.content type"),
+                    };
                 }
             }
-            self.texture = Some(Texture2D::from_image(&image));
+            zone!("create texture");
+            self.texture = Some(Texture2D::from_image(&macro_image));
         }
 
         zone!("draw text texture");
