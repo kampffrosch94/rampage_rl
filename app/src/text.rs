@@ -194,23 +194,17 @@ impl TextObject {
         if self.buffer.redraw() {
             zone!("redraw");
             self.buffer.set_redraw(false);
-            let (Some(w), Some(h)) = self.buffer.size() else { panic!("No size defined") };
-            let w = w.ceil() as usize;
-            let h = h.ceil() as usize;
+            let w = (self.width + 10.0).ceil() as usize;
+            let h = (self.height + 10.0).ceil() as usize;
             let v = vec![0; 4 * w * h];
 
             let mut image =
                 macroquad::prelude::Image { bytes: v, width: w as _, height: h as _ };
 
-            let mut _height = 0.;
-            let mut _total_lines = 0;
-            let mut width = 0.0;
-
             for run in self.buffer.layout_runs() {
-                _total_lines += 1;
-                width = run.line_w.max(width);
-                _height += run.line_height;
+                zone!("layout_run");
                 for glyph in run.glyphs.iter() {
+                    zone!("glyph");
                     let physical_glyph = glyph.physical((0., 0.), 1.0);
 
                     let glyph_color = match glyph.color_opt {
@@ -223,6 +217,7 @@ impl TextObject {
                         physical_glyph.cache_key,
                         glyph_color,
                         |x, y, color| {
+                            zone!("pixel");
                             let (r, g, b, a) = color.as_rgba_tuple();
                             let color = macroquad::prelude::Color::from_rgba(r, g, b, a);
                             let x = (physical_glyph.x + x) as u32;
