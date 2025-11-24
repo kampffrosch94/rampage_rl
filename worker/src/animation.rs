@@ -1,4 +1,4 @@
-use base::{ContextTrait, FPos, FVec, Pos, Rect};
+use base::{ContextTrait, FPos, FVec, Pos, Rect, zone};
 use fastnoise_lite::{FastNoiseLite, NoiseType};
 use froql::query;
 use froql::{entity_store::Entity, world::World};
@@ -80,9 +80,11 @@ pub struct CameraMoveAnimation {
 }
 
 pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
-    let current_time = world.singleton::<GameTime>().0;
-    // handle movement animation
+    zone!();
 
+    let current_time = world.singleton::<GameTime>().0;
+
+    // handle movement animation
     for (timer, anim, mut draw_pos) in query!(
         world,
         AnimationTimer,
@@ -223,6 +225,7 @@ pub fn spawn_bump_attack_animation(
     end_p: Pos,
     hp_bar_animation: HPBarAnimation,
 ) -> Entity {
+    zone!();
     let start = pos_to_drawpos(start_p);
     let end = pos_to_drawpos(end_p);
     let animation_length = 0.15;
@@ -270,6 +273,7 @@ pub fn spawn_bump_attack_animation(
 }
 
 pub fn spawn_move_animation(world: &World, e: Entity, start: Pos, end: Pos) -> Entity {
+    zone!();
     assert!(world.has_component::<DrawPos>(e));
 
     let start = pos_to_drawpos(start);
@@ -290,6 +294,7 @@ pub fn spawn_move_animation(world: &World, e: Entity, start: Pos, end: Pos) -> E
 }
 
 pub fn spawn_camera_shake_animation(world: &mut World) -> Entity {
+    zone!();
     let animation_length = 0.07;
     let current_time = world.singleton::<GameTime>().0;
     let start_time = current_time;
@@ -307,6 +312,7 @@ pub fn spawn_camera_shake_animation(world: &mut World) -> Entity {
 
 /// Moves the camera to goal_pos at the timing of the Animation sync_anim
 pub fn add_camera_move(world: &World, sync_anim: Entity, goal_pos: Pos) {
+    zone!();
     let goal = {
         let p = pos_to_drawpos(goal_pos);
         Rect::new_center_wh(p, TILE_DIM, TILE_DIM).center()
@@ -328,6 +334,7 @@ pub fn spawn_projectile_animation(
     hp_bar_animation: HPBarAnimation,
     target: Entity,
 ) -> Entity {
+    zone!();
     let animation_length = 0.02 * path.len().min(5) as f32;
     let current_time = world.singleton::<GameTime>().0;
     let start_time = query!(world, AnimationTimer, AnimationTarget(this, *target))
