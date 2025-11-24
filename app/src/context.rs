@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 
-use base::{text::Label, *};
 use base::zone;
+use base::{text::Label, *};
 
 use macroquad::prelude::*;
 #[cfg(feature = "hotreload")]
@@ -39,14 +39,17 @@ pub struct ContextInner {
 impl ContextTrait for Context {
     /// time since program start
     fn time(&self) -> f64 {
+        zone!();
         get_time()
     }
 
     fn delta(&self) -> f32 {
+        zone!();
         get_frame_time()
     }
 
     fn fps(&self) -> f32 {
+        zone!();
         get_fps() as f32
     }
 
@@ -56,6 +59,7 @@ impl ContextTrait for Context {
         let color = macroquad::prelude::Color { r: c.r, g: c.g, b: c.b, a: c.a };
 
         let command = move |_: &mut ContextInner| {
+            zone!();
             draw_rectangle(rect.x, rect.y, rect.w, rect.h, color);
         };
         self.draw_buffer
@@ -74,6 +78,7 @@ impl ContextTrait for Context {
         let color = macroquad::prelude::Color { r: c.r, g: c.g, b: c.b, a: c.a };
 
         let command = move |_: &mut ContextInner| {
+            zone!();
             draw_rectangle_lines(rect.x, rect.y, rect.w, rect.h, thickness, color);
         };
         self.draw_buffer
@@ -86,6 +91,7 @@ impl ContextTrait for Context {
         let color = macroquad::prelude::Color { r: c.r, g: c.g, b: c.b, a: c.a };
 
         let command = move |_: &mut ContextInner| {
+            zone!();
             draw_circle(circle.pos.x, circle.pos.y, circle.radius, color);
         };
         self.draw_buffer
@@ -101,6 +107,7 @@ impl ContextTrait for Context {
             let source = None;
             let params = DrawTextureParams { source, ..Default::default() };
             let command = move |_i: &mut ContextInner| {
+                zone!();
                 // i.sprite_shader.set(&texture);
                 kf_draw_texture(&texture, x, y, WHITE, params);
             };
@@ -128,6 +135,7 @@ impl ContextTrait for Context {
                 Some(macroquad::math::Rect { x: src.x, y: src.y, w: src.w, h: src.h });
             let params = DrawTextureParams { source, ..Default::default() };
             let command = move |_i: &mut ContextInner| {
+                zone!();
                 // i.sprite_shader.set(&texture);
                 kf_draw_texture(&texture, x, y, WHITE, params);
             };
@@ -155,6 +163,7 @@ impl ContextTrait for Context {
             let dest_size = Some(vec2(target.w, target.h));
             let params = DrawTextureParams { source, dest_size, ..Default::default() };
             let command = move |_i: &mut ContextInner| {
+                zone!();
                 // i.sprite_shader.set(&texture);
                 kf_draw_texture(&texture, target.x, target.y, WHITE, params);
             };
@@ -251,6 +260,7 @@ impl ContextTrait for Context {
     fn draw_text(&mut self, handle: u128, FPos { x, y }: FPos, z_level: i32) {
         zone!("Context::draw_text");
         let command = move |inner: &mut ContextInner| {
+            zone!();
             if inner.texter.draw_text(handle, x, y).is_none() {
                 let rect = macroquad::prelude::Rect::new(x, y, 300., 300.);
                 draw_rectangle(rect.x, rect.y, rect.w, rect.h, PINK);
@@ -357,6 +367,7 @@ const AVY_KEYS: [(&str, KeyCode); 12] = [
 
 impl Context {
     pub fn new() -> Self {
+        zone!();
         Self {
             draw_buffer: Default::default(),
             camera: Default::default(),
@@ -374,8 +385,7 @@ impl Context {
 
     /// executes deferred drawing, should be called once per frame
     pub async fn process(&mut self) {
-        #[cfg(feature = "profile")]
-        tracy::zone!("Context::process");
+        zone!();
 
         for (name, path) in self.loading.drain(..) {
             if let Err(_err) = self.textures.load_texture(&path, name, false).await {

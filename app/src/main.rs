@@ -37,7 +37,6 @@ pub unsafe extern "C" fn __cxa_thread_atexit_impl() {}
 #[global_allocator]
 static ALLOC: base::tracy::alloc::GlobalAllocator = base::tracy::alloc::GlobalAllocator::new();
 
-
 fn window_conf() -> Conf {
     Conf {
         window_title: "RampageRL".to_owned(),

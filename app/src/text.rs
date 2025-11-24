@@ -12,6 +12,7 @@ use std::{
 use base::{
     text::{Label, TextFamily, TextProperty},
     util::F32Helper,
+    zone,
 };
 use macroquad::prelude::Texture2D;
 use macroquad::prelude::WHITE;
@@ -27,6 +28,7 @@ pub struct Texter {
 
 impl Texter {
     pub fn new() -> Self {
+        zone!();
         // family name: "Blood Cyrillic"
         let blood_cyr = Arc::new(include_bytes!("../../assets/font/BLOODCYR.ttf"));
 
@@ -48,6 +50,7 @@ impl Texter {
 
     /// Set text for a key.
     pub fn set_text(&mut self, w: f32, h: f32, text: &[(&str, TextProperty)]) -> Label {
+        zone!();
         let cache_key = TextCacheKey::new(text, w, h);
         let to = self.cache.entry(cache_key).or_insert_with(|| {
             let buffer = Buffer::new(&mut self.font_system, Metrics::new(33., 40.));
@@ -62,11 +65,13 @@ impl Texter {
 
     /// Draws a text previously set with set_text
     pub fn draw_text(&mut self, handle: u128, x: f32, y: f32) -> Option<base::Rect> {
+        zone!();
         let to = self.cache.get_mut(&TextCacheKey::from_handle(handle))?;
         Some(to.draw(&mut self.font_system, &mut self.swash_cache, x, y))
     }
 
     pub fn collect_garbage(&mut self) {
+        zone!();
         self.cache.retain(|_key, to| {
             to.last_drawn += 1;
             to.last_drawn <= 30
@@ -83,6 +88,7 @@ pub struct TextCacheKey {
 
 impl TextCacheKey {
     pub fn new(text: &[(&str, TextProperty)], w: f32, h: f32) -> Self {
+        zone!();
         let mut hasher = DefaultHasher::new();
         text.hash(&mut hasher);
         F32Helper(w).hash(&mut hasher);
@@ -108,6 +114,7 @@ impl TextCacheKey {
 
 /// turns the game TextProperty into the cosmic text equivalent
 pub fn to_attr(prop: &TextProperty) -> Attrs<'static> {
+    zone!();
     let mut attr = Attrs::new();
     if let Some(c) = prop.color_opt {
         attr = attr.color(cosmic_text::Color::rgba(
@@ -151,6 +158,7 @@ impl TextObject {
         h: f32,
         text: &[(&str, TextProperty)],
     ) {
+        zone!();
         self.buffer.set_size(font_system, Some(w), Some(h));
         self.buffer.set_rich_text(
             font_system,
@@ -179,10 +187,12 @@ impl TextObject {
         x: f32,
         y: f32,
     ) -> base::Rect {
+        zone!();
         // Create a default text color
         const DEFAULT_COLOR: cosmic_text::Color = cosmic_text::Color::rgb(0xFF, 0xFF, 0xFF);
 
         if self.buffer.redraw() {
+            zone!("redraw");
             self.buffer.set_redraw(false);
             let (Some(w), Some(h)) = self.buffer.size() else { panic!("No size defined") };
             let w = w.ceil() as usize;
@@ -227,6 +237,7 @@ impl TextObject {
             self.texture = Some(Texture2D::from_image(&image));
         }
 
+        zone!("draw text texture");
         draw_texture(self.texture.as_ref().unwrap(), x, y, WHITE);
         self.last_drawn = 0;
 
