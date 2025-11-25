@@ -7,8 +7,8 @@ use simple_easing::{cubic_in_out, roundtrip, sine_in_out};
 use crate::game::Z_PROJECTILE;
 use crate::game::tile_map::TileMap;
 use crate::game::tiles::{Decor, DrawTile, TILE_DIM, TILE_SIZE, pos_to_drawpos};
-use crate::game::types::DrawHealth;
 use crate::game::types::GameTime;
+use crate::game::types::{DrawHealth, UI, UIState};
 
 use crate::{game::types::DrawPos, rand::RandomGenerator};
 
@@ -78,6 +78,9 @@ pub struct CameraMoveAnimation {
     pub from: Option<FPos>,
     pub to: FPos,
 }
+
+/// transition to GameOver UI State
+pub struct GameOverAnimation {}
 
 pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
     zone!();
@@ -162,6 +165,14 @@ pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
         }
     }
     world.process();
+
+    // Game Over
+    for (timer,) in query!(world, _ GameOverAnimation, AnimationTimer) {
+        if timer.is_active(current_time) {
+            let mut ui = world.singleton_mut::<UI>();
+            ui.state = UIState::GameOver;
+        }
+    }
 
     // Camera shake animation
     c.camera_set_shake(FVec::ZERO); // if no animation is playing this stays at zero
@@ -360,5 +371,22 @@ pub fn spawn_projectile_animation(
         .relate_to::<AnimationTarget>(target)
         .entity;
     // return the animation that finishes later
+    anim
+}
+
+pub fn spawn_game_over_animation(world: &World, target: Entity) -> Entity {
+    zone!();
+    let animation_length = 0.5;
+    let current_time = world.singleton::<GameTime>().0;
+    let start_time = query!(world, AnimationTimer, AnimationTarget(this, *target))
+        .map(|(timer,)| timer.end)
+        .fold(current_time, f32::max);
+
+    let anim = world
+        .create_deferred()
+        .add(AnimationTimer { start: start_time, end: start_time + animation_length })
+        .add(GameOverAnimation {})
+        .relate_to::<AnimationTarget>(target)
+        .entity;
     anim
 }

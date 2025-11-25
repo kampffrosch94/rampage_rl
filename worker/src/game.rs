@@ -46,6 +46,7 @@ pub const Z_SIDEBAR_BG: i32 = 3000;
 pub const Z_SIDEBAR_TEXT: i32 = 3100;
 pub const Z_INVENTORY_BG: i32 = 3000;
 pub const Z_INVENTORY_TEXT: i32 = 3100;
+pub const Z_GAME_OVER: i32 = 5000;
 
 #[derive(Quicksilver)]
 pub struct DebugOptions {
@@ -144,6 +145,10 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
             }
         }
         UIState::Inventory => {}
+        UIState::GameOver => {
+            ui_game_over(c, world);
+            return;
+        }
     }
 
     c.draw_texture("tiles", -228., -950., 5);
@@ -175,6 +180,19 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
             let mut actor = world.get_component_mut::<Actor>(e);
             c.inspect(&mut reflect(&mut *actor));
         }
+    }
+}
+
+pub fn ui_game_over(c: &mut dyn ContextTrait, world: &mut World) {
+    let r = c.screen_rect();
+    let dim = FVec::new(1000., 300.);
+    let pos = FPos::new(r.center().x - dim.x / 2.0, r.center().y - dim.y / 2.0);
+    "IT'S ALL OGRE NOW"
+        .labelize_prop(c, dim, TextProperty::new().color(Color::RED).size(100.))
+        .draw(c, pos, Z_GAME_OVER);
+
+    if c.is_pressed(Input::Confirm) {
+        *world = create_world();
     }
 }
 
@@ -233,7 +251,12 @@ fn handle_death(world: &World, target: Entity, target_a: &Actor, animation: Enti
     if target_a.hp.current <= 0 {
         let msg = format!("{} dies.", target_a.name);
         log_message(world, msg, animation);
-        world.view_deferred(target).relate_from::<AnimationCleanup>(animation);
+
+        if world.has_component::<Player>(target) {
+            animation::spawn_game_over_animation(world, target);
+        } else {
+            world.view_deferred(target).relate_from::<AnimationCleanup>(animation);
+        }
     }
 }
 
@@ -423,6 +446,9 @@ fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
         UIState::Normal | UIState::Ability => update_systems_normal(c, world),
         UIState::Inventory => update_systems_inventory(c, world),
         UIState::Inspect => update_systems_inspect(c, world),
+        state @ UIState::GameOver => {
+            unreachable!("This branch should not be reached. State: {state:?}")
+        }
     };
 }
 

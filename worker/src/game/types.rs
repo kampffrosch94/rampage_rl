@@ -15,6 +15,7 @@ use crate::animation::BumpAttackAnimation;
 use crate::animation::CameraMoveAnimation;
 use crate::animation::CameraShakeAnimation;
 use crate::animation::DecorSpawnAnimation;
+use crate::animation::GameOverAnimation;
 use crate::animation::HPBarAnimation;
 use crate::animation::MovementAnimation;
 use crate::animation::ProjectilePathAnimation;
@@ -103,6 +104,7 @@ pub struct TurnCount {
 pub enum UIState {
     #[default]
     Normal,
+    GameOver,
     Inventory,
     Inspect,
     Ability,
@@ -147,6 +149,7 @@ ecs_types!(
         HPBarAnimation,
         MovementAnimation,
         CameraMoveAnimation,
+        GameOverAnimation,
         ProjectilePathAnimation
     ),
     Relations(

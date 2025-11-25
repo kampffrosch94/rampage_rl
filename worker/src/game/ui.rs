@@ -66,6 +66,9 @@ fn side_menu(c: &mut dyn ContextTrait, world: &mut World) {
     match state {
         UIState::Normal | UIState::Ability | UIState::Inventory => {}
         UIState::Inspect => side_menu_inspect(c, world, &mut ui_rect),
+        UIState::GameOver => {
+            unreachable!("This branch should not be reached. State: {state:?}")
+        }
     };
 }
 
