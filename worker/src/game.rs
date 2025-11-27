@@ -263,6 +263,10 @@ fn handle_death(world: &World, target: Entity, target_a: &Actor, animation: Enti
 fn handle_action(world: &World, action: Action) {
     zone!();
     match action {
+        Action { actor, kind: ActionKind::Wait } => {
+            let mut actor_a = world.get_component_mut::<Actor>(actor);
+            actor_a.next_turn += 10;
+        }
         Action { actor, kind: ActionKind::Move { from, to } } => {
             let anim = animation::spawn_move_animation(world, actor, from, to);
             world.get_component_mut::<Actor>(actor).pos = to;
@@ -608,6 +612,7 @@ pub struct Action {
 
 #[derive(Debug)]
 pub enum ActionKind {
+    Wait,
     Move { from: Pos, to: Pos },
     BumpAttack { target: Entity },
     UseAbility(Ability),
