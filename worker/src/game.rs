@@ -217,7 +217,7 @@ fn input_direction(c: &mut dyn ContextTrait) -> Option<IVec> {
     None
 }
 
-fn direction_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> {
+fn player_direction_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> {
     zone!();
     if !matches!(world.singleton::<UI>().state, UIState::Normal) {
         return None;
@@ -328,7 +328,7 @@ fn handle_action(world: &World, action: Action) {
 
 fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
     zone!();
-    let action = direction_input(c, world).or_else(|| ability_input(c, world));
+    let action = player_direction_input(c, world).or_else(|| ability_input(c, world));
     // TODO make general handler for inner action
     if let Some(action) = action {
         handle_action(world, action);
