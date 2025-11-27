@@ -338,6 +338,26 @@ pub fn add_camera_move(world: &World, sync_anim: Entity, goal_pos: Pos) {
     });
 }
 
+pub fn spawn_camera_move(world: &World, target: Entity, goal_pos: Pos) {
+    zone!();
+    let goal = {
+        let p = pos_to_drawpos(goal_pos);
+        Rect::new_center_wh(p, TILE_DIM, TILE_DIM).center()
+    };
+
+    let current_time = world.singleton::<GameTime>().0;
+    let start_time = query!(world, AnimationTimer, AnimationTarget(this, *target))
+        .map(|(timer,)| timer.end)
+        .fold(current_time, f32::max);
+
+    const A_LENGTH: f32 = 0.5;
+
+    world
+        .create_deferred()
+        .add(AnimationTimer { start: start_time, end: start_time + A_LENGTH })
+        .add(CameraMoveAnimation { from: None, to: goal });
+}
+
 pub fn spawn_projectile_animation(
     world: &World,
     projectile_sprite: DrawTile,

@@ -337,6 +337,40 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
         return;
     }
 
+    if c.is_pressed(Input::Confirm)
+        && let Some((player, mut p_actor)) = query!(world, &this, _ Player, mut Actor).next()
+        && world.singleton::<TileMap>().down_stairs == p_actor.pos
+    {
+        println!("TODO: Go down the stairs.");
+        let player = player.entity;
+
+        // clean up NPCs on old level
+        for (e,) in query!(world, !Player, _ Actor, &this) {
+            e.destroy();
+        }
+
+        // generate new level and place player there
+        let mut rand = world.singleton_mut::<RandomGenerator>();
+        let seed = rand.next();
+        let tm = generate_map(seed);
+        p_actor.pos = tm.up_stairs;
+        let start_aut = p_actor.next_turn;
+        world.defer_closure(move |world| {
+            world.singleton_add(tm);
+            place_enemies(world, seed);
+            for (mut actor,) in query!(world, !Player, mut Actor) {
+                actor.next_turn = start_aut;
+            }
+            world.add_component(player, Fov(HashSet::new()));
+        });
+
+        // move camera to center on player
+        animation::spawn_camera_move(world, player, p_actor.pos);
+
+
+        return;
+    }
+
     if c.is_pressed(Input::Inspect) {
         world.singleton_mut::<UI>().state = UIState::Inspect;
         return;
