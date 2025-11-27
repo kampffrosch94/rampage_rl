@@ -243,6 +243,12 @@ fn direction_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action
         }
     }
 
+    if c.is_pressed(Input::MoveSkip)
+        && let Some((player_e,)) = query!(world, _ Player, _ Actor, &this).next()
+    {
+        return Some(Action { actor: *player_e, kind: ActionKind::Wait });
+    }
+
     None
 }
 
@@ -370,7 +376,6 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
 
         // move camera to center on player
         animation::spawn_camera_move(world, player, p_actor.pos);
-
 
         return;
     }
