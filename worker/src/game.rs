@@ -529,8 +529,9 @@ fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> 
             }
         }
         positions.sort_by_key(|pos| (p_actor.pos.distance(*pos), pos.x, pos.y));
+
         let tm = world.singleton::<TileMap>();
-        state.cursor_pos = positions
+        let new_cursor = positions
             .into_iter()
             .filter(|pos| {
                 let line = p_actor.pos.bresenham(*pos);
@@ -538,7 +539,9 @@ fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> 
                     line.iter().skip(1).take(line.len() - 2).any(|pos| tm.is_blocked(*pos));
                 !blocked
             })
-            .next();
+            .next()
+            .unwrap_or(p_actor.pos);
+        state.cursor_pos = Some(new_cursor);
     }
 
     // move cursor via normal character movement inputs
