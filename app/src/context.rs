@@ -197,15 +197,31 @@ impl ContextTrait for Context {
             Input::RestartGame => is_key_pressed(KeyCode::F2),
             Input::Save => is_key_pressed(KeyCode::F5),
             Input::Load => is_key_pressed(KeyCode::F9),
-            Input::MoveSW => is_key_pressed(KeyCode::Kp1),
-            Input::MoveS => is_key_pressed(KeyCode::Kp2) || is_key_pressed(KeyCode::Down),
-            Input::MoveSE => is_key_pressed(KeyCode::Kp3),
-            Input::MoveW => is_key_pressed(KeyCode::Kp4) || is_key_pressed(KeyCode::Left),
-            Input::MoveSkip => is_key_pressed(KeyCode::Kp5),
-            Input::MoveE => is_key_pressed(KeyCode::Kp6) || is_key_pressed(KeyCode::Right),
-            Input::MoveNW => is_key_pressed(KeyCode::Kp7),
-            Input::MoveN => is_key_pressed(KeyCode::Kp8) || is_key_pressed(KeyCode::Up),
-            Input::MoveNE => is_key_pressed(KeyCode::Kp9),
+            Input::MoveSW => is_key_pressed(KeyCode::Kp1) || is_key_pressed(KeyCode::B),
+            Input::MoveS => {
+                is_key_pressed(KeyCode::Kp2)
+                    || is_key_pressed(KeyCode::Down)
+                    || is_key_pressed(KeyCode::J)
+            }
+            Input::MoveSE => is_key_pressed(KeyCode::Kp3) || is_key_pressed(KeyCode::N),
+            Input::MoveW => {
+                is_key_pressed(KeyCode::Kp4)
+                    || is_key_pressed(KeyCode::Left)
+                    || is_key_pressed(KeyCode::H)
+            }
+            Input::MoveSkip => is_key_pressed(KeyCode::Kp5) || is_key_pressed(KeyCode::Period),
+            Input::MoveE => {
+                is_key_pressed(KeyCode::Kp6)
+                    || is_key_pressed(KeyCode::Right)
+                    || is_key_pressed(KeyCode::L)
+            }
+            Input::MoveNW => is_key_pressed(KeyCode::Kp7) || is_key_pressed(KeyCode::Z),
+            Input::MoveN => {
+                is_key_pressed(KeyCode::Kp8)
+                    || is_key_pressed(KeyCode::Up)
+                    || is_key_pressed(KeyCode::K)
+            }
+            Input::MoveNE => is_key_pressed(KeyCode::Kp9) || is_key_pressed(KeyCode::U),
             Input::Confirm => {
                 is_key_pressed(KeyCode::Enter)
                     || is_key_pressed(KeyCode::Space)
