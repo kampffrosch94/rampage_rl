@@ -410,3 +410,19 @@ pub fn spawn_game_over_animation(world: &World, target: Entity) -> Entity {
         .entity;
     anim
 }
+
+// TODO use this as base for other animation spawn functions
+pub fn spawn_empty_animation(world: &World, target: Entity, animation_length: f32) -> Entity {
+    zone!();
+    let current_time = world.singleton::<GameTime>().0;
+    let start_time = query!(world, AnimationTimer, AnimationTarget(this, *target))
+        .map(|(timer,)| timer.end)
+        .fold(current_time, f32::max);
+
+    let anim = world
+        .create_deferred()
+        .add(AnimationTimer { start: start_time, end: start_time + animation_length })
+        .relate_to::<AnimationTarget>(target)
+        .entity;
+    anim
+}

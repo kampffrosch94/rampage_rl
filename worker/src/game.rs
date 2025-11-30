@@ -266,11 +266,47 @@ fn handle_death(world: &World, target: Entity, target_a: &Actor, animation: Enti
     }
 }
 
+fn raise_pulse(world: &World, e: Entity, e_actor: &Actor) {
+    zone!();
+    if let Some(mut player) = world.get_component_mut_opt::<Player>(e) {
+        player.pulse += 3.0;
+        player.last_pulse_action = e_actor.next_turn;
+    };
+}
+
+fn lower_pulse(world: &World, e: Entity, e_actor: &mut Actor) {
+    zone!();
+    if let Some(mut player_p) = world.get_component_mut_opt::<Player>(e)
+        && (e_actor.next_turn - player_p.last_pulse_action >= 30)
+    {
+        let before = player_p.pulse;
+        player_p.pulse -= 1.0;
+        if player_p.pulse < 60. && before >= 60. {
+            let a = animation::spawn_empty_animation(world, e, 0.);
+            log_message(world, "Your pulse is getting low.".to_string(), a);
+        }
+        if player_p.pulse < 45. && before >= 45. {
+            let a = animation::spawn_empty_animation(world, e, 0.);
+            log_message(
+                world,
+                "Your pulse is getting dangerously low. Do something exiting quick!"
+                    .to_string(),
+                a,
+            );
+        }
+        if player_p.pulse < 30. {
+            let a = animation::spawn_empty_animation(world, e, 0.);
+            log_message(world, "You die of cardiac arrest.".to_string(), a);
+        }
+    }
+}
+
 fn handle_action(world: &World, action: Action) {
     zone!();
     match action {
         Action { actor, kind: ActionKind::Wait } => {
             let mut actor_a = world.get_component_mut::<Actor>(actor);
+            lower_pulse(world, actor, &mut actor_a);
             actor_a.next_turn += 10;
         }
         Action { actor, kind: ActionKind::Move { from, to } } => {
@@ -280,6 +316,7 @@ fn handle_action(world: &World, action: Action) {
                 animation::add_camera_move(world, anim, to);
             }
             let mut actor_a = world.get_component_mut::<Actor>(actor);
+            lower_pulse(world, actor, &mut actor_a);
             actor_a.next_turn += 10;
         }
         Action { actor, kind: ActionKind::BumpAttack { target } } => {
@@ -298,8 +335,9 @@ fn handle_action(world: &World, action: Action) {
             let msg = format!("{} attacks {}.", actor_a.name, target_a.name);
             log_message(world, msg, animation);
 
+            raise_pulse(world, actor, &actor_a);
+            raise_pulse(world, target, &target_a);
             handle_death(world, target, &target_a, animation);
-
             actor_a.next_turn += 10;
         }
         Action {
@@ -319,6 +357,7 @@ fn handle_action(world: &World, action: Action) {
             let mut actor_a = world.get_component_mut::<Actor>(actor);
             let msg = format!("{} throws a huge rock at {}.", actor_a.name, target_a.name);
             log_message(world, msg, animation);
+            raise_pulse(world, target, &target_a);
             actor_a.next_turn += 10;
 
             handle_death(world, target, &target_a, animation);
@@ -846,7 +885,7 @@ pub fn create_world() -> World {
 
     let _player = world
         .create()
-        .add(Player { pulse: 60., last_action: 0 })
+        .add(Player { pulse: 60., last_pulse_action: 0 })
         .add(DrawPos(FPos::new(0., 0.)))
         .add(Actor {
             name: "Player".into(),

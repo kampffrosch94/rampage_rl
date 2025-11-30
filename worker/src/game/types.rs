@@ -47,7 +47,8 @@ use super::tile_map::TileMap;
 #[derive(Debug, Quicksilver)]
 pub struct Player {
     pub pulse: f32,
-    pub last_action: i32,
+    /// aut of the last pulse raising action taken
+    pub last_pulse_action: i64,
 }
 
 #[derive(Debug, Quicksilver)]
