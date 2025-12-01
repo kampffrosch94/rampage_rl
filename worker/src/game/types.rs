@@ -105,6 +105,7 @@ pub struct TurnCount {
 pub enum UIState {
     #[default]
     Normal,
+    PostDeath,
     GameOver,
     Inventory,
     Inspect,

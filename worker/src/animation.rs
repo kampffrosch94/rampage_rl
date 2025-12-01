@@ -170,7 +170,7 @@ pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
     for (timer,) in query!(world, _ GameOverAnimation, AnimationTimer) {
         if timer.is_active(current_time) {
             let mut ui = world.singleton_mut::<UI>();
-            ui.state = UIState::GameOver;
+            ui.state = UIState::PostDeath;
         }
     }
 

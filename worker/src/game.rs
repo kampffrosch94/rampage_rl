@@ -104,7 +104,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
 
     // systematic input
     match state {
-        UIState::Normal | UIState::Ability | UIState::Inspect => {
+        UIState::Normal | UIState::Ability | UIState::Inspect | UIState::PostDeath => {
             if c.mouse_wheel() > 0. {
                 c.camera_zoom(1);
             }
@@ -528,7 +528,8 @@ fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
         UIState::Normal | UIState::Ability => update_systems_normal(c, world),
         UIState::Inventory => update_systems_inventory(c, world),
         UIState::Inspect => update_systems_inspect(c, world),
-        state @ UIState::GameOver => {
+        UIState::PostDeath => update_systems_postdeath(c, world),
+        UIState::GameOver => {
             unreachable!("This branch should not be reached. State: {state:?}")
         }
     };
@@ -682,6 +683,13 @@ fn update_systems_inventory(c: &mut dyn ContextTrait, world: &mut World) {
 #[derive(Default, Quicksilver)]
 pub struct InspectUIState {
     cursor_pos: Option<Pos>,
+}
+
+fn update_systems_postdeath(c: &mut dyn ContextTrait, world: &mut World) {
+    zone!();
+    if c.is_pressed(Input::Confirm) {
+        world.singleton_mut::<UI>().state = UIState::GameOver;
+    }
 }
 
 fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
