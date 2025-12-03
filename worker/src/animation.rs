@@ -338,6 +338,7 @@ pub fn add_camera_move(world: &World, sync_anim: Entity, goal_pos: Pos) {
     });
 }
 
+#[expect(unused)]
 pub fn spawn_camera_move(world: &World, target: Entity, goal_pos: Pos) {
     zone!();
     let goal = {

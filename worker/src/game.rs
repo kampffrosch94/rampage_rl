@@ -1,5 +1,4 @@
-use std::collections::HashSet;
-
+use crate::animation::CameraMoveAnimation;
 use crate::animation::{AnimationCleanup, AnimationTarget};
 use base::pos::IVec;
 use base::text::Labelize;
@@ -13,12 +12,15 @@ use mapgen::{generate_map, place_enemies};
 use quicksilver::Quicksilver;
 #[allow(unused)]
 use quicksilver::reflections::reflect;
+use std::collections::HashSet;
 use tile_map::{DecorWithPos, TileMap};
 pub mod creature;
 pub mod tile_map;
 pub mod tiles;
 pub mod types;
-use tiles::{DrawTile, Environment, LogicTile, TILE_SIZE, generate_draw_tile, pos_to_drawpos};
+use tiles::{
+    DrawTile, Environment, LogicTile, TILE_DIM, TILE_SIZE, generate_draw_tile, pos_to_drawpos,
+};
 use types::*;
 use ui::{MessageLog, handle_ui, log_message, ui_inventory};
 pub mod mapgen;
@@ -390,7 +392,6 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
         && let Some((player, mut p_actor)) = query!(world, &this, _ Player, mut Actor).next()
         && world.singleton::<TileMap>().down_stairs == p_actor.pos
     {
-        println!("TODO: Go down the stairs.");
         let player = player.entity;
 
         // clean up NPCs on old level
@@ -404,6 +405,22 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
         let tm = generate_map(seed);
         p_actor.pos = tm.up_stairs;
         let start_aut = p_actor.next_turn;
+
+        // remove existing camera move animations
+        for (anim,) in query!(world, &this, _ CameraMoveAnimation) {
+            anim.destroy();
+        }
+
+        // move camera to center on player
+        let from = c.screen_rect_world().center();
+        let goal = {
+            let p = pos_to_drawpos(tm.up_stairs);
+            Rect::new_center_wh(p, TILE_DIM, TILE_DIM).center()
+        };
+        let offset = goal - from;
+        dbg!(&offset);
+        c.camera_move_rel(offset);
+
         world.defer_closure(move |world| {
             world.singleton_add(tm);
             place_enemies(world, seed);
@@ -412,9 +429,6 @@ fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
             }
             world.add_component(player, Fov(HashSet::new()));
         });
-
-        // move camera to center on player
-        animation::spawn_camera_move(world, player, p_actor.pos);
 
         return;
     }
