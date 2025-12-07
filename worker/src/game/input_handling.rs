@@ -13,6 +13,29 @@ use crate::game::{
 
 use super::Action;
 
+pub fn avy_navigation(c: &mut dyn ContextTrait, positions: &[Pos]) -> Option<Pos> {
+    zone!();
+    let mut r = None;
+    let pressed = c.avy_is_key_pressed();
+    for (choice, pos) in positions.iter().enumerate() {
+        let choice = choice as u32;
+        let text = c.avy_label(choice);
+        let label = text.labelize_prop(
+            c,
+            FVec::new(50., 50.),
+            TextProperty::new().color(Color::YELLOW),
+        );
+        let mut draw_pos = pos.to_fpos(TILE_SIZE).rect(TILE_SIZE).bl().to_screen(c);
+        draw_pos.x += 3.0;
+        draw_pos.y -= label.rect.h + 3.0;
+        label.draw(c, draw_pos, Z_AVY_LABEL);
+        if Some(choice) == pressed {
+            r = Some(*pos);
+        }
+    }
+    r
+}
+
 pub fn ability_key_pressed(c: &mut dyn ContextTrait) -> Option<usize> {
     zone!();
     let inputs =

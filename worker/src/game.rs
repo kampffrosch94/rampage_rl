@@ -8,7 +8,7 @@ use base::{Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasti
 use base::{FVec, TextProperty};
 use debug_util::{DebugOptions, debug_ui};
 use froql::{entity_store::Entity, query, world::World};
-use input_handling::{input_direction, player_inputs};
+use input_handling::{avy_navigation, input_direction, player_inputs};
 use mapgen::{generate_map, place_enemies};
 use quicksilver::Quicksilver;
 use sprites::CreatureSprite;
@@ -440,29 +440,6 @@ fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
             state.cursor_pos = Some(pos);
         }
     }
-}
-
-fn avy_navigation(c: &mut dyn ContextTrait, positions: &[Pos]) -> Option<Pos> {
-    zone!();
-    let mut r = None;
-    let pressed = c.avy_is_key_pressed();
-    for (choice, pos) in positions.iter().enumerate() {
-        let choice = choice as u32;
-        let text = c.avy_label(choice);
-        let label = text.labelize_prop(
-            c,
-            FVec::new(50., 50.),
-            TextProperty::new().color(Color::YELLOW),
-        );
-        let mut draw_pos = pos.to_fpos(TILE_SIZE).rect(TILE_SIZE).bl().to_screen(c);
-        draw_pos.x += 3.0;
-        draw_pos.y -= label.rect.h + 3.0;
-        label.draw(c, draw_pos, Z_AVY_LABEL);
-        if Some(choice) == pressed {
-            r = Some(*pos);
-        }
-    }
-    r
 }
 
 fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
