@@ -9,12 +9,8 @@ use froql::{query, world::World};
 use quicksilver::Quicksilver;
 
 use super::InspectUIState;
-use super::Z_INVENTORY_BG;
-use super::Z_INVENTORY_TEXT;
-use super::Z_MESSAGE_BG;
-use super::Z_MESSAGE_TEXT;
 use super::ensure_singleton;
-use super::{Z_SIDEBAR_BG, Z_SIDEBAR_TEXT};
+use crate::game::z_levels::*;
 
 #[derive(Default, Debug, Quicksilver)]
 pub struct MessageLog {

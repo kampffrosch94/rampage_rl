@@ -4,11 +4,11 @@ use froql::query;
 use froql::{entity_store::Entity, world::World};
 use simple_easing::{cubic_in_out, roundtrip, sine_in_out};
 
-use crate::game::Z_PROJECTILE;
 use crate::game::tile_map::TileMap;
 use crate::game::tiles::{Decor, DrawTile, TILE_DIM, TILE_SIZE, pos_to_drawpos};
 use crate::game::types::GameTime;
 use crate::game::types::{DrawHealth, UI, UIState};
+use crate::game::z_levels::*;
 
 use crate::{game::types::DrawPos, rand::RandomGenerator};
 
