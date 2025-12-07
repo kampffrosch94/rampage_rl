@@ -4,12 +4,12 @@ use crate::{
     game::{
         AbilityUIState,
         drawing::DrawPos,
-        ecs_types::{UI, UIState},
         game_logic::{Ability, ActionKind, Actor, Fov, Player, handle_action, handle_death},
         mapgen::{generate_map, place_enemies},
         sprites::{TILE_DIM, TILE_SIZE, pos_to_drawpos},
         tile_map::TileMap,
         z_levels::{Z_AVY_LABEL, Z_CURSOR},
+        {UI, UIState},
     },
     rand::RandomGenerator,
 };

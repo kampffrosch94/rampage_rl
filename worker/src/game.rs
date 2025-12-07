@@ -33,6 +33,40 @@ use sprites::{TILE_SIZE, pos_to_drawpos};
 use tile_map::TileMap;
 use ui::{handle_ui, ui_inventory};
 
+/// How much time passed since the start of the game in seconds
+/// Set early in the game loop.
+/// Used for animations
+#[derive(Default)]
+pub struct GameTime(pub f32);
+
+#[repr(C)]
+#[derive(Debug, Quicksilver, Default, Clone, Copy)]
+pub enum UIState {
+    #[default]
+    Normal,
+    PostDeath,
+    GameOver,
+    Inventory,
+    Inspect,
+    Ability,
+}
+
+#[derive(Debug, Quicksilver, Default)]
+pub struct UI {
+    pub state: UIState,
+    pub last_mouse_pos: Option<FPos>,
+}
+
+#[derive(Default, Quicksilver)]
+pub struct AbilityUIState {
+    cursor_pos: Option<Pos>,
+}
+
+#[derive(Default, Quicksilver)]
+pub struct InspectUIState {
+    cursor_pos: Option<Pos>,
+}
+
 pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     zone!();
     if c.is_pressed(Input::RestartGame) {
@@ -146,11 +180,6 @@ fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
     };
 }
 
-#[derive(Default, Quicksilver)]
-pub struct AbilityUIState {
-    cursor_pos: Option<Pos>,
-}
-
 fn update_systems_inventory(c: &mut dyn ContextTrait, world: &mut World) {
     zone!();
     if c.is_pressed(Input::Cancel) {
@@ -158,11 +187,6 @@ fn update_systems_inventory(c: &mut dyn ContextTrait, world: &mut World) {
     }
 
     ui_inventory(c, world);
-}
-
-#[derive(Default, Quicksilver)]
-pub struct InspectUIState {
-    cursor_pos: Option<Pos>,
 }
 
 fn update_systems_postdeath(c: &mut dyn ContextTrait, world: &mut World) {

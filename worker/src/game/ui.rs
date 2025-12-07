@@ -1,15 +1,14 @@
-use crate::game::ecs_types::UI;
-use crate::game::ecs_types::UIState;
+use super::InspectUIState;
+use super::ensure_singleton;
+use crate::game::UI;
+use crate::game::UIState;
 use crate::game::game_logic::{Actor, Player};
+use crate::game::z_levels::*;
 use base::text::Labelize;
 use base::{Color, ContextTrait, Rect, TextProperty, text::TextFamily};
 use froql::entity_store::Entity;
 use froql::{query, world::World};
 use quicksilver::Quicksilver;
-
-use super::InspectUIState;
-use super::ensure_singleton;
-use crate::game::z_levels::*;
 
 #[derive(Default, Debug, Quicksilver)]
 pub struct MessageLog {

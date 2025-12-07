@@ -8,10 +8,10 @@ use crate::{
     animation::{self, AnimationCleanup, HPBarAnimation},
     game::{
         drawing::{DrawHealth, DrawPos},
-        ecs_types::{UI, register_components},
         mapgen::{generate_map, place_enemies},
         sprites::{CreatureSprite, DrawTile},
         ui::{MessageLog, log_message},
+        {UI, register_components},
     },
     rand::RandomGenerator,
 };

@@ -1,10 +1,8 @@
 use crate::game::drawing::{DrawHealth, DrawPos};
-use crate::game::ecs_types::GameTime;
-use crate::game::ecs_types::{UI, UIState};
 use crate::game::game_logic::Player;
 use crate::game::sprites::{Decor, DrawTile, TILE_DIM, TILE_SIZE, pos_to_drawpos};
 use crate::game::tile_map::TileMap;
-use crate::game::z_levels::*;
+use crate::game::{GameTime, UI, UIState, z_levels::*};
 use crate::rand::RandomGenerator;
 use base::{ContextTrait, FPos, FVec, Pos, Rect, zone};
 use fastnoise_lite::{FastNoiseLite, NoiseType};

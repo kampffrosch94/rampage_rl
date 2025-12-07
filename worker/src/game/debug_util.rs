@@ -4,7 +4,7 @@ use base::{ContextTrait, zone};
 use froql::{query, world::World};
 use quicksilver::{Quicksilver, reflections::reflect};
 
-use crate::game::ecs_types::UI;
+use crate::game::UI;
 
 #[derive(Quicksilver)]
 pub struct DebugOptions {
