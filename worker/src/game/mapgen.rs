@@ -120,7 +120,8 @@ pub fn place_enemies(world: &mut World, seed: u64) {
     let tm = world.singleton::<TileMap>();
     for room in &tm.rooms {
         for t in 0..room.tile_count() {
-            if rand.next_in_range(0, 1000) > 20 {
+            let pos = room.tile_pos(t);
+            if rand.next_in_range(0, 1000) > 20 || tm.up_stairs == pos {
                 continue;
             }
             let _goblin = world
@@ -128,7 +129,7 @@ pub fn place_enemies(world: &mut World, seed: u64) {
                 .add(DrawPos(FPos::new(0., 0.)))
                 .add(Actor {
                     name: "Goblin".into(),
-                    pos: room.tile_pos(t),
+                    pos,
                     sprite: CreatureSprite::Goblin,
                     hp: HP { max: 5, current: 5 },
                     next_turn: 0,
@@ -136,7 +137,7 @@ pub fn place_enemies(world: &mut World, seed: u64) {
                 .add(DrawHealth { ratio: 1.0 });
         }
     }
-    drop(tm);
+    drop(tm); // end borrow
     world.process();
 }
 

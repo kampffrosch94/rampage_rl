@@ -100,7 +100,8 @@ impl Room {
         self.w * self.h
     }
 
-    /// 0..(self.tile_count())
+    /// Position by number row wise
+    /// Nr must be in range of `0..(self.tile_count())`
     pub fn tile_pos(&self, nr: i32) -> Pos {
         let dx = nr.rem_euclid(self.w);
         let dy = nr.div_euclid(self.w);
