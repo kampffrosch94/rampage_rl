@@ -6,9 +6,8 @@ use froql::{entity_store::Entity, query, world::World};
 use crate::{
     animation::{self, AnimationCleanup},
     game::{
-        ecs_types::{
-            DrawHealth, DrawPos, Fov, HP, Player, TurnCount, UI, register_components,
-        },
+        drawing::{DrawHealth, DrawPos},
+        ecs_types::{Fov, HP, Player, TurnCount, UI, register_components},
         mapgen::{generate_map, place_enemies},
         sprites::{CreatureSprite, DrawTile},
         ui::{MessageLog, log_message},

@@ -1,11 +1,5 @@
-use base::Circle;
-use base::FPos;
-use base::Pos;
-use base::Rect;
-use froql::component::CASCADING_DESTRUCT;
-use froql::relation::Relation;
-use froql::world::World;
-
+use super::sprites::CreatureSprite;
+use super::tile_map::TileMap;
 use crate::animation::AnimationCleanup;
 use crate::animation::AnimationTarget;
 use crate::animation::AnimationTimer;
@@ -20,26 +14,31 @@ use crate::animation::ProjectilePathAnimation;
 use crate::ecs_util::EntityComponent;
 use crate::ecs_util::OriginTarget;
 use crate::ecs_util::SerializedState;
+use crate::ecs_util::{ecs_types, generate_load, generate_register, generate_save};
 use crate::game::AbilityUIState;
 use crate::game::InspectUIState;
 use crate::game::debug_util::DebugOptions;
+use crate::game::drawing::DrawHealth;
+use crate::game::drawing::DrawPos;
 use crate::game::ui::MessageInhibitor;
 use crate::game::ui::MessageLog;
 use crate::game::ui::MessageOrder;
 use crate::game::ui::PendingMessage;
 use crate::rand::RandomGenerator;
+use base::Circle;
+use base::FPos;
+use base::Pos;
+use base::Rect;
+use froql::component::CASCADING_DESTRUCT;
 use froql::entity_store::EntityId;
 use froql::query_helper::trivial_query_one_component;
+use froql::relation::Relation;
+use froql::world::World;
 use quicksilver::Quicksilver;
 use std::any::TypeId;
 use std::any::type_name;
 use std::cell::RefCell;
 use std::collections::HashSet;
-
-use crate::ecs_util::{ecs_types, generate_load, generate_register, generate_save};
-
-use super::sprites::CreatureSprite;
-use super::tile_map::TileMap;
 
 /// Marker for player character
 #[derive(Debug, Quicksilver)]
@@ -76,14 +75,6 @@ pub struct Actor {
     pub hp: HP,
     /// when is this actors next turn in aut
     pub next_turn: i64,
-}
-
-#[derive(Debug, Quicksilver)]
-pub struct DrawPos(pub FPos);
-
-#[derive(Debug, Quicksilver)]
-pub struct DrawHealth {
-    pub ratio: f32,
 }
 
 /// How much time passed since the start of the game in seconds

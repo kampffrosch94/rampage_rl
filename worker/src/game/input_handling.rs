@@ -1,5 +1,11 @@
 use std::collections::HashSet;
 
+use crate::game::{
+    Fov,
+    drawing::DrawPos,
+    ecs_types::{UI, UIState},
+    tile_map::TileMap,
+};
 use crate::{
     animation::{self, CameraMoveAnimation},
     ecs_util::ensure_singleton,
@@ -16,12 +22,6 @@ use base::{
     Color, ContextTrait, FVec, Input, Pos, Rect, TextProperty, pos::IVec, text::Labelize, zone,
 };
 use froql::{query, world::World};
-
-use crate::game::{
-    DrawPos, Fov,
-    ecs_types::{UI, UIState},
-    tile_map::TileMap,
-};
 
 use super::game_logic::Action;
 

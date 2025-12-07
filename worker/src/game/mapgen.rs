@@ -1,4 +1,4 @@
-use crate::game::DrawHealth;
+use super::drawing::DrawHealth;
 use crate::rand::RandomGenerator;
 use base::Color;
 use base::FPos;
@@ -9,11 +9,9 @@ use froql::component::SYMMETRIC;
 use froql::component::TRANSITIVE;
 use froql::query;
 use froql::world::World;
-
 mod astar_dig;
-
+use super::drawing::DrawPos;
 use super::ecs_types::Actor;
-use super::ecs_types::DrawPos;
 use super::ecs_types::HP;
 use super::sprites::CreatureSprite;
 use super::sprites::LogicTile;
