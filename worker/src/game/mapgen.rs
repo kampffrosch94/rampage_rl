@@ -12,10 +12,10 @@ use froql::world::World;
 
 mod astar_dig;
 
-use super::sprites::CreatureSprite;
 use super::ecs_types::Actor;
 use super::ecs_types::DrawPos;
 use super::ecs_types::HP;
+use super::sprites::CreatureSprite;
 use super::sprites::LogicTile;
 use super::sprites::TILE_SIZE;
 use super::tile_map::Room;
