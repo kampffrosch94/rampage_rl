@@ -17,13 +17,13 @@ use tile_map::{DecorWithPos, TileMap};
 pub mod creature;
 pub mod tile_map;
 pub mod tiles;
-pub mod types;
+pub mod ecs_types;
 pub mod z_levels;
 use crate::game::z_levels::*;
 use tiles::{
     DrawTile, Environment, LogicTile, TILE_DIM, TILE_SIZE, generate_draw_tile, pos_to_drawpos,
 };
-use types::*;
+use ecs_types::*;
 use ui::{MessageLog, handle_ui, log_message, ui_inventory};
 pub mod mapgen;
 pub mod ui;

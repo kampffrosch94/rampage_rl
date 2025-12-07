@@ -2,7 +2,7 @@ use froql::world::World;
 
 use crate::{
     game::create_world,
-    game::types::{load_world, save_world},
+    game::ecs_types::{load_world, save_world},
 };
 
 /// not dropped across reloads

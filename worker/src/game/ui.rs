@@ -1,7 +1,7 @@
 use crate::game::Actor;
 use crate::game::Player;
-use crate::game::types::UI;
-use crate::game::types::UIState;
+use crate::game::ecs_types::UI;
+use crate::game::ecs_types::UIState;
 use base::text::Labelize;
 use base::{Color, ContextTrait, Rect, TextProperty, text::TextFamily};
 use froql::entity_store::Entity;
