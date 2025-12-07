@@ -1,7 +1,5 @@
-#![allow(unused)]
 use base::Circle;
 use base::FPos;
-use base::FVec;
 use base::Pos;
 use base::Rect;
 use froql::component::CASCADING_DESTRUCT;
