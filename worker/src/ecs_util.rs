@@ -1,4 +1,5 @@
 use crate::quicksilver_glue::EntityWrapper;
+use froql::world::World;
 use quicksilver::Quicksilver;
 use std::collections::HashMap;
 
@@ -131,3 +132,9 @@ pub(crate) use ecs_types;
 pub(crate) use generate_load;
 pub(crate) use generate_register;
 pub(crate) use generate_save;
+
+pub fn ensure_singleton<T: Default + 'static>(world: &mut World) {
+    if !world.singleton_has::<T>() {
+        world.singleton_add(T::default());
+    }
+}

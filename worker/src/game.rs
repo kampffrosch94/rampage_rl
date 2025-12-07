@@ -1,5 +1,6 @@
 use crate::animation::CameraMoveAnimation;
 use crate::animation::{AnimationCleanup, AnimationTarget};
+use crate::ecs_util::ensure_singleton;
 use base::pos::IVec;
 use base::text::Labelize;
 use base::zone;
@@ -7,6 +8,7 @@ use base::zone;
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
 use base::{FVec, TextProperty};
 use creature::CreatureSprite;
+use debug_util::{DebugOptions, debug_ui};
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};
 use quicksilver::Quicksilver;
@@ -15,16 +17,17 @@ use quicksilver::reflections::reflect;
 use std::collections::HashSet;
 use tile_map::{DecorWithPos, TileMap};
 pub mod creature;
+pub mod ecs_types;
 pub mod tile_map;
 pub mod tiles;
-pub mod ecs_types;
 pub mod z_levels;
 use crate::game::z_levels::*;
+use ecs_types::*;
 use tiles::{
     DrawTile, Environment, LogicTile, TILE_DIM, TILE_SIZE, generate_draw_tile, pos_to_drawpos,
 };
-use ecs_types::*;
 use ui::{MessageLog, handle_ui, log_message, ui_inventory};
+pub mod debug_util;
 pub mod mapgen;
 pub mod ui;
 use crate::game::ui::PendingMessage;
@@ -35,25 +38,6 @@ use crate::{
     persistent::PersistentState,
     rand::RandomGenerator,
 };
-
-#[derive(Quicksilver)]
-pub struct DebugOptions {
-    show_debug: bool,
-    slow_mode: bool,
-    slowdown_factor: i32,
-}
-
-impl Default for DebugOptions {
-    fn default() -> Self {
-        Self { slow_mode: false, slowdown_factor: 20, show_debug: true }
-    }
-}
-
-pub fn ensure_singleton<T: Default + 'static>(world: &mut World) {
-    if !world.singleton_has::<T>() {
-        world.singleton_add(T::default());
-    }
-}
 
 pub fn ability_key_pressed(c: &mut dyn ContextTrait) -> Option<usize> {
     let inputs =
@@ -149,26 +133,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     animation::handle_animations(c, world);
     draw_systems(c, world);
 
-    let mut s = world.singleton_mut::<DebugOptions>();
-    if s.show_debug {
-        zone!("show debug");
-        c.inspect(&mut reflect(&mut *s));
-
-        let mut s = world.singleton_mut::<UI>();
-        c.inspect(&mut reflect(&mut *s));
-
-        for (mut msg,) in query!(world, mut PendingMessage) {
-            c.inspect(&mut reflect(&mut *msg));
-        }
-
-        let mut actors =
-            query!(world, &this, _ Actor).map(|(e,)| e.entity).collect::<Vec<_>>();
-        actors.sort_by_key(|e| e.id.0);
-        for e in actors {
-            let mut actor = world.get_component_mut::<Actor>(e);
-            c.inspect(&mut reflect(&mut *actor));
-        }
-    }
+    debug_ui(c, world);
 }
 
 pub fn ui_game_over(c: &mut dyn ContextTrait, world: &mut World) {
