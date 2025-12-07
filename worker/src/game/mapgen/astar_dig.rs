@@ -5,7 +5,7 @@ use base::Pos;
 use base::grids::Grid;
 
 use crate::game::tile_map::TileMap;
-use crate::game::tiles::LogicTile;
+use crate::game::sprites::LogicTile;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 struct PosAndCost {

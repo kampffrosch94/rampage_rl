@@ -19,11 +19,11 @@ use tile_map::{DecorWithPos, TileMap};
 pub mod creature;
 pub mod ecs_types;
 pub mod tile_map;
-pub mod tiles;
+pub mod sprites;
 pub mod z_levels;
 use crate::game::z_levels::*;
 use ecs_types::*;
-use tiles::{
+use sprites::{
     DrawTile, Environment, LogicTile, TILE_DIM, TILE_SIZE, generate_draw_tile, pos_to_drawpos,
 };
 use ui::{MessageLog, handle_ui, log_message, ui_inventory};

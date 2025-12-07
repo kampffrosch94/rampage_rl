@@ -5,7 +5,7 @@ use froql::{entity_store::Entity, query, world::World};
 use quicksilver::Quicksilver;
 use quicksilver::empty::EmptyContainer;
 
-use super::tiles::{Decor, LogicTile};
+use super::sprites::{Decor, LogicTile};
 use crate::game::Actor;
 
 #[derive(Debug, Quicksilver)]

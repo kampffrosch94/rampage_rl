@@ -18,8 +18,8 @@ use super::ecs_types::DrawPos;
 use super::ecs_types::HP;
 use super::tile_map::Room;
 use super::tile_map::TileMap;
-use super::tiles::LogicTile;
-use super::tiles::TILE_SIZE;
+use super::sprites::LogicTile;
+use super::sprites::TILE_SIZE;
 enum Connected {}
 
 pub fn generate_map(seed: u64) -> TileMap {

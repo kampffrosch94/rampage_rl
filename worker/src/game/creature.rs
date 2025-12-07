@@ -3,7 +3,7 @@ use quicksilver::Quicksilver;
 
 use super::{
     Z_SPRITE,
-    tiles::{TILE_DIM, TILE_SCALE},
+    sprites::{TILE_DIM, TILE_SCALE},
 };
 
 #[derive(Debug, Clone, Copy, Quicksilver)]
