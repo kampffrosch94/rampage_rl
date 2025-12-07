@@ -7,7 +7,7 @@ pub use game::update_inner;
 pub use persistent::PersistentState;
 mod animation;
 mod dijkstra;
-mod ecs_setup;
+mod ecs_util;
 mod game;
 mod persistent;
 mod quicksilver_glue;

@@ -19,9 +19,9 @@ use crate::animation::GameOverAnimation;
 use crate::animation::HPBarAnimation;
 use crate::animation::MovementAnimation;
 use crate::animation::ProjectilePathAnimation;
-use crate::ecs_setup::EntityComponent;
-use crate::ecs_setup::OriginTarget;
-use crate::ecs_setup::SerializedState;
+use crate::ecs_util::EntityComponent;
+use crate::ecs_util::OriginTarget;
+use crate::ecs_util::SerializedState;
 use crate::game::AbilityUIState;
 use crate::game::DebugOptions;
 use crate::game::InspectUIState;
@@ -38,7 +38,7 @@ use std::any::type_name;
 use std::cell::RefCell;
 use std::collections::HashSet;
 
-use crate::ecs_setup::{ecs_types, generate_load, generate_register, generate_save};
+use crate::ecs_util::{ecs_types, generate_load, generate_register, generate_save};
 
 use super::creature::CreatureSprite;
 use super::tile_map::TileMap;
