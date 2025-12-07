@@ -1,8 +1,8 @@
 use froql::world::World;
 
 use crate::{
-    game::create_world,
     game::ecs_types::{load_world, save_world},
+    game::game_logic::create_world,
 };
 
 /// not dropped across reloads

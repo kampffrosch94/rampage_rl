@@ -4,9 +4,8 @@ use froql::{entity_store::Entity, query, world::World};
 use crate::{
     dijkstra::{dijkstra, dijkstra_path},
     game::{
-        Action, ActionKind,
         ecs_types::{Actor, Player},
-        handle_action,
+        game_logic::{Action, ActionKind, handle_action},
         tile_map::TileMap,
     },
 };

@@ -1,17 +1,29 @@
+use std::collections::HashSet;
+
 use crate::{
-    animation,
+    animation::{self, CameraMoveAnimation},
     ecs_util::ensure_singleton,
-    game::{AbilityUIState, ActionKind, Actor, Player, handle_action, handle_death, *},
+    game::{
+        AbilityUIState, Actor, Player,
+        game_logic::{Ability, ActionKind, handle_action, handle_death},
+        mapgen::{generate_map, place_enemies},
+        sprites::{TILE_DIM, TILE_SIZE, pos_to_drawpos},
+        z_levels::{Z_AVY_LABEL, Z_CURSOR},
+    },
+    rand::RandomGenerator,
 };
-use base::{ContextTrait, Input, pos::IVec, zone};
+use base::{
+    Color, ContextTrait, FVec, Input, Pos, Rect, TextProperty, pos::IVec, text::Labelize, zone,
+};
 use froql::{query, world::World};
 
 use crate::game::{
+    DrawPos, Fov,
     ecs_types::{UI, UIState},
     tile_map::TileMap,
 };
 
-use super::Action;
+use super::game_logic::Action;
 
 pub fn avy_navigation(c: &mut dyn ContextTrait, positions: &[Pos]) -> Option<Pos> {
     zone!();
