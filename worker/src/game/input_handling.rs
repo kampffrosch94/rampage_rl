@@ -1,19 +1,14 @@
-use std::collections::HashSet;
-
-use crate::game::{
-    game_logic::Fov,
-    drawing::DrawPos,
-    ecs_types::{UI, UIState},
-    tile_map::TileMap,
-};
 use crate::{
     animation::{self, CameraMoveAnimation},
     ecs_util::ensure_singleton,
     game::{
-        AbilityUIState, Actor, Player,
-        game_logic::{Ability, ActionKind, handle_action, handle_death},
+        AbilityUIState,
+        drawing::DrawPos,
+        ecs_types::{UI, UIState},
+        game_logic::{Ability, ActionKind, Actor, Fov, Player, handle_action, handle_death},
         mapgen::{generate_map, place_enemies},
         sprites::{TILE_DIM, TILE_SIZE, pos_to_drawpos},
+        tile_map::TileMap,
         z_levels::{Z_AVY_LABEL, Z_CURSOR},
     },
     rand::RandomGenerator,
@@ -22,6 +17,7 @@ use base::{
     Color, ContextTrait, FVec, Input, Pos, Rect, TextProperty, pos::IVec, text::Labelize, zone,
 };
 use froql::{query, world::World};
+use std::collections::HashSet;
 
 use super::game_logic::Action;
 

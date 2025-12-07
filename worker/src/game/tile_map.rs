@@ -6,7 +6,7 @@ use quicksilver::Quicksilver;
 use quicksilver::empty::EmptyContainer;
 
 use super::sprites::{Decor, LogicTile};
-use crate::game::Actor;
+use crate::game::game_logic::Actor;
 
 #[derive(Debug, Quicksilver)]
 pub struct TileMap {

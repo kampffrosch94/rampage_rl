@@ -1,4 +1,6 @@
 use super::drawing::DrawHealth;
+use super::game_logic::Actor;
+use super::game_logic::HP;
 use crate::rand::RandomGenerator;
 use base::Color;
 use base::FPos;
@@ -11,8 +13,6 @@ use froql::query;
 use froql::world::World;
 mod astar_dig;
 use super::drawing::DrawPos;
-use super::ecs_types::Actor;
-use super::ecs_types::HP;
 use super::sprites::CreatureSprite;
 use super::sprites::LogicTile;
 use super::sprites::TILE_SIZE;

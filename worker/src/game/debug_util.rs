@@ -1,5 +1,5 @@
-use crate::game::Actor;
 use crate::game::PendingMessage;
+use crate::game::game_logic::Actor;
 use base::{ContextTrait, zone};
 use froql::{query, world::World};
 use quicksilver::{Quicksilver, reflections::reflect};

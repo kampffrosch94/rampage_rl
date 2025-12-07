@@ -9,9 +9,9 @@ use base::{Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasti
 use base::{FVec, TextProperty};
 use debug_util::{DebugOptions, debug_ui};
 use drawing::draw_systems;
-use froql::{entity_store::Entity, query, world::World};
+use froql::{query, world::World};
 use game_ai::ai_turn;
-use game_logic::{create_world, next_turn_actor};
+use game_logic::{Actor, Fov, Player, create_world, next_turn_actor};
 use input_handling::{avy_navigation, input_direction, player_inputs};
 use mapgen::{generate_map, place_enemies};
 use quicksilver::Quicksilver;
