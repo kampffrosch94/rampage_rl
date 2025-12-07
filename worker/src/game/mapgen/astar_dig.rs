@@ -4,8 +4,8 @@ use std::collections::BinaryHeap;
 use base::Pos;
 use base::grids::Grid;
 
-use crate::game::tile_map::TileMap;
 use crate::game::sprites::LogicTile;
+use crate::game::tile_map::TileMap;
 
 #[derive(Copy, Clone, Eq, PartialEq)]
 struct PosAndCost {

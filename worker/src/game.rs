@@ -7,19 +7,18 @@ use base::zone;
 #[allow(unused)]
 use base::{Circle, Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
 use base::{FVec, TextProperty};
-use creature::CreatureSprite;
 use debug_util::{DebugOptions, debug_ui};
 use froql::{entity_store::Entity, query, world::World};
 use mapgen::{generate_map, place_enemies};
 use quicksilver::Quicksilver;
 #[allow(unused)]
 use quicksilver::reflections::reflect;
+use sprites::CreatureSprite;
 use std::collections::HashSet;
 use tile_map::{DecorWithPos, TileMap};
-pub mod creature;
 pub mod ecs_types;
-pub mod tile_map;
 pub mod sprites;
+pub mod tile_map;
 pub mod z_levels;
 use crate::game::z_levels::*;
 use ecs_types::*;

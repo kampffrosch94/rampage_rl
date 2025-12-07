@@ -12,14 +12,14 @@ use froql::world::World;
 
 mod astar_dig;
 
-use super::creature::CreatureSprite;
+use super::sprites::CreatureSprite;
 use super::ecs_types::Actor;
 use super::ecs_types::DrawPos;
 use super::ecs_types::HP;
-use super::tile_map::Room;
-use super::tile_map::TileMap;
 use super::sprites::LogicTile;
 use super::sprites::TILE_SIZE;
+use super::tile_map::Room;
+use super::tile_map::TileMap;
 enum Connected {}
 
 pub fn generate_map(seed: u64) -> TileMap {

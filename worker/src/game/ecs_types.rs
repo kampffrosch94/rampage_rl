@@ -38,7 +38,7 @@ use std::collections::HashSet;
 
 use crate::ecs_util::{ecs_types, generate_load, generate_register, generate_save};
 
-use super::creature::CreatureSprite;
+use super::sprites::CreatureSprite;
 use super::tile_map::TileMap;
 
 /// Marker for player character
