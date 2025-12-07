@@ -1,17 +1,16 @@
+use crate::game::drawing::{DrawHealth, DrawPos};
+use crate::game::ecs_types::GameTime;
+use crate::game::ecs_types::{UI, UIState};
+use crate::game::game_logic::Player;
+use crate::game::sprites::{Decor, DrawTile, TILE_DIM, TILE_SIZE, pos_to_drawpos};
+use crate::game::tile_map::TileMap;
+use crate::game::z_levels::*;
+use crate::rand::RandomGenerator;
 use base::{ContextTrait, FPos, FVec, Pos, Rect, zone};
 use fastnoise_lite::{FastNoiseLite, NoiseType};
 use froql::query;
 use froql::{entity_store::Entity, world::World};
 use simple_easing::{cubic_in_out, roundtrip, sine_in_out};
-
-use crate::game::drawing::{DrawHealth, DrawPos};
-use crate::game::ecs_types::GameTime;
-use crate::game::ecs_types::{UI, UIState};
-use crate::game::sprites::{Decor, DrawTile, TILE_DIM, TILE_SIZE, pos_to_drawpos};
-use crate::game::tile_map::TileMap;
-use crate::game::z_levels::*;
-
-use crate::rand::RandomGenerator;
 
 // Components and Relations
 
@@ -427,4 +426,10 @@ pub fn spawn_empty_animation(world: &World, target: Entity, animation_length: f3
         .relate_to::<AnimationTarget>(target)
         .entity;
     anim
+}
+
+/// returns true if there is some animation targeting the player
+pub fn player_is_animation_target(world: &World) -> bool {
+    zone!();
+    query!(world, Player, AnimationTarget(_, this)).next().is_some()
 }

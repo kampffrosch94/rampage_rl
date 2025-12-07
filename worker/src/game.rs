@@ -10,6 +10,7 @@ pub mod tile_map;
 pub mod ui;
 pub mod z_levels;
 
+use crate::animation::player_is_animation_target;
 use crate::ecs_util::ensure_singleton;
 use crate::game::drawing::DrawPos;
 use crate::game::ui::PendingMessage;
@@ -129,12 +130,6 @@ pub fn ui_game_over(c: &mut dyn ContextTrait, world: &mut World) {
     if c.is_pressed(Input::Confirm) {
         *world = create_world();
     }
-}
-
-/// returns true if there is some animation targeting the player
-pub fn player_is_animation_target(world: &World) -> bool {
-    zone!();
-    query!(world, Player, AnimationTarget(_, this)).next().is_some()
 }
 
 fn update_systems(c: &mut dyn ContextTrait, world: &mut World) {
