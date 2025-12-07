@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use crate::game::{
-    Fov,
+    game_logic::Fov,
     drawing::DrawPos,
     ecs_types::{UI, UIState},
     tile_map::TileMap,

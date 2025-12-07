@@ -2,12 +2,13 @@ use std::collections::HashSet;
 
 use base::{FPos, Pos, zone};
 use froql::{entity_store::Entity, query, world::World};
+use quicksilver::Quicksilver;
 
 use crate::{
-    animation::{self, AnimationCleanup},
+    animation::{self, AnimationCleanup, HPBarAnimation},
     game::{
         drawing::{DrawHealth, DrawPos},
-        ecs_types::{Fov, HP, Player, TurnCount, UI, register_components},
+        ecs_types::{UI, register_components},
         mapgen::{generate_map, place_enemies},
         sprites::{CreatureSprite, DrawTile},
         ui::{MessageLog, log_message},
@@ -15,7 +16,52 @@ use crate::{
     rand::RandomGenerator,
 };
 
-use super::ecs_types::Actor;
+#[derive(Debug, Quicksilver)]
+pub struct Actor {
+    pub name: String,
+    pub pos: Pos,
+    pub sprite: CreatureSprite,
+    pub hp: HP,
+    /// when is this actors next turn in aut
+    pub next_turn: i64,
+}
+
+/// Marker for player character
+#[derive(Debug, Quicksilver)]
+pub struct Player {
+    pub pulse: f32,
+    /// aut of the last pulse raising action taken
+    pub last_pulse_action: i64,
+}
+
+#[derive(Debug, Quicksilver)]
+pub struct HP {
+    pub max: i32,
+    pub current: i32,
+}
+
+impl HP {
+    pub fn ratio(&self) -> f32 {
+        self.current as f32 / self.max as f32
+    }
+
+    pub fn dmg(&mut self, amount: i32) -> HPBarAnimation {
+        let start_ratio = self.ratio();
+        self.current -= amount;
+        let end_ratio = self.ratio();
+        HPBarAnimation { start_ratio, end_ratio }
+    }
+}
+
+#[derive(Debug, Quicksilver)]
+pub struct TurnCount {
+    /// 1 tenth of a turn
+    pub aut: i64,
+}
+
+/// Set of Positions within the sight of an actor.
+#[derive(Debug, Quicksilver)]
+pub struct Fov(pub HashSet<Pos>);
 
 /// Anything an actor may do
 #[derive(Debug)]

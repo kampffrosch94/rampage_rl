@@ -1,5 +1,5 @@
 use crate::game::{
-    Actor, Fov, Player,
+    game_logic::{Actor, Fov, Player},
     sprites::{DrawTile, Environment, LogicTile, TILE_SIZE, generate_draw_tile},
     tile_map::{DecorWithPos, TileMap},
     z_levels::{Z_HP_BAR, Z_TILES},

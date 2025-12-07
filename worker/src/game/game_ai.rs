@@ -4,7 +4,7 @@ use froql::{entity_store::Entity, query, world::World};
 use crate::{
     dijkstra::{dijkstra, dijkstra_path},
     game::{
-        ecs_types::{Actor, Player},
+        game_logic::{Actor, Player},
         game_logic::{Action, ActionKind, handle_action},
         tile_map::TileMap,
     },
