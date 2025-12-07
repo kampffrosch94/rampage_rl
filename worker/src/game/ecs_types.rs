@@ -1,4 +1,3 @@
-use super::sprites::CreatureSprite;
 use super::tile_map::TileMap;
 use crate::animation::AnimationCleanup;
 use crate::animation::AnimationTarget;
@@ -42,7 +41,6 @@ use quicksilver::Quicksilver;
 use std::any::TypeId;
 use std::any::type_name;
 use std::cell::RefCell;
-use std::collections::HashSet;
 
 /// How much time passed since the start of the game in seconds
 /// Set early in the game loop.

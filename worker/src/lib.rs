@@ -1,4 +1,3 @@
-#![allow(unused)]
 #[cfg(not(target_arch = "wasm32"))]
 use std::{ffi::c_void, panic::AssertUnwindSafe};
 

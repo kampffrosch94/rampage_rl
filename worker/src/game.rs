@@ -1,48 +1,36 @@
-use crate::animation::CameraMoveAnimation;
-use crate::animation::{AnimationCleanup, AnimationTarget};
-use crate::ecs_util::ensure_singleton;
-use crate::game::drawing::DrawPos;
-use base::pos::IVec;
-use base::text::Labelize;
-use base::zone;
-use base::{Color, ContextTrait, FPos, Input, Pos, Rect, grids::Grid, shadowcasting};
-use base::{FVec, TextProperty};
-use debug_util::{DebugOptions, debug_ui};
-use drawing::draw_systems;
-use froql::{query, world::World};
-use game_ai::ai_turn;
-use game_logic::{Actor, Fov, Player, create_world, next_turn_actor};
-use input_handling::{avy_navigation, input_direction, player_inputs};
-use mapgen::{generate_map, place_enemies};
-use quicksilver::Quicksilver;
-use sprites::CreatureSprite;
-use std::collections::HashSet;
-use tile_map::{DecorWithPos, TileMap};
+pub mod debug_util;
 pub mod drawing;
 pub mod ecs_types;
 pub mod game_ai;
 pub mod game_logic;
 pub mod input_handling;
+pub mod mapgen;
 pub mod sprites;
 pub mod tile_map;
-pub mod z_levels;
-use crate::game::z_levels::*;
-use ecs_types::*;
-use sprites::{
-    DrawTile, Environment, LogicTile, TILE_DIM, TILE_SIZE, generate_draw_tile, pos_to_drawpos,
-};
-use ui::{MessageLog, handle_ui, log_message, ui_inventory};
-pub mod debug_util;
-pub mod mapgen;
 pub mod ui;
+pub mod z_levels;
+
+use crate::ecs_util::ensure_singleton;
+use crate::game::drawing::DrawPos;
 use crate::game::ui::PendingMessage;
-use crate::{
-    animation::{self},
-    dijkstra::{dijkstra, dijkstra_path},
-    game::drawing::DrawHealth,
-    persistent::PersistentState,
-    rand::RandomGenerator,
-};
+use crate::game::z_levels::*;
+use crate::{animation, game::drawing::DrawHealth, persistent::PersistentState};
+use animation::AnimationTarget;
+use base::text::Labelize;
+use base::zone;
+use base::{Color, ContextTrait, FPos, Input, Pos, Rect, shadowcasting};
+use base::{FVec, TextProperty};
+use debug_util::{DebugOptions, debug_ui};
+use drawing::draw_systems;
+use ecs_types::*;
+use froql::{query, world::World};
+use game_ai::ai_turn;
+use game_logic::{Actor, Fov, Player, create_world, next_turn_actor};
+use input_handling::{avy_navigation, input_direction, player_inputs};
+use quicksilver::Quicksilver;
+use sprites::{TILE_SIZE, pos_to_drawpos};
+use tile_map::TileMap;
+use ui::{handle_ui, ui_inventory};
 
 pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     zone!();
