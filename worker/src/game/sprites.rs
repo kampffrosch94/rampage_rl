@@ -110,6 +110,7 @@ fn extruded_source((sx, sy): (i32, i32)) -> Rect {
 pub enum CreatureSprite {
     Dwarf,
     Goblin,
+    GoblinBrute,
 }
 
 impl CreatureSprite {
@@ -117,6 +118,7 @@ impl CreatureSprite {
         let (sheet, sx, sy) = match self {
             CreatureSprite::Dwarf => ("rogues", 0, 0),
             CreatureSprite::Goblin => ("monsters", 2, 0),
+            CreatureSprite::GoblinBrute => ("monsters", 7, 0),
         };
 
         let src = Rect::new(sx as f32 * TILE_DIM, sy as f32 * TILE_DIM, TILE_DIM, TILE_DIM);

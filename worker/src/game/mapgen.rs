@@ -122,13 +122,19 @@ pub fn place_enemies(world: &mut World, seed: u64) {
             if rand.next_in_range(0, 1000) > 20 || tm.up_stairs == pos {
                 continue;
             }
+            use CreatureSprite as S;
+            let sprite = rand.pick_random(&[S::Goblin, S::GoblinBrute]);
             let _goblin = world
                 .create_deferred()
                 .add(DrawPos(FPos::new(0., 0.)))
                 .add(Actor {
-                    name: "Goblin".into(),
+                    name: match sprite {
+                        S::Goblin => "Goblin".into(),
+                        S::GoblinBrute => "Goblin Brute".into(),
+                        S::Dwarf => unreachable!(),
+                    },
                     pos,
-                    sprite: CreatureSprite::Goblin,
+                    sprite: sprite,
                     hp: HP { max: 5, current: 5 },
                     next_turn: 0,
                 })
