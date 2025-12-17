@@ -1,9 +1,6 @@
-use super::drawing::DrawHealth;
-use super::game_logic::Actor;
-use super::game_logic::HP;
+use crate::game::game_logic::CreatureType;
 use crate::rand::RandomGenerator;
 use base::Color;
-use base::FPos;
 use base::Pos;
 use base::Rect;
 use base::grids::Grid;
@@ -12,8 +9,6 @@ use froql::component::TRANSITIVE;
 use froql::query;
 use froql::world::World;
 mod astar_dig;
-use super::drawing::DrawPos;
-use super::sprites::CreatureSprite;
 use super::sprites::LogicTile;
 use super::sprites::TILE_SIZE;
 use super::tile_map::Room;
@@ -122,23 +117,9 @@ pub fn place_enemies(world: &mut World, seed: u64) {
             if rand.next_in_range(0, 1000) > 20 || tm.up_stairs == pos {
                 continue;
             }
-            use CreatureSprite as S;
-            let sprite = rand.pick_random(&[S::Goblin, S::GoblinBrute]);
-            let _goblin = world
-                .create_deferred()
-                .add(DrawPos(FPos::new(0., 0.)))
-                .add(Actor {
-                    name: match sprite {
-                        S::Goblin => "Goblin".into(),
-                        S::GoblinBrute => "Goblin Brute".into(),
-                        S::Dwarf => unreachable!(),
-                    },
-                    pos,
-                    sprite: sprite,
-                    hp: HP { max: 5, current: 5 },
-                    next_turn: 0,
-                })
-                .add(DrawHealth { ratio: 1.0 });
+            use CreatureType as S;
+            let creature = rand.pick_random(&[S::Goblin, S::GoblinBrute]);
+            creature.create_deferred(world, pos);
         }
     }
     drop(tm); // end borrow

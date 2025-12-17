@@ -1,7 +1,9 @@
 use std::collections::HashSet;
 
 use base::{FPos, Pos, zone};
-use froql::{entity_store::Entity, query, world::World};
+use froql::{
+    entity_store::Entity, entity_view_deferred::EntityViewDeferred, query, world::World,
+};
 use quicksilver::Quicksilver;
 
 use crate::{
@@ -21,6 +23,7 @@ pub struct Actor {
     pub name: String,
     pub pos: Pos,
     pub sprite: CreatureSprite,
+    pub creature_type: CreatureType,
     pub hp: HP,
     /// when is this actors next turn in aut
     pub next_turn: i64,
@@ -81,6 +84,57 @@ pub enum ActionKind {
 #[derive(Debug)]
 pub enum Ability {
     RockThrow { path: Vec<Pos>, target: Entity },
+}
+
+#[derive(Debug, Quicksilver, Copy, Clone)]
+#[repr(C)]
+pub enum CreatureType {
+    PlayerCharacter,
+    Goblin,
+    GoblinBrute,
+}
+
+impl CreatureType {
+    pub fn create_deferred(self, world: &World, pos: Pos) -> EntityViewDeferred<'_> {
+        let e = world.create_deferred();
+        e.add(DrawPos(FPos::new(0., 0.)));
+        e.add(DrawHealth { ratio: 1.0 });
+        match self {
+            CreatureType::PlayerCharacter => {
+                e.add(Actor {
+                    name: "Player".into(),
+                    pos,
+                    creature_type: self,
+                    sprite: CreatureSprite::Dwarf,
+                    hp: HP { max: 10, current: 10 },
+                    next_turn: 0,
+                });
+                e.add(Player { pulse: 60., last_pulse_action: 0 });
+                e.add(Fov(HashSet::new()));
+            }
+            CreatureType::Goblin => {
+                e.add(Actor {
+                    name: "Goblin".into(),
+                    pos,
+                    creature_type: self,
+                    sprite: CreatureSprite::Goblin,
+                    hp: HP { max: 5, current: 5 },
+                    next_turn: 0,
+                });
+            }
+            CreatureType::GoblinBrute => {
+                e.add(Actor {
+                    name: "Goblin Brute".into(),
+                    pos,
+                    creature_type: self,
+                    sprite: CreatureSprite::GoblinBrute,
+                    hp: HP { max: 5, current: 5 },
+                    next_turn: 0,
+                });
+            }
+        }
+        e
+    }
 }
 
 pub fn handle_death(world: &World, target: Entity, target_a: &Actor, animation: Entity) {
@@ -212,19 +266,8 @@ pub fn create_world() -> World {
     // TODO get properly random seed
     let tm = generate_map(12345);
 
-    let _player = world
-        .create()
-        .add(Player { pulse: 60., last_pulse_action: 0 })
-        .add(DrawPos(FPos::new(0., 0.)))
-        .add(Actor {
-            name: "Player".into(),
-            pos: tm.up_stairs,
-            sprite: CreatureSprite::Dwarf,
-            hp: HP { max: 10, current: 10 },
-            next_turn: 0,
-        })
-        .add(DrawHealth { ratio: 1.0 })
-        .add(Fov(HashSet::new()));
+    CreatureType::PlayerCharacter.create_deferred(&world, tm.up_stairs);
+    world.process();
 
     world.singleton_add(tm);
 
