@@ -81,6 +81,12 @@ pub enum ActionKind {
     UseAbility(Ability),
 }
 
+impl ActionKind {
+    pub fn done_by(self, actor: Entity) -> Action {
+        Action { actor, kind: self }
+    }
+}
+
 #[derive(Debug)]
 pub enum Ability {
     RockThrow { path: Vec<Pos>, target: Entity },

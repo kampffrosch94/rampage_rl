@@ -4,14 +4,14 @@ use froql::{entity_store::Entity, query, world::World};
 use crate::{
     dijkstra::{dijkstra, dijkstra_path},
     game::{
-        game_logic::{Action, ActionKind, handle_action},
+        game_logic::{Action, ActionKind},
         game_logic::{Actor, Player},
         tile_map::TileMap,
     },
 };
 
-// TODO return action instead of handling it directly
-pub fn ai_turn(world: &mut World, npc: Entity) {
+#[must_use]
+pub fn ai_turn(world: &mut World, npc: Entity) -> Action {
     zone!();
     {
         let mut actor = world.get_component_mut::<Actor>(npc);
@@ -20,7 +20,7 @@ pub fn ai_turn(world: &mut World, npc: Entity) {
             // might be better to handle it with a death marker component or something
             // that could then exclude actors from the turn order
             actor.next_turn += 100;
-            return;
+            return ActionKind::Wait.done_by(npc);
         }
     }
 
@@ -55,20 +55,16 @@ pub fn ai_turn(world: &mut World, npc: Entity) {
         && let Some(next) = path[1..].first()
         && !tm.is_blocked(*next)
     {
-        let action = Action { actor: npc, kind: ActionKind::Move { from: start, to: *next } };
-        handle_action(world, action);
+        return ActionKind::Move { from: start, to: *next }.done_by(npc);
     } else if path.len() > 1
         && let Some(next) = path[1..].first()
         && let Some(target) = tm.actors.get(next)
         && world.has_component::<Player>(*target)
     {
         // attack player if the player is the thing blocking movement
-        let action = Action { actor: npc, kind: ActionKind::BumpAttack { target: *target } };
-        handle_action(world, action);
+        return ActionKind::BumpAttack { target: *target }.done_by(npc);
     } else {
         // just stand in place
-        // TODO add wait action
-        let mut actor = world.get_component_mut::<Actor>(npc);
-        actor.next_turn += 10;
+        return ActionKind::Wait.done_by(npc);
     }
 }

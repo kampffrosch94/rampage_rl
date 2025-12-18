@@ -26,7 +26,7 @@ use drawing::draw_systems;
 use ecs_types::*;
 use froql::{query, world::World};
 use game_ai::ai_turn;
-use game_logic::{Actor, Fov, Player, create_world, next_turn_actor};
+use game_logic::{Actor, Fov, Player, create_world, handle_action, next_turn_actor};
 use input_handling::{avy_navigation, input_direction, player_inputs};
 use quicksilver::Quicksilver;
 use sprites::{TILE_SIZE, pos_to_drawpos};
@@ -272,7 +272,8 @@ fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
         let mut next = next_turn_actor(world);
         while !world.has_component::<Player>(next) {
             TileMap::update_actors(world);
-            ai_turn(world, next);
+            let action = ai_turn(world, next);
+            handle_action(world, action);
             next = next_turn_actor(world);
         }
         world.process();
