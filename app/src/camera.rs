@@ -1,6 +1,6 @@
+use std::ops::{Add, Sub, SubAssign};
+
 use base::{FPos, FVec, zone};
-use derive_more::derive::From;
-use derive_more::derive::*;
 use macroquad::prelude::*;
 use tween::{Linear, TweenValue, Tweener};
 
@@ -118,9 +118,7 @@ pub fn screen_camera() -> Camera2D {
 }
 
 // needed because orphan rules are annoying
-#[derive(
-    Default, Clone, Copy, Add, Sub, Mul, Div, From, AddAssign, SubAssign, MulAssign, DivAssign,
-)]
+#[derive(Default, Clone, Copy)]
 pub struct Vec2f {
     pub x: f32,
     pub y: f32,
@@ -132,9 +130,32 @@ impl std::fmt::Debug for Vec2f {
     }
 }
 
+impl Add for Vec2f {
+    type Output = Self;
+
+    fn add(self, rhs: Self) -> Self::Output {
+        Self { x: self.x + rhs.x, y: self.y + rhs.y }
+    }
+}
+
+impl Sub for Vec2f {
+    type Output = Self;
+
+    fn sub(self, rhs: Self) -> Self::Output {
+        Self { x: self.x - rhs.x, y: self.y - rhs.y }
+    }
+}
+
+impl SubAssign for Vec2f {
+    fn sub_assign(&mut self, rhs: Self) {
+        self.x -= rhs.x;
+        self.y -= rhs.y;
+    }
+}
+
 impl TweenValue for Vec2f {
     fn scale(self, scale: f32) -> Self {
-        self * scale
+        Self { x: self.x * scale, y: self.y * scale }
     }
 }
 
@@ -147,5 +168,11 @@ impl From<Vec2> for Vec2f {
 impl Into<Vec2> for Vec2f {
     fn into(self) -> Vec2 {
         Vec2 { x: self.x, y: self.y }
+    }
+}
+
+impl From<(f32, f32)> for Vec2f {
+    fn from((x, y): (f32, f32)) -> Self {
+        Self { x, y }
     }
 }
