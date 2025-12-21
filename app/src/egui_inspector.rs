@@ -19,7 +19,7 @@ pub fn reset_id() {
     *guard = 0;
 }
 
-fn draw_reflection(ui: &mut egui::Ui, r: &mut StructReflection) {
+fn draw_struct_reflection(ui: &mut egui::Ui, r: &mut StructReflection) {
     ui.heading(r.name);
     egui::Grid::new(next_id()).min_col_width(50.).num_columns(2).striped(true).show(
         ui,
@@ -32,9 +32,36 @@ fn draw_reflection(ui: &mut egui::Ui, r: &mut StructReflection) {
         },
     );
 }
+fn draw_enum_reflection(ui: &mut egui::Ui, r: &mut RustEnumReflection) {
+    ui.heading(format!("{}::{}", r.name, r.variant_name));
+    egui::Grid::new(next_id()).min_col_width(50.).num_columns(2).striped(true).show(
+        ui,
+        |ui| {
+            for field in &mut r.fields {
+                ui.label(field.name);
+                draw_value(ui, &mut field.value);
+                ui.end_row();
+            }
+        },
+    );
+}
 
-fn draw_reflection_ref(ui: &mut egui::Ui, r: &StructReflection) {
+fn draw_struct_reflection_ref(ui: &mut egui::Ui, r: &StructReflection) {
     ui.heading(r.name);
+    egui::Grid::new(next_id()).min_col_width(50.).num_columns(2).striped(true).show(
+        ui,
+        |ui| {
+            for field in &r.fields {
+                ui.label(field.name);
+                draw_value_ref(ui, &field.value);
+                ui.end_row();
+            }
+        },
+    );
+}
+
+fn draw_enum_reflection_ref(ui: &mut egui::Ui, r: &RustEnumReflection) {
+    ui.heading(format!("{}::{}", r.name, r.variant_name));
     egui::Grid::new(next_id()).min_col_width(50.).num_columns(2).striped(true).show(
         ui,
         |ui| {
@@ -95,7 +122,12 @@ pub fn draw_value(ui: &mut egui::Ui, value: &mut ValueReflection) {
         }
         ValueReflection::Struct(s) => {
             ui.vertical(|ui| {
-                draw_reflection(ui, s);
+                draw_struct_reflection(ui, s);
+            });
+        }
+        ValueReflection::RustEnum(re) => {
+            ui.vertical(|ui| {
+                draw_enum_reflection(ui, re);
             });
         }
         ValueReflection::Vec(vec) => {
@@ -184,7 +216,12 @@ fn draw_value_ref(ui: &mut egui::Ui, value: &ValueReflection) {
         }
         ValueReflection::Struct(s) => {
             ui.vertical(|ui| {
-                draw_reflection_ref(ui, s);
+                draw_struct_reflection_ref(ui, s);
+            });
+        }
+        ValueReflection::RustEnum(re) => {
+            ui.vertical(|ui| {
+                draw_enum_reflection_ref(ui, re);
             });
         }
         ValueReflection::Vec(vec) => {

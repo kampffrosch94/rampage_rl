@@ -76,7 +76,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     }
 
     if c.is_pressed(Input::Save) {
-        println!("Saving game.");
+        println!("Saving game........");
         s.save();
     }
     if c.is_pressed(Input::Load) {
