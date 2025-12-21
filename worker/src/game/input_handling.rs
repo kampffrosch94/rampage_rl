@@ -4,7 +4,7 @@ use crate::{
     game::{
         AbilityUIState,
         drawing::DrawPos,
-        game_logic::{Ability, ActionKind, Actor, Fov, Player, handle_action, handle_death},
+        game_logic::{ActionKind, Actor, Fov, Player, handle_action, handle_death},
         mapgen::{generate_map, place_enemies},
         sprites::{TILE_DIM, TILE_SIZE, pos_to_drawpos},
         tile_map::TileMap,
@@ -214,7 +214,7 @@ fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> 
                 world.defer_closure(exit_ability_state);
                 return Some(Action {
                     actor: *player,
-                    kind: ActionKind::UseAbility(Ability::RockThrow { path: line, target }),
+                    kind: ActionKind::RockThrow { path: line, target },
                 });
             }
         }

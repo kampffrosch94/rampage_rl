@@ -1,3 +1,4 @@
+use crate::quicksilver_glue::EntityWrapper;
 use std::collections::HashSet;
 
 use base::{FPos, Pos, zone};
@@ -73,23 +74,28 @@ pub struct Action {
     pub kind: ActionKind,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Quicksilver)]
 pub enum ActionKind {
     Wait,
-    Move { from: Pos, to: Pos },
-    BumpAttack { target: Entity },
-    UseAbility(Ability),
+    Move {
+        from: Pos,
+        to: Pos,
+    },
+    BumpAttack {
+        #[quicksilver(proxy(Entity, EntityWrapper))]
+        target: Entity,
+    },
+    RockThrow {
+        path: Vec<Pos>,
+        #[quicksilver(proxy(Entity, EntityWrapper))]
+        target: Entity,
+    },
 }
 
 impl ActionKind {
     pub fn done_by(self, actor: Entity) -> Action {
         Action { actor, kind: self }
     }
-}
-
-#[derive(Debug)]
-pub enum Ability {
-    RockThrow { path: Vec<Pos>, target: Entity },
 }
 
 #[derive(Debug, Quicksilver, Copy, Clone)]
@@ -231,10 +237,7 @@ pub fn handle_action(world: &World, action: Action) {
             handle_death(world, target, &target_a, animation);
             actor_a.next_turn += 10;
         }
-        Action {
-            actor,
-            kind: ActionKind::UseAbility(Ability::RockThrow { path, target }),
-        } => {
+        Action { actor, kind: ActionKind::RockThrow { path, target } } => {
             let mut target_a = world.get_component_mut::<Actor>(target);
             let hp_bar_change = target_a.hp.dmg(2);
             let animation = animation::spawn_projectile_animation(
