@@ -1,7 +1,7 @@
-use crate::quicksilver_glue::EntityWrapper;
+use crate::{game::tile_map::TileMap, quicksilver_glue::EntityWrapper};
 use std::collections::HashSet;
 
-use base::{FPos, Pos, zone};
+use base::{FPos, Pos, pos::IVec, zone};
 use froql::{
     entity_store::Entity, entity_view_deferred::EntityViewDeferred, query, world::World,
 };
@@ -68,10 +68,16 @@ pub struct TurnCount {
 pub struct Fov(pub HashSet<Pos>);
 
 /// Anything an actor may do
-#[derive(Debug)]
+#[derive(Debug, Quicksilver)]
 pub struct Action {
+    #[quicksilver(proxy(Entity, EntityWrapper))]
     pub actor: Entity,
     pub kind: ActionKind,
+}
+
+#[derive(Debug, Quicksilver)]
+pub struct DelayedAction {
+    pub action: Action,
 }
 
 #[derive(Debug, Quicksilver)]
@@ -89,6 +95,9 @@ pub enum ActionKind {
         path: Vec<Pos>,
         #[quicksilver(proxy(Entity, EntityWrapper))]
         target: Entity,
+    },
+    DelayedSmash {
+        dir: IVec,
     },
 }
 
@@ -179,11 +188,11 @@ pub fn lower_pulse(world: &World, e: Entity, e_actor: &mut Actor) {
         let before = player_p.pulse;
         player_p.pulse -= 1.0;
         if player_p.pulse < 60. && before >= 60. {
-            let a = animation::spawn_empty_animation(world, e, 0.);
+            let a = animation::spawn_empty_animation(world, e, 0.).entity;
             log_message(world, "Your pulse is getting low.".to_string(), a);
         }
         if player_p.pulse < 45. && before >= 45. {
-            let a = animation::spawn_empty_animation(world, e, 0.);
+            let a = animation::spawn_empty_animation(world, e, 0.).entity;
             log_message(
                 world,
                 "Your pulse is getting dangerously low. Do something exiting quick!"
@@ -192,13 +201,13 @@ pub fn lower_pulse(world: &World, e: Entity, e_actor: &mut Actor) {
             );
         }
         if player_p.pulse < 30. {
-            let a = animation::spawn_empty_animation(world, e, 0.);
+            let a = animation::spawn_empty_animation(world, e, 0.).entity;
             log_message(world, "You die of cardiac arrest.".to_string(), a);
         }
     }
 }
 
-pub fn handle_action(world: &World, action: Action) {
+pub fn handle_action(world: &mut World, action: Action) {
     zone!();
     match action {
         Action { actor, kind: ActionKind::Wait } => {
@@ -256,7 +265,53 @@ pub fn handle_action(world: &World, action: Action) {
 
             handle_death(world, target, &target_a, animation);
         }
+        Action { actor, kind: ActionKind::DelayedSmash { .. } } => {
+            world.add_component(actor, DelayedAction { action });
+            let mut actor_a = world.get_component_mut::<Actor>(actor);
+            let animation = animation::spawn_empty_animation(world, actor, 0.);
+            let msg = format!("{} prepares to smash.", actor_a.name);
+            log_message(world, msg, *animation);
+            actor_a.next_turn += 10;
+        }
     };
+}
+
+pub fn handle_delayed_action(world: &World, action: Action) {
+    zone!();
+
+    match action {
+        Action { actor, kind: ActionKind::DelayedSmash { dir } } => {
+            let tm = world.singleton::<TileMap>();
+            let mut actor_a = world.get_component_mut::<Actor>(actor);
+            let target_pos = actor_a.pos + dir;
+
+            if let Some(target) = tm.get_actor(target_pos) {
+                assert_ne!(actor, target);
+                let mut target_a = world.get_component_mut::<Actor>(target);
+                let hp_bar_change = target_a.hp.dmg(3);
+                let animation = animation::spawn_bump_attack_animation(
+                    world,
+                    actor,
+                    target,
+                    actor_a.pos,
+                    target_a.pos,
+                    hp_bar_change,
+                );
+                let msg = format!("{} smashes {}.", actor_a.name, target_a.name);
+                log_message(world, msg, animation);
+
+                raise_pulse(world, actor, &actor_a);
+                raise_pulse(world, target, &target_a);
+                handle_death(world, target, &target_a, animation);
+            } else {
+                let animation = animation::spawn_empty_animation(world, actor, 0.);
+                let msg = format!("{} smashes nothing.", actor_a.name);
+                log_message(world, msg, *animation);
+            }
+            actor_a.next_turn += 10;
+        }
+        other => panic!("Unhandled delayed action: {other:?}"),
+    }
 }
 
 pub fn next_turn_actor(world: &World) -> Entity {

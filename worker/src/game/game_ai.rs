@@ -11,7 +11,7 @@ use crate::{
 };
 
 #[must_use]
-pub fn ai_turn(world: &mut World, npc: Entity) -> Action {
+pub fn ai_turn(world: &World, npc: Entity) -> Action {
     zone!();
     {
         let mut actor = world.get_component_mut::<Actor>(npc);

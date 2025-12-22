@@ -6,6 +6,7 @@ use crate::game::{GameTime, UI, UIState, z_levels::*};
 use crate::rand::RandomGenerator;
 use base::{ContextTrait, FPos, FVec, Pos, Rect, zone};
 use fastnoise_lite::{FastNoiseLite, NoiseType};
+use froql::entity_view_deferred::EntityViewDeferred;
 use froql::query;
 use froql::{entity_store::Entity, world::World};
 use simple_easing::{cubic_in_out, roundtrip, sine_in_out};
@@ -396,33 +397,28 @@ pub fn spawn_projectile_animation(
 pub fn spawn_game_over_animation(world: &World, target: Entity) -> Entity {
     zone!();
     let animation_length = 0.5;
-    let current_time = world.singleton::<GameTime>().0;
-    let start_time = query!(world, AnimationTimer, AnimationTarget(this, *target))
-        .map(|(timer,)| timer.end)
-        .fold(current_time, f32::max);
 
-    let anim = world
-        .create_deferred()
-        .add(AnimationTimer { start: start_time, end: start_time + animation_length })
+    let anim = spawn_empty_animation(world, target, animation_length)
         .add(GameOverAnimation {})
-        .relate_to::<AnimationTarget>(target)
         .entity;
     anim
 }
 
 // TODO use this as base for other animation spawn functions
-pub fn spawn_empty_animation(world: &World, target: Entity, animation_length: f32) -> Entity {
+pub fn spawn_empty_animation(
+    world: &World,
+    target: Entity,
+    animation_length: f32,
+) -> EntityViewDeferred<'_> {
     zone!();
     let current_time = world.singleton::<GameTime>().0;
     let start_time = query!(world, AnimationTimer, AnimationTarget(this, *target))
         .map(|(timer,)| timer.end)
         .fold(current_time, f32::max);
 
-    let anim = world
-        .create_deferred()
-        .add(AnimationTimer { start: start_time, end: start_time + animation_length })
-        .relate_to::<AnimationTarget>(target)
-        .entity;
+    let anim = world.create_deferred();
+    anim.add(AnimationTimer { start: start_time, end: start_time + animation_length })
+        .relate_to::<AnimationTarget>(target);
     anim
 }
 

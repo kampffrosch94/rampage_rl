@@ -22,6 +22,7 @@ use crate::game::debug_util::DebugOptions;
 use crate::game::drawing::DrawHealth;
 use crate::game::drawing::DrawPos;
 use crate::game::game_logic::Actor;
+use crate::game::game_logic::DelayedAction;
 use crate::game::game_logic::Fov;
 use crate::game::game_logic::Player;
 use crate::game::game_logic::TurnCount;
@@ -56,6 +57,7 @@ ecs_types!(
         DrawHealth[persist],
         TileMap[persist],
         RandomGenerator[persist],
+        DelayedAction[persist],
         // ui
         UI[persist],
         MessageLog[persist],
