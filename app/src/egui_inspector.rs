@@ -175,9 +175,11 @@ pub fn draw_value(ui: &mut egui::Ui, value: &mut ValueReflection) {
                 ui.label("None");
             }
         }
-
         ref outer @ ValueReflection::HashSet(_) => {
             draw_value_ref(ui, outer);
+        }
+        ValueReflection::Box(box_reflection) => {
+            draw_value(ui, &mut box_reflection.inner);
         }
     }
 }
@@ -271,6 +273,9 @@ fn draw_value_ref(ui: &mut egui::Ui, value: &ValueReflection) {
                     }
                 },
             );
+        }
+        ValueReflection::Box(box_reflection) => {
+            draw_value_ref(ui, &box_reflection.inner);
         }
     }
 }
