@@ -4,8 +4,7 @@ use froql::{entity_store::Entity, query, world::World};
 use crate::{
     dijkstra::{dijkstra, dijkstra_path},
     game::{
-        game_logic::{Action, ActionKind},
-        game_logic::{Actor, Player},
+        game_logic::{Action, ActionKind, Actor, CreatureType, Player},
         tile_map::TileMap,
     },
 };
@@ -21,6 +20,23 @@ pub fn ai_turn(world: &World, npc: Entity) -> Action {
             // that could then exclude actors from the turn order
             actor.next_turn += 100;
             return ActionKind::Wait.done_by(npc);
+        }
+    }
+
+    // check possible actions and pick the best one
+    // going for a bump attack is the default if none is found (below this block)
+    {
+        // TODO this should use proper action source logic later
+
+        let actor = world.get_component::<Actor>(npc);
+        if matches!(actor.creature_type, CreatureType::GoblinBrute) {
+            // goblin brutes smash the player if they are in range
+            for (player_a,) in query!(world, Actor, _ Player) {
+                if actor.pos.distance(player_a.pos) == 1 {
+                    return ActionKind::DelayedSmash { dir: player_a.pos - actor.pos }
+                        .done_by(npc);
+                }
+            }
         }
     }
 
