@@ -448,7 +448,7 @@ dependencies = [
 [[package]]
 name = "froql"
 version = "0.1.0"
-source = "git+https://github.com/kampffrosch94/froql.git#7898b557d4d3a8904583fb77f987b9d1f1dc88e3"
+source = "git+https://github.com/kampffrosch94/froql.git#811d29616fd046b254642dd094725c27d98432b1"
 dependencies = [
  "froql_macro",
  "hi_sparse_bitset",
@@ -457,7 +457,7 @@ dependencies = [
 [[package]]
 name = "froql_macro"
 version = "0.1.0"
-source = "git+https://github.com/kampffrosch94/froql.git#7898b557d4d3a8904583fb77f987b9d1f1dc88e3"
+source = "git+https://github.com/kampffrosch94/froql.git#811d29616fd046b254642dd094725c27d98432b1"
 
 [[package]]
 name = "fsevent-sys"
