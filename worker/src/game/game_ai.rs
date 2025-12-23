@@ -12,16 +12,6 @@ use crate::{
 #[must_use]
 pub fn ai_turn(world: &World, npc: Entity) -> Action {
     zone!();
-    {
-        let mut actor = world.get_component_mut::<Actor>(npc);
-        if actor.hp.current <= 0 {
-            // dead actors wait for further handling
-            // might be better to handle it with a death marker component or something
-            // that could then exclude actors from the turn order
-            actor.next_turn += 100;
-            return ActionKind::Wait.done_by(npc);
-        }
-    }
 
     // check possible actions and pick the best one
     // going for a bump attack is the default if none is found (below this block)

@@ -317,6 +317,7 @@ pub fn handle_delayed_action(world: &World, action: Action) {
 pub fn next_turn_actor(world: &World) -> Entity {
     zone!();
     query!(world, &this, Actor)
+        .filter(|(_e, a)| a.hp.current > 0) // filter out dead
         .min_by_key(|(e, a)| (a.next_turn, e.id.0))
         .map(|(e, _a)| e.entity)
         .unwrap()
