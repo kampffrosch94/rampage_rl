@@ -10,6 +10,8 @@ pub mod tile_map;
 pub mod ui;
 pub mod z_levels;
 
+use std::collections::HashSet;
+
 use crate::animation::player_is_animation_target;
 use crate::ecs_util::ensure_singleton;
 use crate::game::drawing::DrawPos;
@@ -257,34 +259,9 @@ fn update_systems_inspect(c: &mut dyn ContextTrait, world: &mut World) {
 
 fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
     zone!();
-    TileMap::update_actors(world);
-    if !player_is_animation_target(world) {
-        // sanity check
-        let next = next_turn_actor(world);
-        assert!(
-            world.has_component::<Player>(next),
-            "It needs to be the players turn to enter here."
-        );
 
-        // handle player input
-        TileMap::update_actors(world);
-        player_inputs(c, world);
-        world.process();
-
-        // handle AI input after player
-        let mut next = next_turn_actor(world);
-        while !world.has_component::<Player>(next) {
-            TileMap::update_actors(world);
-            if let Some(DelayedAction { action, .. }) = world.take_component(next) {
-                handle_delayed_action(world, action);
-            } else {
-                let action = ai_turn(world, next);
-                handle_action(world, action);
-            }
-            next = next_turn_actor(world);
-        }
-        world.process();
-    }
+    handle_turn(c, world);
+    world.process();
 
     for (actor, mut draw_pos, mut draw_health) in
         query!(world, Actor, mut DrawPos, mut DrawHealth, !AnimationTarget(_, this))
@@ -300,6 +277,42 @@ fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
         shadowcasting::compute_fov(actor.pos, &mut |pos| tm.blocks_vision(pos), &mut |pos| {
             fov.0.insert(pos);
         });
+    }
+}
+
+fn handle_turn(c: &mut dyn ContextTrait, world: &mut World) {
+    zone!();
+    TileMap::update_actors(world);
+    if !player_is_animation_target(world) {
+        // sanity check
+        let next = next_turn_actor(world).unwrap();
+        assert!(
+            world.has_component::<Player>(next),
+            "It needs to be the players turn to enter here."
+        );
+
+        // handle player input
+        TileMap::update_actors(world);
+        player_inputs(c, world);
+        world.process();
+
+        // handle AI input after player
+        let Some(mut current) = next_turn_actor(world) else { return };
+        // same should not be processed twice in the same frame to stop infinite loops
+        let mut had_turn = HashSet::new();
+
+        while !world.has_component::<Player>(current) && !had_turn.contains(&current) {
+            had_turn.insert(current);
+            TileMap::update_actors(world);
+            if let Some(DelayedAction { action, .. }) = world.take_component(current) {
+                handle_delayed_action(world, action);
+            } else {
+                let action = ai_turn(world, current);
+                handle_action(world, action);
+            }
+            let Some(next) = next_turn_actor(world) else { break };
+            current = next;
+        }
     }
 }
 

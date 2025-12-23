@@ -19,6 +19,7 @@ pub fn ai_turn(world: &World, npc: Entity) -> Action {
         // TODO this should use proper action source logic later
 
         let actor = world.get_component::<Actor>(npc);
+        println!("Turn of {}", actor.name);
         if matches!(actor.creature_type, CreatureType::GoblinBrute) {
             // goblin brutes smash the player if they are in range
             for (player_a,) in query!(world, Actor, _ Player) {
