@@ -322,6 +322,11 @@ pub fn next_turn_actor(world: &World) -> Option<Entity> {
         .map(|(e, _a)| e.entity)
 }
 
+pub fn player_is_alive(world: &World) -> bool {
+    zone!();
+    query!(world, _ Player, Actor).filter(|(a,)| a.hp.current > 0).next().is_some()
+}
+
 pub fn create_world() -> World {
     zone!();
     let mut world = World::new();

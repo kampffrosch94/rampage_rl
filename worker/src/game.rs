@@ -10,8 +10,6 @@ pub mod tile_map;
 pub mod ui;
 pub mod z_levels;
 
-use std::collections::HashSet;
-
 use crate::animation::player_is_animation_target;
 use crate::ecs_util::ensure_singleton;
 use crate::game::drawing::DrawPos;
@@ -30,7 +28,7 @@ use froql::{query, world::World};
 use game_ai::ai_turn;
 use game_logic::{
     Actor, DelayedAction, Fov, Player, create_world, handle_action, handle_delayed_action,
-    next_turn_actor,
+    next_turn_actor, player_is_alive,
 };
 use input_handling::{avy_navigation, input_direction, player_inputs};
 use quicksilver::Quicksilver;
@@ -74,12 +72,12 @@ pub struct InspectUIState {
 
 pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     zone!();
+
     if c.is_pressed(Input::RestartGame) {
         println!("Restarting game.");
         s.restart();
         println!("Game restarted.");
     }
-
     if c.is_pressed(Input::Save) {
         println!("Saving game.");
         s.save();
@@ -282,7 +280,7 @@ fn update_systems_normal(c: &mut dyn ContextTrait, world: &mut World) {
 
 fn handle_turn(c: &mut dyn ContextTrait, world: &mut World) {
     zone!();
-    TileMap::update_actors(world);
+
     if !player_is_animation_target(world) {
         // sanity check
         let next = next_turn_actor(world).unwrap();
@@ -298,11 +296,8 @@ fn handle_turn(c: &mut dyn ContextTrait, world: &mut World) {
 
         // handle AI input after player
         let Some(mut current) = next_turn_actor(world) else { return };
-        // same should not be processed twice in the same frame to stop infinite loops
-        let mut had_turn = HashSet::new();
 
-        while !world.has_component::<Player>(current) && !had_turn.contains(&current) {
-            had_turn.insert(current);
+        while !world.has_component::<Player>(current) && player_is_alive(world) {
             TileMap::update_actors(world);
             if let Some(DelayedAction { action, .. }) = world.take_component(current) {
                 handle_delayed_action(world, action);
