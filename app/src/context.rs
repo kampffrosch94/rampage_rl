@@ -194,7 +194,7 @@ impl ContextTrait for Context {
             Input::MouseLeft => is_mouse_button_pressed(MouseButton::Left),
             Input::MouseMiddle => is_mouse_button_pressed(MouseButton::Middle),
             Input::MouseRight => is_mouse_button_pressed(MouseButton::Right),
-            Input::RestartGame => is_key_pressed(KeyCode::F2),
+            Input::RestartGame => is_key_pressed(KeyCode::F12),
             Input::Save => is_key_pressed(KeyCode::F5),
             Input::Load => is_key_pressed(KeyCode::F9),
             Input::MoveSW => is_key_pressed(KeyCode::Kp1) || is_key_pressed(KeyCode::B),
