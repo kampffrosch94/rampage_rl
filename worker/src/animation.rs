@@ -1,4 +1,4 @@
-use crate::game::drawing::{DrawHealth, DrawPos};
+use crate::game::drawing::{DangerZone, DrawHealth, DrawPos};
 use crate::game::game_logic::Player;
 use crate::game::sprites::{Decor, DrawTile, TILE_DIM, TILE_SIZE, pos_to_drawpos};
 use crate::game::tile_map::TileMap;
@@ -80,6 +80,12 @@ pub struct CameraMoveAnimation {
 
 /// transition to GameOver UI State
 pub struct GameOverAnimation {}
+
+pub struct AddDangerZoneAnimation {
+    pub danger_zone: DangerZone,
+}
+
+pub struct RemoveDangerZoneAnimation {}
 
 pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
     zone!();
@@ -163,7 +169,36 @@ pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
             anim_e.destroy();
         }
     }
-    world.process();
+
+    // Add DangerZone
+    for (e, timer, add, target) in query!(
+        world,
+        &this,
+        AnimationTimer,
+        AddDangerZoneAnimation,
+        AnimationTarget(this, target),
+        &target
+    ) {
+        if timer.start <= current_time {
+            target.add(add.danger_zone.clone());
+            e.destroy();
+        }
+    }
+
+    // Remove DangerZone
+    for (e, timer, target) in query!(
+        world,
+        &this,
+        AnimationTimer,
+        _ RemoveDangerZoneAnimation,
+        AnimationTarget(this, target),
+        &target
+    ) {
+        if timer.start <= current_time {
+            target.remove::<DangerZone>();
+            e.destroy();
+        }
+    }
 
     // Game Over
     for (timer,) in query!(world, _ GameOverAnimation, AnimationTimer) {
@@ -426,4 +461,20 @@ pub fn spawn_empty_animation(
 pub fn player_is_animation_target(world: &World) -> bool {
     zone!();
     query!(world, Player, AnimationTarget(_, this)).next().is_some()
+}
+
+pub fn spawn_add_dangerzone_animation(
+    world: &World,
+    target: Entity,
+    danger_zone: DangerZone,
+) -> Entity {
+    let anim = spawn_empty_animation(world, target, 0.);
+    anim.add(AddDangerZoneAnimation { danger_zone });
+    anim.entity
+}
+
+pub fn spawn_remove_dangerzone_animation(world: &World, target: Entity) -> Entity {
+    let anim = spawn_empty_animation(world, target, 0.);
+    anim.add(RemoveDangerZoneAnimation {});
+    anim.entity
 }

@@ -1,4 +1,7 @@
-use crate::{game::tile_map::TileMap, quicksilver_glue::EntityWrapper};
+use crate::{
+    game::{drawing::DangerZone, tile_map::TileMap},
+    quicksilver_glue::EntityWrapper,
+};
 use std::collections::HashSet;
 
 use base::{FPos, Pos, pos::IVec, zone};
@@ -265,12 +268,13 @@ pub fn handle_action(world: &mut World, action: Action) {
 
             handle_death(world, target, &target_a, animation);
         }
-        Action { actor, kind: ActionKind::DelayedSmash { .. } } => {
+        Action { actor, kind: ActionKind::DelayedSmash { dir } } => {
             world.add_component(actor, DelayedAction { action });
             let mut actor_a = world.get_component_mut::<Actor>(actor);
-            let animation = animation::spawn_empty_animation(world, actor, 0.);
+            let dz = DangerZone { offsets: vec![dir] };
+            let animation = animation::spawn_add_dangerzone_animation(world, actor, dz);
             let msg = format!("{} prepares to smash.", actor_a.name);
-            log_message(world, msg, *animation);
+            log_message(world, msg, animation);
             actor_a.next_turn += 10;
         }
     };
@@ -289,6 +293,7 @@ pub fn handle_delayed_action(world: &World, action: Action) {
                 assert_ne!(actor, target);
                 let mut target_a = world.get_component_mut::<Actor>(target);
                 let hp_bar_change = target_a.hp.dmg(3);
+                animation::spawn_remove_dangerzone_animation(world, actor);
                 let animation = animation::spawn_bump_attack_animation(
                     world,
                     actor,
@@ -304,9 +309,9 @@ pub fn handle_delayed_action(world: &World, action: Action) {
                 raise_pulse(world, target, &target_a);
                 handle_death(world, target, &target_a, animation);
             } else {
-                let animation = animation::spawn_empty_animation(world, actor, 0.);
+                let animation = animation::spawn_remove_dangerzone_animation(world, actor);
                 let msg = format!("{} smashes nothing.", actor_a.name);
-                log_message(world, msg, *animation);
+                log_message(world, msg, animation);
             }
             actor_a.next_turn += 10;
         }

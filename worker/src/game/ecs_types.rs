@@ -1,4 +1,5 @@
 use super::tile_map::TileMap;
+use crate::animation::AddDangerZoneAnimation;
 use crate::animation::AnimationCleanup;
 use crate::animation::AnimationTarget;
 use crate::animation::AnimationTimer;
@@ -10,6 +11,7 @@ use crate::animation::GameOverAnimation;
 use crate::animation::HPBarAnimation;
 use crate::animation::MovementAnimation;
 use crate::animation::ProjectilePathAnimation;
+use crate::animation::RemoveDangerZoneAnimation;
 use crate::ecs_util::EntityComponent;
 use crate::ecs_util::OriginTarget;
 use crate::ecs_util::SerializedState;
@@ -19,6 +21,7 @@ use crate::game::GameTime;
 use crate::game::InspectUIState;
 use crate::game::UI;
 use crate::game::debug_util::DebugOptions;
+use crate::game::drawing::DangerZone;
 use crate::game::drawing::DrawHealth;
 use crate::game::drawing::DrawPos;
 use crate::game::game_logic::Actor;
@@ -58,6 +61,7 @@ ecs_types!(
         TileMap[persist],
         RandomGenerator[persist],
         DelayedAction[persist],
+        DangerZone[persist],
         // ui
         UI[persist],
         MessageLog[persist],
@@ -74,7 +78,9 @@ ecs_types!(
         MovementAnimation,
         CameraMoveAnimation,
         GameOverAnimation,
-        ProjectilePathAnimation
+        ProjectilePathAnimation,
+        AddDangerZoneAnimation,
+        RemoveDangerZoneAnimation
     ),
     Relations(
         AnimationTarget,

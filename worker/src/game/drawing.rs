@@ -2,9 +2,9 @@ use crate::game::{
     game_logic::{Actor, Fov, Player},
     sprites::{DrawTile, Environment, LogicTile, TILE_SIZE, generate_draw_tile},
     tile_map::{DecorWithPos, TileMap},
-    z_levels::{Z_HP_BAR, Z_TILES},
+    z_levels::{Z_DANGER_ZONE, Z_HP_BAR, Z_TILES},
 };
-use base::{Color, ContextTrait, FPos, Rect, zone};
+use base::{Color, ContextTrait, FPos, Rect, pos::IVec, zone};
 use froql::{query, world::World};
 use quicksilver::Quicksilver;
 
@@ -14,6 +14,14 @@ pub struct DrawPos(pub FPos);
 #[derive(Debug, Quicksilver)]
 pub struct DrawHealth {
     pub ratio: f32,
+}
+
+/// Shows what tiles are dangerous to the player
+#[derive(Debug, Quicksilver, Clone)]
+pub struct DangerZone {
+    /// These are offset from the position of the Entity the Dangerzone does belong to.
+    /// We do this so that moving the entity also moves the danger zone
+    pub offsets: Vec<IVec>,
 }
 
 pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
@@ -81,6 +89,15 @@ pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
                 5.,
             );
             c.draw_rect(rect, Color::GREEN, Z_HP_BAR);
+        }
+    }
+
+    // highlight danger tiles
+    for (actor, dz) in query!(world, Actor, DangerZone) {
+        for v in dz.offsets.iter() {
+            let pos = actor.pos + *v;
+            let color = Color { r: 1., g: 0., b: 0., a: 0.3 };
+            c.draw_rect(pos.to_fpos(TILE_SIZE).rect(TILE_SIZE), color, Z_DANGER_ZONE);
         }
     }
 }
