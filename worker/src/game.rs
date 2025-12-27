@@ -74,6 +74,7 @@ pub enum PlayerAbility {
     Kick,
     Meditate,
     GroundSlam,
+    JumpAttack,
 }
 
 #[derive(Default, Quicksilver)]

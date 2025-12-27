@@ -1,5 +1,5 @@
 use crate::{
-    animation::AnimationTarget,
+    animation::{AnimationTarget, AnimationTimer, MovementAnimation},
     game::{drawing::DangerZone, tile_map::TileMap},
     quicksilver_glue::EntityWrapper,
 };
@@ -101,6 +101,11 @@ pub enum ActionKind {
         target: Entity,
     },
     RockThrow {
+        path: Vec<Pos>,
+        #[quicksilver(proxy(Entity, EntityWrapper))]
+        target: Entity,
+    },
+    JumpAttack {
         path: Vec<Pos>,
         #[quicksilver(proxy(Entity, EntityWrapper))]
         target: Entity,
@@ -290,6 +295,42 @@ pub fn handle_action(world: &mut World, action: Action) {
             actor_a.next_turn += 10;
 
             handle_death(world, target, &target_a, animation);
+        }
+        Action { actor, kind: ActionKind::JumpAttack { path, target } } => {
+            let mut actor_a = world.get_component_mut::<Actor>(actor);
+            let mut target_a = world.get_component_mut::<Actor>(target);
+
+            let animation_start = animation::start_time(world, &[actor, target]);
+            let jump_ani = world.create_deferred();
+            let jump_length = 0.15;
+            let jump_pos = path[path.len() - 2];
+            jump_ani
+                .add(AnimationTimer::new(animation_start, jump_length))
+                .add(MovementAnimation { start: actor_a.pos, end: jump_pos })
+                .relate_to::<AnimationTarget>(actor);
+            // also block the target from being animated
+            world
+                .create_deferred()
+                .add(AnimationTimer::new(animation_start, jump_length))
+                .relate_to::<AnimationTarget>(target);
+            actor_a.pos = jump_pos;
+
+            // hp change
+            let hp_change = target_a.hp.dmg(5);
+            let hp_anim = world
+                .create_deferred()
+                .add(hp_change)
+                .add(AnimationTimer::new(animation_start + jump_length, 0.2))
+                .relate_to::<AnimationTarget>(target)
+                .entity;
+
+            let msg = format!("{} jumps at {}.", actor_a.name, target_a.name);
+            log_message(world, msg, *jump_ani);
+            raise_pulse(world, actor, &actor_a);
+            raise_pulse(world, target, &target_a);
+            actor_a.next_turn += 10;
+
+            handle_death(world, target, &target_a, hp_anim);
         }
         Action { actor, kind: ActionKind::Kick { target } } => {
             assert_ne!(actor, target);

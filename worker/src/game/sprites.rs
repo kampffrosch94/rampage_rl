@@ -67,7 +67,7 @@ pub fn generate_draw_tile(lt: LogicTile, env: Environment, below: LogicTile) -> 
 }
 
 pub fn pos_to_drawpos(pos: Pos) -> FPos {
-    pos * (TILE_DIM * TILE_SCALE)
+    pos.to_fpos(TILE_SIZE)
 }
 
 /// Anything that can lie on top of a tile.

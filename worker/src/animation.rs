@@ -29,7 +29,10 @@ pub struct AnimationTimer {
 }
 
 impl AnimationTimer {
-    fn normalize(&self, current_time: f32) -> f32 {
+    pub fn new(start: f32, length: f32) -> Self {
+        Self { start, end: start + length }
+    }
+    pub fn normalize(&self, current_time: f32) -> f32 {
         let Self { start, end } = self;
         let length = end - start;
         let elapsed = current_time - start;
@@ -37,14 +40,14 @@ impl AnimationTimer {
         r.clamp(0., 1.)
     }
 
-    fn is_active(&self, current_time: f32) -> bool {
+    pub fn is_active(&self, current_time: f32) -> bool {
         current_time >= self.start
     }
 }
 
 pub struct MovementAnimation {
-    start: FPos,
-    end: FPos,
+    pub start: Pos,
+    pub end: Pos,
 }
 
 pub struct BumpAttackAnimation {
@@ -102,7 +105,9 @@ pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
     ) {
         if timer.is_active(current_time) {
             let lerpiness = sine_in_out(timer.normalize(current_time));
-            draw_pos.0 = anim.start.lerp(anim.end, lerpiness);
+            let start = anim.start.to_fpos(TILE_SIZE);
+            let end = anim.end.to_fpos(TILE_SIZE);
+            draw_pos.0 = start.lerp(end, lerpiness);
         }
     }
 
@@ -321,8 +326,6 @@ pub fn spawn_move_animation(world: &World, e: Entity, start: Pos, end: Pos) -> E
     zone!();
     assert!(world.has_component::<DrawPos>(e));
 
-    let start = pos_to_drawpos(start);
-    let end = pos_to_drawpos(end);
     let animation_length = 0.10;
     let current_time = world.singleton::<GameTime>().0;
 
@@ -438,6 +441,18 @@ pub fn spawn_game_over_animation(world: &World, target: Entity) -> Entity {
     anim
 }
 
+pub fn start_time(world: &World, targets: &[Entity]) -> f32 {
+    zone!();
+    let current_time = world.singleton::<GameTime>().0;
+    let start_time = targets
+        .into_iter()
+        .copied()
+        .flat_map(|e| query!(world, AnimationTimer, AnimationTarget(this, *e)))
+        .map(|(timer,)| timer.end)
+        .fold(current_time, f32::max);
+    start_time
+}
+
 // TODO use this as base for other animation spawn functions
 pub fn spawn_empty_animation(
     world: &World,
@@ -445,10 +460,7 @@ pub fn spawn_empty_animation(
     animation_length: f32,
 ) -> EntityViewDeferred<'_> {
     zone!();
-    let current_time = world.singleton::<GameTime>().0;
-    let start_time = query!(world, AnimationTimer, AnimationTarget(this, *target))
-        .map(|(timer,)| timer.end)
-        .fold(current_time, f32::max);
+    let start_time = start_time(world, &[target]);
 
     let anim = world.create_deferred();
     anim.add(AnimationTimer { start: start_time, end: start_time + animation_length })

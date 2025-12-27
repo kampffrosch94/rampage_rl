@@ -15,7 +15,7 @@ use crate::{
 use base::{
     Color, ContextTrait, FVec, Input, Pos, Rect, TextProperty, pos::IVec, text::Labelize, zone,
 };
-use froql::{query, world::World};
+use froql::{entity_store::Entity, query, world::World};
 use std::collections::HashSet;
 
 use super::game_logic::Action;
@@ -33,6 +33,7 @@ pub fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
             1 => PlayerAbility::ThrowRock,
             2 => PlayerAbility::Kick,
             3 => PlayerAbility::GroundSlam,
+            4 => PlayerAbility::JumpAttack,
             5 => PlayerAbility::Meditate,
             _ => PlayerAbility::ThrowRock,
         };
@@ -219,7 +220,12 @@ fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> 
     };
 
     return match ability {
-        PlayerAbility::ThrowRock => ability_input_line(c, world, 5),
+        PlayerAbility::ThrowRock => ability_input_line(c, world, 1, 5, |path, target| {
+            ActionKind::RockThrow { path, target }
+        }),
+        PlayerAbility::JumpAttack => ability_input_line(c, world, 2, 5, |path, target| {
+            ActionKind::JumpAttack { path, target }
+        }),
         PlayerAbility::Kick => ability_input_melee_single(c, world),
         PlayerAbility::Meditate => {
             exit_ability_state(world);
@@ -235,7 +241,9 @@ fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> 
 fn ability_input_line(
     c: &mut dyn ContextTrait,
     world: &mut World,
-    range: i32,
+    min_range: i32,
+    max_range: i32,
+    action_fn: impl Fn(Vec<Pos>, Entity) -> ActionKind,
 ) -> Option<Action> {
     zone!();
 
@@ -257,7 +265,10 @@ fn ability_input_line(
         let tm = world.singleton::<TileMap>();
         let new_cursor = positions
             .into_iter()
-            .filter(|pos| p_actor.pos.distance(*pos) <= range)
+            .filter(|pos| {
+                let dist = p_actor.pos.distance(*pos);
+                dist <= max_range && dist >= min_range
+            })
             .filter(|pos| {
                 let line = p_actor.pos.bresenham(*pos);
                 let blocked =
@@ -291,6 +302,7 @@ fn ability_input_line(
         let line: Vec<Pos> = p_actor.pos.bresenham(cursor_pos);
         let mut blocked = false;
         let mut blocker = None;
+        let mut blocker_pos = None;
         for pos in line.iter().skip(1) {
             if !blocked {
                 c.draw_rect(pos.to_fpos(TILE_SIZE).rect(TILE_SIZE), color, Z_CURSOR);
@@ -299,6 +311,7 @@ fn ability_input_line(
                 // only save actor as blocker if its the first thing blocking the path
                 if !blocked {
                     blocker = tm.get_actor(*pos);
+                    blocker_pos = Some(*pos);
                 }
                 blocked = true;
             }
@@ -321,12 +334,12 @@ fn ability_input_line(
 
         if c.is_pressed(Input::Confirm)
             && let Some(target) = blocker
+            && let Some(dist) = blocker_pos.map(|p| p.distance(p_actor.pos))
+            && dist >= min_range
+            && dist <= max_range
         {
             world.defer_closure(exit_ability_state);
-            return Some(Action {
-                actor: *player,
-                kind: ActionKind::RockThrow { path: line, target },
-            });
+            return Some(Action { actor: *player, kind: action_fn(line, target) });
         }
     }
 
