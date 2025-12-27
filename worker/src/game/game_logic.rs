@@ -99,6 +99,10 @@ pub enum ActionKind {
         #[quicksilver(proxy(Entity, EntityWrapper))]
         target: Entity,
     },
+    Kick {
+        #[quicksilver(proxy(Entity, EntityWrapper))]
+        target: Entity,
+    },
     DelayedSmash {
         dir: IVec,
     },
@@ -267,6 +271,27 @@ pub fn handle_action(world: &mut World, action: Action) {
             actor_a.next_turn += 10;
 
             handle_death(world, target, &target_a, animation);
+        }
+        Action { actor, kind: ActionKind::Kick { target } } => {
+            assert_ne!(actor, target);
+            let mut actor_a = world.get_component_mut::<Actor>(actor);
+            let mut target_a = world.get_component_mut::<Actor>(target);
+            let hp_bar_change = target_a.hp.dmg(3);
+            let animation = animation::spawn_bump_attack_animation(
+                world,
+                actor,
+                target,
+                actor_a.pos,
+                target_a.pos,
+                hp_bar_change,
+            );
+            let msg = format!("{} kicks {}.", actor_a.name, target_a.name);
+            log_message(world, msg, animation);
+
+            raise_pulse(world, actor, &actor_a);
+            raise_pulse(world, target, &target_a);
+            handle_death(world, target, &target_a, animation);
+            actor_a.next_turn += 10;
         }
         Action { actor, kind: ActionKind::DelayedSmash { dir } } => {
             world.add_component(actor, DelayedAction { action });

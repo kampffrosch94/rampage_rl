@@ -244,10 +244,12 @@ fn ability_input_line(
     zone!();
 
     let mut state = world.singleton_mut::<AbilityUIState>();
+    let Some((player, fov, p_actor)) = query!(world, &this, Fov, _ Player, Actor).next()
+    else {
+        return None;
+    };
 
-    if state.cursor_pos.is_none()
-        && let Some((p_actor, fov)) = query!(world, _ Player, Actor, Fov).next()
-    {
+    if state.cursor_pos.is_none() {
         let mut positions = Vec::new();
         for (actor, _draw_pos) in query!(world, Actor, DrawPos, !Player) {
             if fov.0.contains(&actor.pos) {
@@ -290,48 +292,45 @@ fn ability_input_line(
         let color = Color::rgba(1.0, 0.2, 0.3, 0.4);
         c.draw_rect_lines(rect, 3.0, Color::YELLOW, Z_CURSOR);
 
-        if let Some((player, fov, p_actor)) = query!(world, &this, Fov, _ Player, Actor).next()
-        {
-            let line: Vec<Pos> = p_actor.pos.bresenham(cursor_pos);
-            let mut blocked = false;
-            let mut blocker = None;
-            for pos in line.iter().skip(1) {
+        let line: Vec<Pos> = p_actor.pos.bresenham(cursor_pos);
+        let mut blocked = false;
+        let mut blocker = None;
+        for pos in line.iter().skip(1) {
+            if !blocked {
+                c.draw_rect(pos.to_fpos(TILE_SIZE).rect(TILE_SIZE), color, Z_CURSOR);
+            }
+            if tm.is_blocked(*pos) {
+                // only save actor as blocker if its the first thing blocking the path
                 if !blocked {
-                    c.draw_rect(pos.to_fpos(TILE_SIZE).rect(TILE_SIZE), color, Z_CURSOR);
+                    blocker = tm.get_actor(*pos);
                 }
-                if tm.is_blocked(*pos) {
-                    // only save actor as blocker if its the first thing blocking the path
-                    if !blocked {
-                        blocker = tm.get_actor(*pos);
-                    }
-                    blocked = true;
-                }
+                blocked = true;
             }
+        }
 
-            let mut positions = Vec::new();
-            for (actor, _draw_pos) in query!(world, Actor, DrawPos, !Player) {
-                // TODO check if draw_pos is visible
-                let line = p_actor.pos.bresenham(actor.pos);
-                let blocked =
-                    line.iter().skip(1).take(line.len() - 2).any(|pos| tm.is_blocked(*pos));
-                if fov.0.contains(&actor.pos) && !blocked {
-                    positions.push(actor.pos);
-                }
+        let mut positions = Vec::new();
+        for (actor, _draw_pos) in query!(world, Actor, DrawPos, !Player) {
+            // TODO check if draw_pos is visible
+            let line = p_actor.pos.bresenham(actor.pos);
+            let blocked =
+                line.iter().skip(1).take(line.len() - 2).any(|pos| tm.is_blocked(*pos));
+            if fov.0.contains(&actor.pos) && !blocked {
+                positions.push(actor.pos);
             }
-            positions.sort_by_key(|pos| (p_actor.pos.distance(*pos), pos.x, pos.y));
-            if let Some(pos) = avy_navigation(c, &positions) {
-                state.cursor_pos = Some(pos);
-            }
+        }
+        positions.sort_by_key(|pos| (p_actor.pos.distance(*pos), pos.x, pos.y));
+        if let Some(pos) = avy_navigation(c, &positions) {
+            state.cursor_pos = Some(pos);
+        }
 
-            if c.is_pressed(Input::Confirm)
-                && let Some(target) = blocker
-            {
-                world.defer_closure(exit_ability_state);
-                return Some(Action {
-                    actor: *player,
-                    kind: ActionKind::RockThrow { path: line, target },
-                });
-            }
+        if c.is_pressed(Input::Confirm)
+            && let Some(target) = blocker
+        {
+            world.defer_closure(exit_ability_state);
+            return Some(Action {
+                actor: *player,
+                kind: ActionKind::RockThrow { path: line, target },
+            });
         }
     }
 
@@ -343,9 +342,14 @@ fn ability_input_melee_single(c: &mut dyn ContextTrait, world: &mut World) -> Op
 
     let mut state = world.singleton_mut::<AbilityUIState>();
 
-    if state.cursor_pos.is_none()
-        && let Some((p_actor, fov)) = query!(world, _ Player, Actor, Fov).next()
-    {
+    let Some((player, p_actor, fov)) = query!(world, &this, _ Player, Actor, Fov).next()
+    else {
+        return None;
+    };
+    let player = player.entity;
+
+    // initial cursor position
+    if state.cursor_pos.is_none() {
         let mut positions = Vec::new();
         for (actor, _draw_pos) in query!(world, Actor, DrawPos, !Player) {
             if fov.0.contains(&actor.pos) {
@@ -354,16 +358,9 @@ fn ability_input_melee_single(c: &mut dyn ContextTrait, world: &mut World) -> Op
         }
         positions.sort_by_key(|pos| (p_actor.pos.distance(*pos), pos.x, pos.y));
 
-        let tm = world.singleton::<TileMap>();
         let new_cursor = positions
             .into_iter()
-            .filter(|pos| p_actor.pos.distance(*pos) <= range)
-            .filter(|pos| {
-                let line = p_actor.pos.bresenham(*pos);
-                let blocked =
-                    line.iter().skip(1).take(line.len() - 2).any(|pos| tm.is_blocked(*pos));
-                !blocked
-            })
+            .filter(|pos| p_actor.pos.distance(*pos) <= 1) // melee range
             .next()
             .unwrap_or(p_actor.pos);
         state.cursor_pos = Some(new_cursor);
@@ -379,57 +376,29 @@ fn ability_input_melee_single(c: &mut dyn ContextTrait, world: &mut World) -> Op
     // highlight whatever the cursor is on
     let tm = world.singleton::<TileMap>();
     if let Some(cursor_pos) = state.cursor_pos {
-        let rect = Rect::new(
-            cursor_pos.x as f32 * TILE_SIZE,
-            cursor_pos.y as f32 * TILE_SIZE,
-            TILE_SIZE,
-            TILE_SIZE,
-        );
-        let color = Color::rgba(1.0, 0.2, 0.3, 0.4);
+        let rect = cursor_pos.to_fpos(TILE_SIZE).rect(TILE_SIZE);
         c.draw_rect_lines(rect, 3.0, Color::YELLOW, Z_CURSOR);
+        let color = Color::rgba(1.0, 0.2, 0.3, 0.4);
+        c.draw_rect(rect, color, Z_CURSOR);
 
-        if let Some((player, fov, p_actor)) = query!(world, &this, Fov, _ Player, Actor).next()
+        let mut positions = Vec::new();
+        for (actor, _draw_pos) in query!(world, Actor, DrawPos, !Player) {
+            if fov.0.contains(&actor.pos) {
+                positions.push(actor.pos);
+            }
+        }
+        positions.sort_by_key(|pos| (p_actor.pos.distance(*pos), pos.x, pos.y));
+        positions.retain(|pos| pos.distance(p_actor.pos) <= 1);
+        if let Some(pos) = avy_navigation(c, &positions) {
+            state.cursor_pos = Some(pos);
+        }
+
+        if c.is_pressed(Input::Confirm)
+            && let Some(pos) = state.cursor_pos
+            && let Some(target) = tm.get_actor(pos)
         {
-            let line: Vec<Pos> = p_actor.pos.bresenham(cursor_pos);
-            let mut blocked = false;
-            let mut blocker = None;
-            for pos in line.iter().skip(1) {
-                if !blocked {
-                    c.draw_rect(pos.to_fpos(TILE_SIZE).rect(TILE_SIZE), color, Z_CURSOR);
-                }
-                if tm.is_blocked(*pos) {
-                    // only save actor as blocker if its the first thing blocking the path
-                    if !blocked {
-                        blocker = tm.get_actor(*pos);
-                    }
-                    blocked = true;
-                }
-            }
-
-            let mut positions = Vec::new();
-            for (actor, _draw_pos) in query!(world, Actor, DrawPos, !Player) {
-                // TODO check if draw_pos is visible
-                let line = p_actor.pos.bresenham(actor.pos);
-                let blocked =
-                    line.iter().skip(1).take(line.len() - 2).any(|pos| tm.is_blocked(*pos));
-                if fov.0.contains(&actor.pos) && !blocked {
-                    positions.push(actor.pos);
-                }
-            }
-            positions.sort_by_key(|pos| (p_actor.pos.distance(*pos), pos.x, pos.y));
-            if let Some(pos) = avy_navigation(c, &positions) {
-                state.cursor_pos = Some(pos);
-            }
-
-            if c.is_pressed(Input::Confirm)
-                && let Some(target) = blocker
-            {
-                world.defer_closure(exit_ability_state);
-                return Some(Action {
-                    actor: *player,
-                    kind: ActionKind::RockThrow { path: line, target },
-                });
-            }
+            world.defer_closure(exit_ability_state);
+            return Some(Action { actor: player, kind: ActionKind::Kick { target } });
         }
     }
 
