@@ -63,6 +63,15 @@ pub struct UI {
 #[derive(Default, Quicksilver)]
 pub struct AbilityUIState {
     cursor_pos: Option<Pos>,
+    ability_selected: PlayerAbility,
+}
+
+#[derive(Default, Quicksilver, Clone, Copy)]
+#[repr(C)]
+pub enum PlayerAbility {
+    #[default]
+    ThrowRock,
+    Kick,
 }
 
 #[derive(Default, Quicksilver)]
