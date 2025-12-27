@@ -2,6 +2,7 @@ use crate::game::drawing::{DangerZone, DrawHealth, DrawPos};
 use crate::game::game_logic::Player;
 use crate::game::sprites::{Decor, DrawTile, TILE_DIM, TILE_SIZE, pos_to_drawpos};
 use crate::game::tile_map::TileMap;
+use crate::game::ui::{LOGPANEL_HEIGHT, SIDEBAR_WIDTH};
 use crate::game::{GameTime, UI, UIState, z_levels::*};
 use crate::rand::RandomGenerator;
 use base::{ContextTrait, FPos, FVec, Pos, Rect, zone};
@@ -236,8 +237,16 @@ pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
 
     for (mut anim, timer) in query!(world, mut CameraMoveAnimation, AnimationTimer) {
         if timer.is_active(current_time) && timer.start == max_start {
+            let game_area_center = {
+                let mut pos = c.screen_rect_world().center();
+                pos.y -= LOGPANEL_HEIGHT / 2.0;
+                pos.x -= SIDEBAR_WIDTH / 2.0;
+                pos.x += TILE_SIZE / 2.0;
+                pos.y += TILE_SIZE / 2.0;
+                pos
+            };
             if anim.from.is_none() {
-                anim.from = Some(c.screen_rect_world().center());
+                anim.from = Some(game_area_center);
             }
 
             let ease = simple_easing::cubic_out;
@@ -246,7 +255,7 @@ pub fn handle_animations(c: &mut dyn ContextTrait, world: &mut World) {
             let dist = anim.to - from;
             let current_target = from + dist * lerpiness;
 
-            let delta = current_target - c.screen_rect_world().center();
+            let delta = current_target - game_area_center;
             c.camera_move_rel(delta);
         }
     }
@@ -372,27 +381,6 @@ pub fn add_camera_move(world: &World, sync_anim: Entity, goal_pos: Pos) {
 
         world.create().add(timer).add(CameraMoveAnimation { from: None, to: goal });
     });
-}
-
-#[expect(unused)]
-pub fn spawn_camera_move(world: &World, target: Entity, goal_pos: Pos) {
-    zone!();
-    let goal = {
-        let p = pos_to_drawpos(goal_pos);
-        Rect::new_center_wh(p, TILE_DIM, TILE_DIM).center()
-    };
-
-    let current_time = world.singleton::<GameTime>().0;
-    let start_time = query!(world, AnimationTimer, AnimationTarget(this, *target))
-        .map(|(timer,)| timer.end)
-        .fold(current_time, f32::max);
-
-    const A_LENGTH: f32 = 0.5;
-
-    world
-        .create_deferred()
-        .add(AnimationTimer { start: start_time, end: start_time + A_LENGTH })
-        .add(CameraMoveAnimation { from: None, to: goal });
 }
 
 pub fn spawn_projectile_animation(

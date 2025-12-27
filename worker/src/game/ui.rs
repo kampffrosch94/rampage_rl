@@ -10,6 +10,9 @@ use froql::entity_store::Entity;
 use froql::{query, world::World};
 use quicksilver::Quicksilver;
 
+pub const SIDEBAR_WIDTH: f32 = 400.;
+pub const LOGPANEL_HEIGHT: f32 = 300.;
+
 #[derive(Default, Debug, Quicksilver)]
 pub struct MessageLog {
     messages: Vec<String>,
@@ -39,7 +42,7 @@ const TEXT_HEADING: TextProperty =
     TextProperty::new().family(TextFamily::BloodCyrillic).color(Color::RED).metrics(50., 40.);
 
 fn side_menu(c: &mut dyn ContextTrait, world: &mut World) {
-    let side_panel_rect = c.screen_rect().take_right(400.);
+    let side_panel_rect = c.screen_rect().take_right(SIDEBAR_WIDTH);
     c.draw_rect(side_panel_rect, Color::BLACK, Z_SIDEBAR_BG);
     c.draw_rect_lines(side_panel_rect, 5.0, Color::GRAY, Z_SIDEBAR_BG);
     let mut ui_rect = side_panel_rect.skip_all(15.).skip_top(5.);
@@ -117,7 +120,12 @@ pub fn ui_inventory(c: &mut dyn ContextTrait, _world: &mut World) {
 
 fn ui_message_log(c: &mut dyn ContextTrait, world: &mut World) {
     let w = c.screen_rect().w;
-    let ui_rect = c.screen_rect().take_bot(300.).skip_right(w / 4.).skip_left(w / 4.);
+    let ui_rect = c
+        .screen_rect()
+        .take_bot(LOGPANEL_HEIGHT)
+        .skip_right(SIDEBAR_WIDTH)
+        .skip_right(w / 5.)
+        .skip_left(w / 5.);
     c.draw_rect(ui_rect, Color::BLACK, Z_MESSAGE_BG);
     c.draw_rect_lines(ui_rect, 5.0, Color::GRAY, Z_MESSAGE_BG);
     let text_rect = ui_rect.skip_all(15.).skip_top(5.);
