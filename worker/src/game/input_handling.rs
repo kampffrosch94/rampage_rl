@@ -1,10 +1,10 @@
 use crate::{
-    animation::{self, CameraMoveAnimation},
+    animation::CameraMoveAnimation,
     ecs_util::ensure_singleton,
     game::{
         AbilityUIState, PlayerAbility, UI, UIState,
         drawing::DrawPos,
-        game_logic::{ActionKind, Actor, Fov, Player, handle_action, handle_death},
+        game_logic::{ActionKind, Actor, Fov, Player, handle_action},
         mapgen::{generate_map, place_enemies},
         sprites::{TILE_DIM, TILE_SIZE, pos_to_drawpos},
         tile_map::TileMap,
@@ -100,25 +100,6 @@ pub fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
 
     if c.is_pressed(Input::Inspect) {
         world.singleton_mut::<UI>().state = UIState::Inspect;
-        return;
-    }
-
-    // TODO this is temporary and needs to get rolled into an ability
-    if c.is_pressed(Input::Test) {
-        let animation = animation::spawn_camera_shake_animation(world);
-
-        // find enemies around player and damage them
-        let (player_actor,) = query!(world, _ Player, mut Actor).next().unwrap();
-        let player_pos = player_actor.pos;
-        let tm = world.singleton::<TileMap>();
-        for pos in player_pos.neighbors(&tm.tiles) {
-            if let Some(neighbor_e) = tm.get_actor(pos) {
-                let mut neighbor_actor = world.get_component_mut::<Actor>(neighbor_e);
-                neighbor_actor.hp.current -= 1;
-                handle_death(world, neighbor_e, &neighbor_actor, animation);
-            }
-        }
-
         return;
     }
 }
@@ -244,7 +225,10 @@ fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> 
             exit_ability_state(world);
             Some(Action { actor: player, kind: ActionKind::Meditate })
         }
-        PlayerAbility::GroundSlam => todo!(),
+        PlayerAbility::GroundSlam => {
+            exit_ability_state(world);
+            Some(Action { actor: player, kind: ActionKind::GroundSlam })
+        }
     };
 }
 

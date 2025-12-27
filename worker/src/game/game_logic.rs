@@ -1,4 +1,5 @@
 use crate::{
+    animation::AnimationTarget,
     game::{drawing::DangerZone, tile_map::TileMap},
     quicksilver_glue::EntityWrapper,
 };
@@ -90,6 +91,7 @@ pub struct DelayedAction {
 pub enum ActionKind {
     Wait,
     Meditate,
+    GroundSlam,
     Move {
         from: Pos,
         to: Pos,
@@ -320,6 +322,35 @@ pub fn handle_action(world: &mut World, action: Action) {
             raise_pulse(world, actor, &actor_a);
             raise_pulse(world, target, &target_a);
             handle_death(world, target, &target_a, kick_ani);
+            actor_a.next_turn += 10;
+        }
+        Action { actor, kind: ActionKind::GroundSlam } => {
+            let animation = animation::spawn_camera_shake_animation(world);
+            animation.relate_to::<AnimationTarget>(actor);
+
+            // find enemies around player and damage them
+            let tm = world.singleton::<TileMap>();
+            let mut actor_a = world.get_component_mut::<Actor>(actor);
+            let epicenter = actor_a.pos;
+
+            let msg = format!("{} stomps the ground mightily.", actor_a.name);
+            log_message(world, msg, *animation);
+
+            for pos in epicenter.neighbors(&tm.tiles) {
+                if let Some(target) = tm.get_actor(pos) {
+                    animation.relate_to::<AnimationTarget>(target);
+                    let mut target_a = world.get_component_mut::<Actor>(target);
+
+                    let hp_change = target_a.hp.dmg(2);
+                    let hp_anim = animation::spawn_empty_animation(world, target, 0.3);
+                    hp_anim.add(hp_change);
+
+                    raise_pulse(world, actor, &actor_a);
+                    raise_pulse(world, target, &target_a);
+                    handle_death(world, target, &target_a, *hp_anim);
+                }
+            }
+
             actor_a.next_turn += 10;
         }
         Action { actor, kind: ActionKind::DelayedSmash { dir } } => {
