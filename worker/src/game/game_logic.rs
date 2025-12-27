@@ -276,8 +276,12 @@ pub fn handle_action(world: &mut World, action: Action) {
             assert_ne!(actor, target);
             let mut actor_a = world.get_component_mut::<Actor>(actor);
             let mut target_a = world.get_component_mut::<Actor>(target);
+            let dir = target_a.pos - actor_a.pos;
+            let kicked_to = target_a.pos + dir;
+            let tm = world.singleton::<TileMap>();
+
             let hp_bar_change = target_a.hp.dmg(3);
-            let animation = animation::spawn_bump_attack_animation(
+            let kick_ani = animation::spawn_bump_attack_animation(
                 world,
                 actor,
                 target,
@@ -286,11 +290,19 @@ pub fn handle_action(world: &mut World, action: Action) {
                 hp_bar_change,
             );
             let msg = format!("{} kicks {}.", actor_a.name, target_a.name);
-            log_message(world, msg, animation);
+            log_message(world, msg, kick_ani);
+
+            if !tm.is_blocked(kicked_to) {
+                let _fly_ani =
+                    animation::spawn_move_animation(world, target, target_a.pos, kicked_to);
+                target_a.pos = kicked_to;
+                let msg = format!("{} flies away.", target_a.name);
+                log_message(world, msg, kick_ani);
+            }
 
             raise_pulse(world, actor, &actor_a);
             raise_pulse(world, target, &target_a);
-            handle_death(world, target, &target_a, animation);
+            handle_death(world, target, &target_a, kick_ani);
             actor_a.next_turn += 10;
         }
         Action { actor, kind: ActionKind::DelayedSmash { dir } } => {
