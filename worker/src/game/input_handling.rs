@@ -323,7 +323,9 @@ fn ability_input_line(
             let line = p_actor.pos.bresenham(actor.pos);
             let blocked =
                 line.iter().skip(1).take(line.len() - 2).any(|pos| tm.is_blocked(*pos));
-            if fov.0.contains(&actor.pos) && !blocked {
+            let dist = actor.pos.distance(p_actor.pos);
+            if fov.0.contains(&actor.pos) && !blocked && dist >= min_range && dist <= max_range
+            {
                 positions.push(actor.pos);
             }
         }

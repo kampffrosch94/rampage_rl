@@ -316,11 +316,11 @@ pub fn handle_action(world: &mut World, action: Action) {
             actor_a.pos = jump_pos;
 
             // hp change
-            let hp_change = target_a.hp.dmg(5);
+            let hp_change = target_a.hp.dmg(4);
             let hp_anim = world
                 .create_deferred()
                 .add(hp_change)
-                .add(AnimationTimer::new(animation_start + jump_length, 0.2))
+                .add(AnimationTimer::new(animation_start + jump_length, 0.10))
                 .relate_to::<AnimationTarget>(target)
                 .entity;
 
