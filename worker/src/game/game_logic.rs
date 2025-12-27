@@ -89,6 +89,7 @@ pub struct DelayedAction {
 #[derive(Debug, Quicksilver)]
 pub enum ActionKind {
     Wait,
+    Meditate,
     Move {
         from: Pos,
         to: Pos,
@@ -224,6 +225,19 @@ pub fn handle_action(world: &mut World, action: Action) {
             let mut actor_a = world.get_component_mut::<Actor>(actor);
             lower_pulse(world, actor, &mut actor_a);
             actor_a.next_turn += 10;
+        }
+        Action { actor, kind: ActionKind::Meditate } => {
+            let mut actor_a = world.get_component_mut::<Actor>(actor);
+            for _ in 0..10 {
+                lower_pulse(world, actor, &mut actor_a);
+            }
+            let heal = i32::min(5, actor_a.hp.max - actor_a.hp.current);
+            let hp_change = actor_a.hp.dmg(-heal);
+            let anim =
+                animation::spawn_empty_animation(world, actor, 0.5).add(hp_change).entity;
+            let msg = format!("{} meditates briefly and heals for {heal} HP.", actor_a.name);
+            log_message(world, msg, anim);
+            actor_a.next_turn += 50;
         }
         Action { actor, kind: ActionKind::Move { from, to } } => {
             let anim = animation::spawn_move_animation(world, actor, from, to);

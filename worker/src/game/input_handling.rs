@@ -30,7 +30,10 @@ pub fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
         ensure_singleton::<AbilityUIState>(world);
         let mut state = world.singleton_mut::<AbilityUIState>();
         let ability = match nr {
+            1 => PlayerAbility::ThrowRock,
             2 => PlayerAbility::Kick,
+            3 => PlayerAbility::GroundSlam,
+            5 => PlayerAbility::Meditate,
             _ => PlayerAbility::ThrowRock,
         };
         state.ability_selected = ability;
@@ -229,10 +232,19 @@ fn ability_input(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> 
 
     ensure_singleton::<AbilityUIState>(world);
     let ability = world.singleton::<AbilityUIState>().ability_selected;
+    let Some(player) = query!(world, &this, _ Player, _ Actor).next().map(|(p,)| p.entity)
+    else {
+        return None;
+    };
 
     return match ability {
         PlayerAbility::ThrowRock => ability_input_line(c, world, 5),
         PlayerAbility::Kick => ability_input_melee_single(c, world),
+        PlayerAbility::Meditate => {
+            exit_ability_state(world);
+            Some(Action { actor: player, kind: ActionKind::Meditate })
+        }
+        PlayerAbility::GroundSlam => todo!(),
     };
 }
 

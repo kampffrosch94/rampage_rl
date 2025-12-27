@@ -72,6 +72,8 @@ pub enum PlayerAbility {
     #[default]
     ThrowRock,
     Kick,
+    Meditate,
+    GroundSlam,
 }
 
 #[derive(Default, Quicksilver)]
