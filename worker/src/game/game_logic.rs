@@ -48,6 +48,9 @@ pub struct HP {
 }
 
 impl HP {
+    pub fn new(amount: i32) -> Self {
+        Self { max: amount, current: amount }
+    }
     pub fn ratio(&self) -> f32 {
         self.current as f32 / self.max as f32
     }
@@ -156,7 +159,7 @@ impl CreatureType {
                     pos,
                     creature_type: self,
                     sprite: CreatureSprite::GoblinBrute,
-                    hp: HP { max: 5, current: 5 },
+                    hp: HP::new(15),
                     next_turn: 0,
                 });
             }
