@@ -221,6 +221,8 @@ pub fn lower_pulse(world: &World, e: Entity, e_actor: &mut Actor) {
         if player_p.pulse < 30. {
             let a = animation::spawn_empty_animation(world, e, 0.).entity;
             log_message(world, "You die of cardiac arrest.".to_string(), a);
+            e_actor.hp.current = -9999;
+            handle_death(world, e, &e_actor, a);
         }
     }
 }
