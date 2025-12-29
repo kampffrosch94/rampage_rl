@@ -151,7 +151,7 @@ impl CreatureType {
                     pos,
                     creature_type: self,
                     sprite: CreatureSprite::Dwarf,
-                    hp: HP { max: 10, current: 10 },
+                    hp: HP::new(30),
                     next_turn: 0,
                 });
                 e.add(Player { pulse: 60., last_pulse_action: 0 });
