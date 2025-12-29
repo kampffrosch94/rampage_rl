@@ -14,7 +14,6 @@ mod quicksilver_glue;
 mod rand;
 mod util;
 
-
 #[cfg(not(target_arch = "wasm32"))]
 #[unsafe(no_mangle)]
 pub extern "C" fn create_worker_state() -> PersistWrapper {

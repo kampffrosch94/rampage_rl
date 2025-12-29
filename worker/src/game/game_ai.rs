@@ -53,8 +53,9 @@ impl Pathfinding {
                         seeds.push(pos);
                     }
                 }
+                dijkstra(&mut grid, &seeds, cost_function);
+                grid[player.pos] = -1; // don't move through player tile
             }
-            dijkstra(&mut grid, &seeds, cost_function);
             grid
         };
 
