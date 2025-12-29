@@ -146,6 +146,20 @@ impl Pos {
         }
         points
     }
+
+    /// A circle looks suspiciouly like a rect if diagonals have distance 1
+    pub fn circle_around(self, radius: i32) -> Vec<Pos> {
+        let mut r = Vec::new();
+        for x in (self.x - radius)..=(self.x + radius) {
+            r.push(Self { x, y: self.y - radius });
+            r.push(Self { x, y: self.y + radius });
+        }
+        for y in (self.y - radius + 1)..=(self.y + radius - 1) {
+            r.push(Self { x: self.x - radius, y });
+            r.push(Self { x: self.x + radius, y });
+        }
+        r
+    }
 }
 
 impl From<(i32, i32)> for Pos {

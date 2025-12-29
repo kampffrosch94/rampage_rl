@@ -12,6 +12,7 @@ use crate::{
 pub struct Pathfinding {
     /// This is a dijkstra map for going towards the player and melee attacking them.
     melee_grid: Grid<i32>,
+    ranged_grid: Grid<i32>,
 }
 
 impl Pathfinding {
@@ -19,12 +20,6 @@ impl Pathfinding {
         zone!();
 
         let tm = world.singleton::<TileMap>();
-        let mut melee_grid = Grid::new(tm.tiles.width, tm.tiles.height, 0);
-        let mut seeds = Vec::new();
-        for (player,) in query!(world, Actor, _ Player) {
-            melee_grid[player.pos] = 500;
-            seeds.push(player.pos);
-        }
         let cost_function = |pos| {
             if tm.is_wall(pos) {
                 i32::MAX
@@ -34,8 +29,36 @@ impl Pathfinding {
                 1
             }
         };
-        dijkstra(&mut melee_grid, &seeds, cost_function);
-        Self { melee_grid }
+
+        let melee_grid = {
+            let mut grid = Grid::new(tm.tiles.width, tm.tiles.height, 0);
+            let mut seeds = Vec::new();
+            for (player,) in query!(world, Actor, _ Player) {
+                grid[player.pos] = 500;
+                seeds.push(player.pos);
+            }
+            dijkstra(&mut grid, &seeds, cost_function);
+            grid
+        };
+
+        let ranged_grid = {
+            let mut grid = Grid::new(tm.tiles.width, tm.tiles.height, 0);
+            let mut seeds = Vec::new();
+            for (player,) in query!(world, Actor, _ Player) {
+                for pos in player.pos.circle_around(5) {
+                    let has_los =
+                        pos.bresenham(player.pos).into_iter().all(|p| !tm.is_wall(p));
+                    if has_los {
+                        grid[pos] = 500;
+                        seeds.push(pos);
+                    }
+                }
+            }
+            dijkstra(&mut grid, &seeds, cost_function);
+            grid
+        };
+
+        Self { melee_grid, ranged_grid }
     }
 }
 
@@ -43,13 +66,14 @@ impl Pathfinding {
 pub fn ai_turn(world: &World, pf: &Pathfinding, npc: Entity) -> Action {
     zone!();
 
+    let actor = world.get_component::<Actor>(npc);
+    println!("Turn of {}", actor.name);
+
     // check possible actions and pick the best one
     // going for a bump attack is the default if none is found (below this block)
     {
         // TODO this should use proper action source logic later
 
-        let actor = world.get_component::<Actor>(npc);
-        println!("Turn of {}", actor.name);
         if matches!(actor.creature_type, CreatureType::GoblinBrute) {
             // goblin brutes smash the player if they are in range
             for (player_a,) in query!(world, Actor, _ Player) {
@@ -59,14 +83,32 @@ pub fn ai_turn(world: &World, pf: &Pathfinding, npc: Entity) -> Action {
                 }
             }
         }
+
+        if matches!(actor.creature_type, CreatureType::GoblinArcher) {
+            // goblin archer shoots the player if they are in range
+            for (player_e, player_a) in query!(world, &this, Actor, _ Player) {
+                let distance = actor.pos.distance(player_a.pos);
+                if distance > 1 && distance <= 5 {
+                    let tm = world.singleton::<TileMap>();
+                    let path = actor.pos.bresenham(player_a.pos);
+                    let blocked = path[1..(path.len() - 1)].iter().any(|p| tm.is_blocked(*p));
+                    if !blocked {
+                        return ActionKind::RockThrow { path, target: *player_e }.done_by(npc);
+                    }
+                }
+            }
+        }
     }
 
     // set up pathfinding dijsktra map
-    let grid = &pf.melee_grid;
+    let grid = match actor.creature_type {
+        CreatureType::GoblinArcher => &pf.ranged_grid,
+        _ => &pf.melee_grid,
+    };
     let tm = world.singleton::<TileMap>();
 
     // do pathfinding
-    let start = world.get_component::<Actor>(npc).pos;
+    let start = actor.pos;
     let path = dijkstra_path(&grid, start);
 
     if path.len() > 1
