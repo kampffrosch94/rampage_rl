@@ -9,8 +9,38 @@ use crate::{
     },
 };
 
+pub struct Pathfinding {
+    /// This is a dijkstra map for going towards the player and melee attacking them.
+    melee_grid: Grid<i32>,
+}
+
+impl Pathfinding {
+    pub fn new(world: &World) -> Self {
+        zone!();
+
+        let tm = world.singleton::<TileMap>();
+        let mut melee_grid = Grid::new(tm.tiles.width, tm.tiles.height, 0);
+        let mut seeds = Vec::new();
+        for (player,) in query!(world, Actor, _ Player) {
+            melee_grid[player.pos] = 500;
+            seeds.push(player.pos);
+        }
+        let cost_function = |pos| {
+            if tm.is_wall(pos) {
+                i32::MAX
+            } else if tm.get_actor(pos).is_some() {
+                25
+            } else {
+                1
+            }
+        };
+        dijkstra(&mut melee_grid, &seeds, cost_function);
+        Self { melee_grid }
+    }
+}
+
 #[must_use]
-pub fn ai_turn(world: &World, npc: Entity) -> Action {
+pub fn ai_turn(world: &World, pf: &Pathfinding, npc: Entity) -> Action {
     zone!();
 
     // check possible actions and pick the best one
@@ -32,27 +62,8 @@ pub fn ai_turn(world: &World, npc: Entity) -> Action {
     }
 
     // set up pathfinding dijsktra map
-    let start = world.get_component::<Actor>(npc).pos;
+    let grid = &pf.melee_grid;
     let tm = world.singleton::<TileMap>();
-    let grid = {
-        let mut grid = Grid::new(tm.tiles.width, tm.tiles.height, 0);
-        let mut seeds = Vec::new();
-        for (player,) in query!(world, Actor, _ Player) {
-            grid[player.pos] = 500;
-            seeds.push(player.pos);
-        }
-        let cost_function = |pos| {
-            if tm.is_wall(pos) && pos != start {
-                i32::MAX
-            } else if tm.get_actor(pos).is_some() {
-                25
-            } else {
-                1
-            }
-        };
-        dijkstra(&mut grid, &seeds, cost_function);
-        grid
-    };
 
     // do pathfinding
     let start = world.get_component::<Actor>(npc).pos;

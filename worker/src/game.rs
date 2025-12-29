@@ -25,7 +25,7 @@ use debug_util::{DebugOptions, debug_ui};
 use drawing::draw_systems;
 use ecs_types::*;
 use froql::{query, world::World};
-use game_ai::ai_turn;
+use game_ai::{Pathfinding, ai_turn};
 use game_logic::{
     Actor, DelayedAction, Fov, Player, create_world, handle_action, handle_delayed_action,
     next_turn_actor, player_is_alive,
@@ -308,15 +308,18 @@ fn handle_turn(c: &mut dyn ContextTrait, world: &mut World) {
 
         // handle AI input after player
         let Some(mut current) = next_turn_actor(world) else { return };
+        let pf = Pathfinding::new(world);
 
         while !world.has_component::<Player>(current) && player_is_alive(world) {
             TileMap::update_actors(world);
+
             if let Some(DelayedAction { action, .. }) = world.take_component(current) {
                 handle_delayed_action(world, action);
             } else {
-                let action = ai_turn(world, current);
+                let action = ai_turn(world, &pf, current);
                 handle_action(world, action);
             }
+
             let Some(next) = next_turn_actor(world) else { break };
             current = next;
         }
