@@ -17,7 +17,7 @@ pub struct DebugOptions {
 
 impl Default for DebugOptions {
     fn default() -> Self {
-        Self { slow_mode: false, slowdown_factor: 20, show_debug: true }
+        Self { slow_mode: false, slowdown_factor: 20, show_debug: false }
     }
 }
 
