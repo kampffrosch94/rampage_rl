@@ -256,7 +256,7 @@ pub fn handle_action(world: &mut World, action: Action) {
             for _ in 0..10 {
                 lower_pulse(world, actor, &mut actor_a);
             }
-            let heal = i32::min(5, actor_a.hp.max - actor_a.hp.current);
+            let heal = i32::min(10, actor_a.hp.max - actor_a.hp.current);
             let hp_change = actor_a.hp.dmg(-heal);
             let anim =
                 animation::spawn_empty_animation(world, actor, 0.5).add(hp_change).entity;
