@@ -1,4 +1,4 @@
-use base::{ContextTrait, FPos, Pos, Rect};
+use base::{ContextTrait, FPos, Pos, Rect, zone};
 use quicksilver::Quicksilver;
 
 use super::z_levels::Z_SPRITE;
@@ -19,23 +19,29 @@ pub enum DrawTile {
     DownStairs,
     UpStairs,
     Rock,
+    Arrow,
 }
 
 impl DrawTile {
     pub fn draw(&self, c: &mut dyn ContextTrait, FPos { x, y }: FPos, z: i32) {
-        let src = match self {
-            DrawTile::Empty => (0, 2),
-            DrawTile::SkullWallTop => (0, 5),
-            DrawTile::SkullWallBot => (1, 5),
-            DrawTile::GrayFloor => (0, 6),
-            DrawTile::DownStairs => (7, 16),
-            DrawTile::UpStairs => (8, 16),
-            DrawTile::Rock => (1, 18),
+        zone!();
+        let (asset, sx, sy) = match self {
+            DrawTile::Empty => ("tiles", 0, 2),
+            DrawTile::SkullWallTop => ("tiles", 0, 5),
+            DrawTile::SkullWallBot => ("tiles", 1, 5),
+            DrawTile::GrayFloor => ("tiles", 0, 6),
+            DrawTile::DownStairs => ("tiles", 7, 16),
+            DrawTile::UpStairs => ("tiles", 8, 16),
+            DrawTile::Rock => ("tiles", 1, 18),
+            DrawTile::Arrow => ("items", 0, 23),
         };
-
-        let src = extruded_source(src);
+        let src = if asset == "tiles" {
+            extruded_source((sx, sy))
+        } else {
+            Rect::new(sx as f32 * TILE_DIM, sy as f32 * TILE_DIM, TILE_DIM, TILE_DIM)
+        };
         let target = Rect::new(x, y, TILE_DIM * TILE_SCALE, TILE_DIM * TILE_SCALE);
-        c.draw_texture_part_scaled("tiles", src, target, z);
+        c.draw_texture_part_scaled(asset, src, target, z);
     }
 }
 
@@ -54,6 +60,7 @@ pub enum Environment {
 }
 
 pub fn generate_draw_tile(lt: LogicTile, env: Environment, below: LogicTile) -> DrawTile {
+    zone!();
     match env {
         Environment::Catacomb => match lt {
             LogicTile::Wall => match below {
@@ -82,6 +89,7 @@ pub enum Decor {
 
 impl Decor {
     pub fn draw(&self, c: &mut dyn ContextTrait, FPos { x, y }: FPos, z: i32) {
+        zone!();
         let src = match self {
             Decor::BloodRed1 => (0, 22),
             Decor::BloodRed2 => (1, 22),
@@ -96,6 +104,7 @@ impl Decor {
 /// our tileset is extruded
 /// this computes the source rect for a sprite in the tileset
 fn extruded_source((sx, sy): (i32, i32)) -> Rect {
+    zone!();
     let offset = TILE_DIM + 2. * TILE_EXTRUSION;
     Rect::new(
         sx as f32 * offset + TILE_EXTRUSION,
@@ -116,6 +125,7 @@ pub enum CreatureSprite {
 
 impl CreatureSprite {
     pub fn draw(&self, c: &mut dyn ContextTrait, x: f32, y: f32) {
+        zone!();
         let (sheet, sx, sy) = match self {
             CreatureSprite::Dwarf => ("rogues", 0, 0),
             CreatureSprite::Goblin => ("monsters", 2, 0),

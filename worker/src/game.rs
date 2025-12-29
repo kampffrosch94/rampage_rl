@@ -156,6 +156,7 @@ pub fn update_inner(c: &mut dyn ContextTrait, s: &mut PersistentState) {
     }
 
     // c.draw_texture("tiles", -228., -950., 5);
+    // c.draw_texture("items", -228., -950., 5);
     // c.draw_texture("rogues", -600., -950., 5);
     // c.draw_texture("monsters", -1100., -950., 5);
     // c.draw_circle(Circle { pos: FPos::new(50., 60.), radius: 30. }, Color::WHITE, 15);
@@ -305,6 +306,7 @@ fn handle_turn(c: &mut dyn ContextTrait, world: &mut World) {
         TileMap::update_actors(world);
         player_inputs(c, world);
         world.process();
+        TileMap::update_actors(world);
 
         // handle AI input after player
         let Some(mut current) = next_turn_actor(world) else { return };

@@ -1,7 +1,7 @@
 #![allow(unused)]
 use base::{FPos, Pos};
 
-use crate::GRIDSIZE;
+pub const GRIDSIZE: f32 = 64.;
 
 /// translates from world coordinates to game grid
 pub fn world_to_game(p: FPos) -> Pos {

@@ -1,5 +1,7 @@
 use crate::game::PendingMessage;
+use crate::game::game_ai::Pathfinding;
 use crate::game::game_logic::Actor;
+use crate::util::world_to_game;
 use base::{ContextTrait, zone};
 use froql::{query, world::World};
 use quicksilver::{Quicksilver, reflections::reflect};
@@ -23,6 +25,15 @@ pub fn debug_ui(c: &mut dyn ContextTrait, world: &mut World) {
     let mut s = world.singleton_mut::<DebugOptions>();
     if s.show_debug {
         zone!("show debug");
+
+        {
+            let pf = Pathfinding::new(world);
+            let pos = world_to_game(c.mouse_world());
+            if let Some(val) = pf.melee_grid.get_opt(pos) {
+                c.inspect_str(&format!("{pos:?} -> {val}"));
+            }
+        }
+
         c.inspect(&mut reflect(&mut *s));
 
         let mut s = world.singleton_mut::<UI>();

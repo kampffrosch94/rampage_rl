@@ -14,7 +14,6 @@ mod quicksilver_glue;
 mod rand;
 mod util;
 
-pub const GRIDSIZE: f32 = 16.;
 
 #[cfg(not(target_arch = "wasm32"))]
 #[unsafe(no_mangle)]

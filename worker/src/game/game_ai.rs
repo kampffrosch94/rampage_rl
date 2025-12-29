@@ -11,8 +11,8 @@ use crate::{
 
 pub struct Pathfinding {
     /// This is a dijkstra map for going towards the player and melee attacking them.
-    melee_grid: Grid<i32>,
-    ranged_grid: Grid<i32>,
+    pub melee_grid: Grid<i32>,
+    pub ranged_grid: Grid<i32>,
 }
 
 impl Pathfinding {
@@ -93,7 +93,8 @@ pub fn ai_turn(world: &World, pf: &Pathfinding, npc: Entity) -> Action {
                     let path = actor.pos.bresenham(player_a.pos);
                     let blocked = path[1..(path.len() - 1)].iter().any(|p| tm.is_blocked(*p));
                     if !blocked {
-                        return ActionKind::RockThrow { path, target: *player_e }.done_by(npc);
+                        return ActionKind::ShootArrow { path, target: *player_e }
+                            .done_by(npc);
                     }
                 }
             }

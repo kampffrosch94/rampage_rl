@@ -105,6 +105,11 @@ pub enum ActionKind {
         #[quicksilver(proxy(Entity, EntityWrapper))]
         target: Entity,
     },
+    ShootArrow {
+        path: Vec<Pos>,
+        #[quicksilver(proxy(Entity, EntityWrapper))]
+        target: Entity,
+    },
     JumpAttack {
         path: Vec<Pos>,
         #[quicksilver(proxy(Entity, EntityWrapper))]
@@ -303,6 +308,25 @@ pub fn handle_action(world: &mut World, action: Action) {
 
             let mut actor_a = world.get_component_mut::<Actor>(actor);
             let msg = format!("{} throws a huge rock at {}.", actor_a.name, target_a.name);
+            log_message(world, msg, animation);
+            raise_pulse(world, target, &target_a);
+            actor_a.next_turn += 10;
+
+            handle_death(world, target, &target_a, animation);
+        }
+        Action { actor, kind: ActionKind::ShootArrow { path, target } } => {
+            let mut target_a = world.get_component_mut::<Actor>(target);
+            let hp_bar_change = target_a.hp.dmg(2);
+            let animation = animation::spawn_projectile_animation(
+                world,
+                DrawTile::Arrow,
+                path,
+                hp_bar_change,
+                target,
+            );
+
+            let mut actor_a = world.get_component_mut::<Actor>(actor);
+            let msg = format!("{} shoots an arrow at {}.", actor_a.name, target_a.name);
             log_message(world, msg, animation);
             raise_pulse(world, target, &target_a);
             actor_a.next_turn += 10;
