@@ -111,6 +111,7 @@ pub enum CreatureSprite {
     Dwarf,
     Goblin,
     GoblinBrute,
+    GoblinArcher,
 }
 
 impl CreatureSprite {
@@ -119,6 +120,7 @@ impl CreatureSprite {
             CreatureSprite::Dwarf => ("rogues", 0, 0),
             CreatureSprite::Goblin => ("monsters", 2, 0),
             CreatureSprite::GoblinBrute => ("monsters", 7, 0),
+            CreatureSprite::GoblinArcher => ("monsters", 5, 0),
         };
 
         let src = Rect::new(sx as f32 * TILE_DIM, sy as f32 * TILE_DIM, TILE_DIM, TILE_DIM);

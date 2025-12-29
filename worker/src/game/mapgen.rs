@@ -114,11 +114,12 @@ pub fn place_enemies(world: &mut World, seed: u64) {
     for room in &tm.rooms {
         for t in 0..room.tile_count() {
             let pos = room.tile_pos(t);
-            if rand.next_in_range(0, 1000) > 20 || tm.up_stairs == pos {
+            if rand.next_in_range(0, 1000) > 30 || tm.up_stairs == pos {
                 continue;
             }
             use CreatureType as S;
-            let creature = rand.pick_random(&[S::Goblin, S::GoblinBrute]);
+            let creature =
+                rand.pick_random(&[S::Goblin, S::Goblin, S::GoblinArcher, S::GoblinBrute]);
             creature.create_deferred(world, pos);
         }
     }

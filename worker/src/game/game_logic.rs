@@ -131,6 +131,7 @@ pub enum CreatureType {
     PlayerCharacter,
     Goblin,
     GoblinBrute,
+    GoblinArcher,
 }
 
 impl CreatureType {
@@ -168,6 +169,16 @@ impl CreatureType {
                     creature_type: self,
                     sprite: CreatureSprite::GoblinBrute,
                     hp: HP::new(15),
+                    next_turn: 0,
+                });
+            }
+            CreatureType::GoblinArcher => {
+                e.add(Actor {
+                    name: "Goblin Archer".into(),
+                    pos,
+                    creature_type: self,
+                    sprite: CreatureSprite::GoblinArcher,
+                    hp: HP::new(5),
                     next_turn: 0,
                 });
             }
