@@ -118,8 +118,15 @@ pub fn place_enemies(world: &mut World, seed: u64) {
                 continue;
             }
             use CreatureType as S;
-            let creature =
-                rand.pick_random(&[S::Goblin, S::Goblin, S::GoblinArcher, S::GoblinBrute]);
+            let creature = rand.pick_random(&[
+                S::GoblinMage,
+                S::GoblinMage,
+                S::GoblinMage,
+                S::Goblin,
+                S::Goblin,
+                S::GoblinArcher,
+                S::GoblinBrute,
+            ]);
             creature.create_deferred(world, pos);
         }
     }

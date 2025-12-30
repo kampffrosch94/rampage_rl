@@ -75,36 +75,48 @@ pub fn ai_turn(world: &World, pf: &Pathfinding, npc: Entity) -> Action {
     {
         // TODO this should use proper action source logic later
 
-        if matches!(actor.creature_type, CreatureType::GoblinBrute) {
-            // goblin brutes smash the player if they are in range
-            for (player_a,) in query!(world, Actor, _ Player) {
-                if actor.pos.distance(player_a.pos) == 1 {
-                    return ActionKind::DelayedSmash { dir: player_a.pos - actor.pos }
-                        .done_by(npc);
-                }
-            }
-        }
-
-        if matches!(actor.creature_type, CreatureType::GoblinArcher) {
-            // goblin archer shoots the player if they are in range
-            for (player_e, player_a) in query!(world, &this, Actor, _ Player) {
-                let distance = actor.pos.distance(player_a.pos);
-                if distance > 1 && distance <= 5 {
-                    let tm = world.singleton::<TileMap>();
-                    let path = actor.pos.bresenham(player_a.pos);
-                    let blocked = path[1..(path.len() - 1)].iter().any(|p| tm.is_blocked(*p));
-                    if !blocked {
-                        return ActionKind::ShootArrow { path, target: *player_e }
+        match actor.creature_type {
+            CreatureType::GoblinBrute => {
+                // goblin brutes smash the player if they are in range
+                for (player_a,) in query!(world, Actor, _ Player) {
+                    if actor.pos.distance(player_a.pos) == 1 {
+                        return ActionKind::DelayedSmash { dir: player_a.pos - actor.pos }
                             .done_by(npc);
                     }
                 }
             }
+            CreatureType::GoblinArcher | CreatureType::GoblinMage => {
+                // ranged npc shoots the player if they are in range
+                for (player_e, player_a) in query!(world, &this, Actor, _ Player) {
+                    let distance = actor.pos.distance(player_a.pos);
+                    if distance > 1 && distance <= 5 {
+                        let tm = world.singleton::<TileMap>();
+                        let path = actor.pos.bresenham(player_a.pos);
+                        let blocked =
+                            path[1..(path.len() - 1)].iter().any(|p| tm.is_blocked(*p));
+                        if !blocked {
+                            return match actor.creature_type {
+                                CreatureType::GoblinArcher => {
+                                    ActionKind::ShootArrow { path, target: *player_e }
+                                        .done_by(npc)
+                                }
+                                CreatureType::GoblinMage => {
+                                    ActionKind::ShootFire { path, target: *player_e }
+                                        .done_by(npc)
+                                }
+                                _ => unreachable!(),
+                            };
+                        }
+                    }
+                }
+            }
+            _ => {}
         }
     }
 
     // set up pathfinding dijsktra map
     let grid = match actor.creature_type {
-        CreatureType::GoblinArcher => &pf.ranged_grid,
+        CreatureType::GoblinArcher | CreatureType::GoblinMage => &pf.ranged_grid,
         _ => &pf.melee_grid,
     };
     let tm = world.singleton::<TileMap>();

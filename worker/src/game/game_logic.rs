@@ -110,6 +110,11 @@ pub enum ActionKind {
         #[quicksilver(proxy(Entity, EntityWrapper))]
         target: Entity,
     },
+    ShootFire {
+        path: Vec<Pos>,
+        #[quicksilver(proxy(Entity, EntityWrapper))]
+        target: Entity,
+    },
     JumpAttack {
         path: Vec<Pos>,
         #[quicksilver(proxy(Entity, EntityWrapper))]
@@ -137,6 +142,7 @@ pub enum CreatureType {
     Goblin,
     GoblinBrute,
     GoblinArcher,
+    GoblinMage,
 }
 
 impl CreatureType {
@@ -183,6 +189,16 @@ impl CreatureType {
                     pos,
                     creature_type: self,
                     sprite: CreatureSprite::GoblinArcher,
+                    hp: HP::new(5),
+                    next_turn: 0,
+                });
+            }
+            CreatureType::GoblinMage => {
+                e.add(Actor {
+                    name: "Goblin Mage".into(),
+                    pos,
+                    creature_type: self,
+                    sprite: CreatureSprite::GoblinMage,
                     hp: HP::new(5),
                     next_turn: 0,
                 });
@@ -327,6 +343,25 @@ pub fn handle_action(world: &mut World, action: Action) {
 
             let mut actor_a = world.get_component_mut::<Actor>(actor);
             let msg = format!("{} shoots an arrow at {}.", actor_a.name, target_a.name);
+            log_message(world, msg, animation);
+            raise_pulse(world, target, &target_a);
+            actor_a.next_turn += 10;
+
+            handle_death(world, target, &target_a, animation);
+        }
+        Action { actor, kind: ActionKind::ShootFire { path, target } } => {
+            let mut target_a = world.get_component_mut::<Actor>(target);
+            let hp_bar_change = target_a.hp.dmg(2);
+            let animation = animation::spawn_projectile_animation(
+                world,
+                DrawTile::Fire,
+                path,
+                hp_bar_change,
+                target,
+            );
+
+            let mut actor_a = world.get_component_mut::<Actor>(actor);
+            let msg = format!("{} throws fire at {}.", actor_a.name, target_a.name);
             log_message(world, msg, animation);
             raise_pulse(world, target, &target_a);
             actor_a.next_turn += 10;

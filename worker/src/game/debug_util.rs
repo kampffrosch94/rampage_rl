@@ -29,7 +29,7 @@ pub fn debug_ui(c: &mut dyn ContextTrait, world: &mut World) {
         {
             let pf = Pathfinding::new(world);
             let pos = world_to_game(c.mouse_world());
-            if let Some(val) = pf.melee_grid.get_opt(pos) {
+            if let Some(val) = pf.ranged_grid.get_opt(pos) {
                 c.inspect_str(&format!("{pos:?} -> {val}"));
             }
         }

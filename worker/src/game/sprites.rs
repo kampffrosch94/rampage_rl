@@ -20,6 +20,7 @@ pub enum DrawTile {
     UpStairs,
     Rock,
     Arrow,
+    Fire,
 }
 
 impl DrawTile {
@@ -34,6 +35,7 @@ impl DrawTile {
             DrawTile::UpStairs => ("tiles", 8, 16),
             DrawTile::Rock => ("tiles", 1, 18),
             DrawTile::Arrow => ("items", 0, 23),
+            DrawTile::Fire => ("animated-tiles", 0, 9),
         };
         let src = if asset == "tiles" {
             extruded_source((sx, sy))
@@ -121,6 +123,7 @@ pub enum CreatureSprite {
     Goblin,
     GoblinBrute,
     GoblinArcher,
+    GoblinMage,
 }
 
 impl CreatureSprite {
@@ -131,6 +134,7 @@ impl CreatureSprite {
             CreatureSprite::Goblin => ("monsters", 2, 0),
             CreatureSprite::GoblinBrute => ("monsters", 7, 0),
             CreatureSprite::GoblinArcher => ("monsters", 5, 0),
+            CreatureSprite::GoblinMage => ("monsters", 6, 0),
         };
 
         let src = Rect::new(sx as f32 * TILE_DIM, sy as f32 * TILE_DIM, TILE_DIM, TILE_DIM);
