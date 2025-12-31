@@ -1,3 +1,4 @@
+use crate::game::TileEffect;
 use crate::{
     animation::CameraMoveAnimation,
     ecs_util::ensure_singleton,
@@ -61,6 +62,11 @@ pub fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) -> Option<Acti
 
         // clean up NPCs on old level
         for (e,) in query!(world, !Player, _ Actor, &this) {
+            e.destroy();
+        }
+
+        // clean up tile effects
+        for (e,) in query!(world, _ TileEffect, &this) {
             e.destroy();
         }
 
