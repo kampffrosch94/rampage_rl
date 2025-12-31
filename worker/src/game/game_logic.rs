@@ -149,6 +149,7 @@ pub enum CreatureType {
     GoblinBrute,
     GoblinArcher,
     GoblinMage,
+    OrcFighter,
 }
 
 impl CreatureType {
@@ -185,6 +186,16 @@ impl CreatureType {
                     pos,
                     creature_type: self,
                     sprite: CreatureSprite::GoblinBrute,
+                    hp: HP::new(10),
+                    next_turn: 0,
+                });
+            }
+            CreatureType::OrcFighter => {
+                e.add(Actor {
+                    name: "Orc Fighter".into(),
+                    pos,
+                    creature_type: self,
+                    sprite: CreatureSprite::OrcFighter,
                     hp: HP::new(15),
                     next_turn: 0,
                 });
