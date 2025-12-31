@@ -4,7 +4,7 @@ use crate::{
     game::{
         AbilityUIState, PlayerAbility, UI, UIState,
         drawing::DrawPos,
-        game_logic::{ActionKind, Actor, Fov, Player, handle_action},
+        game_logic::{ActionKind, Actor, Fov, Player},
         mapgen::{generate_map, place_enemies},
         sprites::{TILE_DIM, TILE_SIZE, pos_to_drawpos},
         tile_map::TileMap,
@@ -20,7 +20,8 @@ use std::collections::HashSet;
 
 use super::game_logic::Action;
 
-pub fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
+#[must_use]
+pub fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) -> Option<Action> {
     zone!();
 
     if let Some(nr) = ability_key_pressed(c) {
@@ -38,19 +39,17 @@ pub fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
             _ => PlayerAbility::ThrowRock,
         };
         state.ability_selected = ability;
-        return;
+        return None;
     }
 
     let action = player_direction_input(c, world).or_else(|| ability_input(c, world));
-    if let Some(action) = action {
-        handle_action(world, action);
-        world.process();
-        return;
+    if action.is_some() {
+        return action;
     }
 
     if c.is_pressed(Input::Inventory) {
         world.singleton_mut::<UI>().state = UIState::Inventory;
-        return;
+        return None;
     }
 
     // go down the stairs
@@ -96,13 +95,15 @@ pub fn player_inputs(c: &mut dyn ContextTrait, world: &mut World) {
             world.add_component(player, Fov(HashSet::new()));
         });
 
-        return;
+        return None;
     }
 
     if c.is_pressed(Input::Inspect) {
         world.singleton_mut::<UI>().state = UIState::Inspect;
-        return;
+        return None;
     }
+
+    None
 }
 
 pub fn avy_navigation(c: &mut dyn ContextTrait, positions: &[Pos]) -> Option<Pos> {

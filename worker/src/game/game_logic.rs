@@ -137,6 +137,12 @@ impl ActionKind {
 
 #[derive(Debug, Quicksilver, Copy, Clone)]
 #[repr(C)]
+pub enum TileEffect {
+    Burning,
+}
+
+#[derive(Debug, Quicksilver, Copy, Clone)]
+#[repr(C)]
 pub enum CreatureType {
     PlayerCharacter,
     Goblin,
@@ -261,6 +267,7 @@ pub fn lower_pulse(world: &World, e: Entity, e_actor: &mut Actor) {
 
 pub fn handle_action(world: &mut World, action: Action) {
     zone!();
+    world.process();
     match action {
         Action { actor, kind: ActionKind::Wait } => {
             let mut actor_a = world.get_component_mut::<Actor>(actor);
@@ -352,13 +359,32 @@ pub fn handle_action(world: &mut World, action: Action) {
         Action { actor, kind: ActionKind::ShootFire { path, target } } => {
             let mut target_a = world.get_component_mut::<Actor>(target);
             let hp_bar_change = target_a.hp.dmg(2);
+            let effect_pos = path.last().copied().unwrap();
             let animation = animation::spawn_projectile_animation(
                 world,
-                DrawTile::Fire,
+                DrawTile::FireFlying,
                 path,
                 hp_bar_change,
                 target,
             );
+
+            // need to wait for the deferred creation of the projectile animation
+            // so that we can grab its animation timer
+            world.defer_closure(move |world| {
+                // remove previous effect on tile
+                if let Some(e) = { world.singleton::<TileMap>().get_effect(effect_pos) } {
+                    world.destroy(e);
+                }
+                let end_time = world.get_component::<AnimationTimer>(animation).end;
+                let tile_effect =
+                    world.create().add(effect_pos).add(TileEffect::Burning).entity;
+                // this animation is just here to supress the display of the tile effect
+                // until after the projectile hits
+                world
+                    .create()
+                    .add(AnimationTimer::new(end_time, 0.))
+                    .relate_to::<AnimationTarget>(tile_effect);
+            });
 
             let mut actor_a = world.get_component_mut::<Actor>(actor);
             let msg = format!("{} throws fire at {}.", actor_a.name, target_a.name);
@@ -476,6 +502,7 @@ pub fn handle_action(world: &mut World, action: Action) {
             actor_a.next_turn += 10;
         }
     };
+    world.process();
 }
 
 pub fn handle_delayed_action(world: &World, action: Action) {

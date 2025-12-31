@@ -25,8 +25,8 @@ pub enum AnimationCleanup {}
 
 #[derive(Debug, Clone, Copy)]
 pub struct AnimationTimer {
-    start: f32,
-    end: f32,
+    pub start: f32,
+    pub end: f32,
 }
 
 impl AnimationTimer {

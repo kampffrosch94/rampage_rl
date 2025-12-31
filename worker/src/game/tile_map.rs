@@ -5,18 +5,23 @@ use froql::{entity_store::Entity, query, world::World};
 use quicksilver::Quicksilver;
 use quicksilver::empty::EmptyContainer;
 
-use super::sprites::{Decor, LogicTile};
+use super::{
+    game_logic::TileEffect,
+    sprites::{Decor, LogicTile},
+};
 use crate::game::game_logic::Actor;
 
 #[derive(Debug, Quicksilver)]
 pub struct TileMap {
     pub tiles: Grid<LogicTile>,
     #[quicksilver(skip)]
-    pub actors: HashMap<Pos, Entity>,
+    actors: HashMap<Pos, Entity>,
     pub decor: Vec<DecorWithPos>,
     pub up_stairs: Pos,
     pub down_stairs: Pos,
     pub rooms: Vec<Room>,
+    #[quicksilver(skip)]
+    tile_effects: HashMap<Pos, Entity>,
 }
 
 #[derive(Debug, Quicksilver)]
@@ -31,6 +36,7 @@ impl TileMap {
             up_stairs: Pos::new(0, 0),
             down_stairs: Pos::new(0, 0),
             rooms: Vec::new(),
+            tile_effects: HashMap::new(),
         }
     }
 
@@ -66,17 +72,26 @@ impl TileMap {
         self.actors.get(&pos).copied()
     }
 
+    pub fn get_effect(&self, pos: Pos) -> Option<Entity> {
+        self.tile_effects.get(&pos).copied()
+    }
+
     pub fn blocks_vision(&self, pos: Pos) -> bool {
         self.is_wall(pos)
     }
 
     /// Updates the cache of where actors are in the tilemap.
     /// This is used for lookup of actors by position and pathfinding.
-    pub fn update_actors(world: &mut World) {
+    pub fn update_caches(world: &mut World) {
         let mut tm = world.singleton_mut::<TileMap>();
         tm.actors.clear();
         for (e, actor) in query!(world, &this, Actor) {
             tm.actors.insert(actor.pos, *e);
+        }
+
+        tm.tile_effects.clear();
+        for (e, pos) in query!(world, &this, Pos, _ TileEffect) {
+            tm.tile_effects.insert(*pos, *e);
         }
     }
 }

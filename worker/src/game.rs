@@ -24,17 +24,18 @@ use base::{FVec, TextProperty};
 use debug_util::{DebugOptions, debug_ui};
 use drawing::draw_systems;
 use ecs_types::*;
+use froql::entity_store::Entity;
 use froql::{query, world::World};
 use game_ai::{Pathfinding, ai_turn};
 use game_logic::{
-    Actor, DelayedAction, Fov, Player, create_world, handle_action, handle_delayed_action,
-    next_turn_actor, player_is_alive,
+    Actor, DelayedAction, Fov, Player, TileEffect, create_world, handle_action, handle_death,
+    handle_delayed_action, next_turn_actor, player_is_alive, raise_pulse,
 };
 use input_handling::{avy_navigation, input_direction, player_inputs};
 use quicksilver::Quicksilver;
 use sprites::{TILE_SIZE, pos_to_drawpos};
 use tile_map::TileMap;
-use ui::{handle_ui, ui_inventory};
+use ui::{handle_ui, log_message, ui_inventory};
 
 /// How much time passed since the start of the game in seconds
 /// Set early in the game loop.
@@ -304,17 +305,21 @@ fn handle_turn(c: &mut dyn ContextTrait, world: &mut World) {
         );
 
         // handle player input
-        TileMap::update_actors(world);
-        player_inputs(c, world);
+        TileMap::update_caches(world);
+        let Some(action) = player_inputs(c, world) else {
+            return;
+        };
+        handle_action(world, action);
         world.process();
-        TileMap::update_actors(world);
+        TileMap::update_caches(world);
 
         // handle AI input after player
         let Some(mut current) = next_turn_actor(world) else { return };
         let pf = Pathfinding::new(world);
 
         while !world.has_component::<Player>(current) && player_is_alive(world) {
-            TileMap::update_actors(world);
+            TileMap::update_caches(world);
+            on_turn_start(world, current);
 
             if let Some(DelayedAction { action, .. }) = world.take_component(current) {
                 handle_delayed_action(world, action);
@@ -323,10 +328,34 @@ fn handle_turn(c: &mut dyn ContextTrait, world: &mut World) {
                 handle_action(world, action);
             }
 
-            let Some(next) = next_turn_actor(world) else { break };
+            let Some(next) = next_turn_actor(world) else { return };
             current = next;
         }
+
+        // turn start effect for the player
+        if world.has_component::<Player>(current) && player_is_alive(world) {
+            TileMap::update_caches(world);
+            on_turn_start(world, current);
+        }
     }
+}
+
+pub fn on_turn_start(world: &mut World, e: Entity) {
+    world.process();
+    let mut actor = world.get_component_mut::<Actor>(e);
+    if let Some(effect) = { world.singleton::<TileMap>().get_effect(actor.pos) } {
+        let effect = world.get_component::<TileEffect>(effect);
+        match *effect {
+            TileEffect::Burning => {
+                let dmg = 2;
+                let hp_change = actor.hp.dmg(dmg);
+                let a = animation::spawn_empty_animation(world, e, 0.25).add(hp_change).entity;
+                log_message(world, format!("{} burns for {dmg} damage.", actor.name), a);
+                raise_pulse(world, e, &mut actor);
+                handle_death(world, e, &actor, a);
+            }
+        }
+    };
 }
 
 #[cfg(test)]

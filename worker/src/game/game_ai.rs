@@ -132,11 +132,11 @@ pub fn ai_turn(world: &World, pf: &Pathfinding, npc: Entity) -> Action {
         return ActionKind::Move { from: start, to: *next }.done_by(npc);
     } else if path.len() > 1
         && let Some(next) = path[1..].first()
-        && let Some(target) = tm.actors.get(next)
-        && world.has_component::<Player>(*target)
+        && let Some(target) = tm.get_actor(*next)
+        && world.has_component::<Player>(target)
     {
         // attack player if the player is the thing blocking movement
-        return ActionKind::BumpAttack { target: *target }.done_by(npc);
+        return ActionKind::BumpAttack { target }.done_by(npc);
     } else {
         // just stand in place
         return ActionKind::Wait.done_by(npc);

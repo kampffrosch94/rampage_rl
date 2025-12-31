@@ -8,7 +8,7 @@ pub const TILE_DIM: f32 = 32.;
 pub const TILE_SCALE: f32 = 2.0;
 pub const TILE_SIZE: f32 = TILE_DIM * TILE_SCALE;
 
-/// A graphical tile from the tileset.png asset in 32rogues
+/// A graphical tile from the assets in 32rogues
 #[derive(Debug, Clone, Copy, Quicksilver)]
 #[repr(C)]
 pub enum DrawTile {
@@ -20,7 +20,8 @@ pub enum DrawTile {
     UpStairs,
     Rock,
     Arrow,
-    Fire,
+    FireFlying,
+    FireBurning,
 }
 
 impl DrawTile {
@@ -35,7 +36,8 @@ impl DrawTile {
             DrawTile::UpStairs => ("tiles", 8, 16),
             DrawTile::Rock => ("tiles", 1, 18),
             DrawTile::Arrow => ("items", 0, 23),
-            DrawTile::Fire => ("animated-tiles", 0, 9),
+            DrawTile::FireFlying => ("animated-tiles", 0, 9),
+            DrawTile::FireBurning => ("animated-tiles", 0, 8),
         };
         let src = if asset == "tiles" {
             extruded_source((sx, sy))

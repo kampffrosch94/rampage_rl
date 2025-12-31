@@ -1,4 +1,5 @@
 pub const Z_TILES: i32 = 0;
+pub const Z_TILE_EFFECTS: i32 = 1;
 pub const Z_HP_BAR: i32 = 9;
 pub const Z_SPRITE: i32 = 10;
 pub const Z_PROJECTILE: i32 = 15;

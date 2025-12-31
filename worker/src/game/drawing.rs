@@ -1,9 +1,13 @@
+use crate::game::AnimationTarget;
+use crate::game::game_logic::TileEffect;
+use crate::game::z_levels::Z_TILE_EFFECTS;
 use crate::game::{
     game_logic::{Actor, Fov, Player},
     sprites::{DrawTile, Environment, LogicTile, TILE_SIZE, generate_draw_tile},
     tile_map::{DecorWithPos, TileMap},
     z_levels::{Z_DANGER_ZONE, Z_HP_BAR, Z_TILES},
 };
+use base::Pos;
 use base::{Color, ContextTrait, FPos, Rect, pos::IVec, zone};
 use froql::{query, world::World};
 use quicksilver::Quicksilver;
@@ -90,6 +94,19 @@ pub fn draw_systems(c: &mut dyn ContextTrait, world: &World) {
             );
             c.draw_rect(rect, Color::GREEN, Z_HP_BAR);
         }
+    }
+
+    // draw tile effects
+    for (pos, effect) in query!(world, Pos, TileEffect, !AnimationTarget(_, this)) {
+        if !fov.0.contains(&*pos) {
+            continue;
+        }
+
+        let dpos = pos.to_fpos(TILE_SIZE);
+        let sprite = match *effect {
+            TileEffect::Burning => DrawTile::FireBurning,
+        };
+        sprite.draw(c, dpos, Z_TILE_EFFECTS);
     }
 
     // highlight danger tiles

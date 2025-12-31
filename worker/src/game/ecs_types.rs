@@ -28,6 +28,7 @@ use crate::game::game_logic::Actor;
 use crate::game::game_logic::DelayedAction;
 use crate::game::game_logic::Fov;
 use crate::game::game_logic::Player;
+use crate::game::game_logic::TileEffect;
 use crate::game::game_logic::TurnCount;
 use crate::game::ui::MessageInhibitor;
 use crate::game::ui::MessageLog;
@@ -51,6 +52,7 @@ ecs_types!(
         Circle,
         Rect,
         GameTime,
+        TileEffect[persist],
         TurnCount[persist],
         Fov[persist],
         Pos[persist],
