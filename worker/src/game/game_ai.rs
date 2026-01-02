@@ -85,7 +85,9 @@ pub fn ai_turn(world: &World, pf: &Pathfinding, npc: Entity) -> Action {
                     }
                 }
             }
-            CreatureType::GoblinArcher | CreatureType::GoblinMage => {
+            CreatureType::GoblinArcher
+            | CreatureType::GoblinMage
+            | CreatureType::OrcFighter => {
                 // ranged npc shoots the player if they are in range
                 for (player_e, player_a) in query!(world, &this, Actor, _ Player) {
                     let distance = actor.pos.distance(player_a.pos);
@@ -102,6 +104,10 @@ pub fn ai_turn(world: &World, pf: &Pathfinding, npc: Entity) -> Action {
                                 }
                                 CreatureType::GoblinMage => {
                                     ActionKind::ShootFire { path, target: *player_e }
+                                        .done_by(npc)
+                                }
+                                CreatureType::OrcFighter => {
+                                    ActionKind::JumpAttack { path, target: *player_e }
                                         .done_by(npc)
                                 }
                                 _ => unreachable!(),
