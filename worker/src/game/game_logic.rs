@@ -186,7 +186,7 @@ impl CreatureType {
                     pos,
                     creature_type: self,
                     sprite: CreatureSprite::GoblinBrute,
-                    hp: HP::new(10),
+                    hp: HP::new(9),
                     next_turn: 0,
                 });
             }
@@ -196,7 +196,7 @@ impl CreatureType {
                     pos,
                     creature_type: self,
                     sprite: CreatureSprite::OrcFighter,
-                    hp: HP::new(15),
+                    hp: HP::new(12),
                     next_turn: 0,
                 });
             }
